@@ -104,8 +104,8 @@
 
             <!-- CCCD -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">CCCD</label>
-                <input type="text" name="cccd" value="{{ old('cccd', $user->cccd) }}"
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">CCCD <span class="text-red-500">*</span></label>
+                <input type="text" name="cccd" value="{{ old('cccd', $user->cccd) }}" required
                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
             </div>
 
@@ -227,8 +227,8 @@
 
             <!-- CCCD -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">CCCD</label>
-                <input type="text" name="cccd" value="{{ old('cccd', $user->cccd) }}"
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">CCCD <span class="text-red-500">*</span></label>
+                <input type="text" name="cccd" value="{{ old('cccd', $user->cccd) }}" required
                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
             </div>
 

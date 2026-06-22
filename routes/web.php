@@ -30,6 +30,20 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
     // Admin cũng có quyền quản lý tòa nhà
     Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class);
+
+    // Quản lý nhân viên
+    Route::resource('nhan-vien', \App\Http\Controllers\Admin\NhanVienController::class)
+        ->except(['destroy'])
+        ->parameters(['nhan-vien' => 'nhanVien']);
+    Route::patch('nhan-vien/{nhanVien}/toggle-status', [\App\Http\Controllers\Admin\NhanVienController::class, 'toggleStatus'])
+        ->name('nhan-vien.toggle-status');
+
+    // Quản lý cư dân
+    Route::resource('cu-dan', \App\Http\Controllers\Admin\CuDanController::class)
+        ->except(['destroy'])
+        ->parameters(['cu-dan' => 'cuDan']);
+    Route::patch('cu-dan/{cuDan}/toggle-status', [\App\Http\Controllers\Admin\CuDanController::class, 'toggleStatus'])
+        ->name('cu-dan.toggle-status');
 });
 
 // ==================== MANAGER ====================
