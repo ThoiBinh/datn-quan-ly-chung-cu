@@ -7,16 +7,16 @@
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div class="flex items-start justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-800">{{ $yeuCau->tieu_de }}</h2>
-            <span class="px-3 py-1 rounded-full text-sm font-medium {{ $yeuCau->muc_do_uu_tien == 3 ? 'bg-red-100 text-red-700' : ($yeuCau->muc_do_uu_tien == 2 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600') }}">
-                {{ $yeuCau->muc_do_label }}
+            <span class="px-3 py-1 rounded-full text-sm font-medium {{ $yeuCau->muc_do_label['class'] }}">
+                {{ $yeuCau->muc_do_label['text'] }}
             </span>
         </div>
         <div class="prose prose-sm text-gray-700 mb-6">{{ $yeuCau->noi_dung }}</div>
         <dl class="grid grid-cols-2 gap-3 text-sm mb-6 bg-gray-50 rounded-lg p-4">
             <div><dt class="text-gray-500">Cư dân</dt><dd class="font-medium mt-0.5">{{ $yeuCau->cuDan?->ho_ten }}</dd></div>
             <div><dt class="text-gray-500">Ngày gửi</dt><dd class="font-medium mt-0.5">{{ $yeuCau->ngay_gui?->format('d/m/Y H:i') }}</dd></div>
-            <div><dt class="text-gray-500">Trạng thái</dt><dd class="mt-0.5"><span class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{{ $yeuCau->trang_thai_label }}</span></dd></div>
-            <div><dt class="text-gray-500">NV xử lý</dt><dd class="font-medium mt-0.5">{{ $yeuCau->nhanVienXuLy?->name ?? 'Chưa phân công' }}</dd></div>
+            <div><dt class="text-gray-500">Trạng thái</dt><dd class="mt-0.5"><span class="px-2 py-0.5 rounded text-xs font-medium {{ $yeuCau->trang_thai_label['class'] }}">{{ $yeuCau->trang_thai_label['text'] }}</span></dd></div>
+            <div><dt class="text-gray-500">NV xử lý</dt><dd class="font-medium mt-0.5">{{ $yeuCau->nhanVienXuLy?->ho_ten ?? 'Chưa phân công' }}</dd></div>
         </dl>
         <form method="POST" action="{{ route('manager.yeu-cau.update', $yeuCau) }}" class="flex items-center gap-3">
             @csrf @method('PUT')

@@ -30,7 +30,6 @@
                     <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Căn hộ</th>
                     <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tòa nhà</th>
                     <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tầng</th>
-                    <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Diện tích</th>
                     <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Giá</th>
                     <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
                     <th class="px-5 py-3"></th>
@@ -42,7 +41,6 @@
                     <td class="px-5 py-4 font-semibold text-gray-800">{{ $ch->so_can_ho }}</td>
                     <td class="px-5 py-4 text-gray-600">{{ $ch->toaNha?->ten_toa_nha ?? '-' }}</td>
                     <td class="px-5 py-4 text-gray-600">{{ $ch->tang }}</td>
-                    <td class="px-5 py-4 text-gray-600">{{ $ch->dien_tich ? number_format($ch->dien_tich, 1) . ' m²' : '-' }}</td>
                     <td class="px-5 py-4 text-gray-600">{{ $ch->gia ? number_format($ch->gia) . 'đ' : '-' }}</td>
                     <td class="px-5 py-4">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -62,7 +60,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Chưa có căn hộ nào</td></tr>
+                <tr><td colspan="6" class="px-5 py-12 text-center text-gray-400">Chưa có căn hộ nào</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -21,7 +21,6 @@
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tiêu đề</th>
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Loại</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Mức độ</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Ngày gửi</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
@@ -32,7 +31,6 @@
                     @forelse($yeuCau as $yc)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-4 font-medium text-gray-800 max-w-xs truncate">{{ $yc->tieu_de }}</td>
-                        <td class="px-5 py-4 text-gray-600 capitalize">{{ $yc->loai_yeu_cau }}</td>
                         <td class="px-5 py-4">
                             <span class="px-2 py-0.5 rounded-full text-xs {{ $yc->muc_do_label['class'] }}">{{ $yc->muc_do_label['text'] }}</span>
                         </td>
@@ -45,7 +43,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="px-5 py-12 text-center text-gray-400">Chưa có yêu cầu nào</td></tr>
+                    <tr><td colspan="5" class="px-5 py-12 text-center text-gray-400">Chưa có yêu cầu nào</td></tr>
                     @endforelse
                 </tbody>
             </table>

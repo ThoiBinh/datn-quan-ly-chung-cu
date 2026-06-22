@@ -14,7 +14,7 @@ class AuditLogService
         mixed $giaTriMoi = null
     ): void {
         NhatKyHeThong::create([
-            'nguoi_thuc_hien' => auth()->id(),
+            'nguoi_thuc_hien' => auth('nhanvien')->id() ?? auth('cudan')->id(),
             'thoi_gian'       => now(),
             'hanh_dong'       => $hanhDong,
             'bang_tac_dong'   => $bangTacDong,

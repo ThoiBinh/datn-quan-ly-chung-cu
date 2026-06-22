@@ -29,20 +29,15 @@
                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Diện tích (m²)</label>
-                    <input type="number" name="dien_tich" value="{{ old('dien_tich', $canHo->dien_tich) }}" step="0.1"
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Giá (đ)</label>
                     <input type="number" name="gia" value="{{ old('gia', $canHo->gia) }}" step="1000"
                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Loại căn hộ</label>
-                    <select name="loai_can_ho" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Loại căn hộ <span class="text-red-500">*</span></label>
+                    <select name="loai_can_ho" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="">-- Chọn loại --</option>
-                        @foreach($loaiCanHo as $loai)<option value="{{ $loai->id }}" {{ $canHo->loai_can_ho == $loai->id ? 'selected' : '' }}>{{ $loai->ten_loai_can_ho }}</option>@endforeach
+                        @foreach($loaiCanHo as $loai)<option value="{{ $loai->id }}" {{ old('loai_can_ho', $canHo->loai_can_ho) == $loai->id ? 'selected' : '' }}>{{ $loai->ten_loai_can_ho }}</option>@endforeach
                     </select>
                 </div>
                 <div>

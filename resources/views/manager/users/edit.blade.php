@@ -36,10 +36,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
-                    <select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="resident" {{ old('role', $user->role) == 'resident' ? 'selected' : '' }}>Cư dân</option>
-                        <option value="manager" {{ old('role', $user->role) == 'manager' ? 'selected' : '' }}>Quản lý</option>
-                    </select>
+                    <input type="text" value="Quản lý" disabled
+                           class="w-full px-4 py-2.5 border border-gray-200 bg-gray-50 rounded-lg text-sm text-gray-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>

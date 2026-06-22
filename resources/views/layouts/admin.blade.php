@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="vi" x-data="{ sidebarOpen: true, mobileOpen: false }">
 <head>
     <meta charset="UTF-8">
@@ -85,10 +85,10 @@
         <div class="p-3 border-t border-white/10">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    {{ strtoupper(substr(auth('nhanvien')->user()->name, 0, 1)) }}
                 </div>
                 <div x-show="sidebarOpen" class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-white truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-sm font-medium text-white truncate">{{ auth('nhanvien')->user()->name }}</p>
                     <p class="text-xs text-slate-400">Admin</p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" x-show="sidebarOpen">
@@ -114,7 +114,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:block text-sm text-gray-500">{{ now()->format('d/m/Y') }}</span>
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-semibold text-sm">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    {{ strtoupper(substr(auth('nhanvien')->user()->name, 0, 1)) }}
                 </div>
             </div>
         </header>
@@ -141,5 +141,6 @@
     </div>
 </div>
 
+@stack('scripts')
 </body>
 </html>

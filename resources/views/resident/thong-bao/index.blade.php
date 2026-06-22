@@ -12,7 +12,7 @@
                 <p class="text-sm font-medium text-gray-800 truncate">{{ $tb->tieu_de }}</p>
                 <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ Str::limit($tb->noi_dung, 120) }}</p>
             </div>
-            <p class="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">{{ $tb->created_at->diffForHumans() }}</p>
+            <p class="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">{{ $tb->created_at?->diffForHumans() }}</p>
         </a>
         @empty
         <div class="px-5 py-16 text-center text-gray-400">

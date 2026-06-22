@@ -38,9 +38,9 @@
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open = !open" class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
                         <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-semibold text-sm">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            {{ strtoupper(substr(auth('cudan')->user()->name, 0, 1)) }}
                         </div>
-                        <span class="hidden sm:block font-medium">{{ auth()->user()->name }}</span>
+                        <span class="hidden sm:block font-medium">{{ auth('cudan')->user()->name }}</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="open" @click.away="open = false" x-transition

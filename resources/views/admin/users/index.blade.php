@@ -13,7 +13,6 @@
                 <option value="">Tất cả vai trò</option>
                 <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                 <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Quản lý</option>
-                <option value="resident" {{ request('role') == 'resident' ? 'selected' : '' }}>Cư dân</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">Lọc</button>
         </form>
@@ -54,7 +53,7 @@
                     <td class="px-5 py-4">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : ($user->role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700') }}">
-                            {{ match($user->role) { 'admin' => 'Admin', 'manager' => 'Quản lý', 'resident' => 'Cư dân' } }}
+                            {{ $user->isAdmin() ? 'Admin' : 'Quản lý' }}
                         </span>
                     </td>
                     <td class="px-5 py-4">
@@ -63,13 +62,16 @@
                             {{ $user->status === 'active' ? 'Hoạt động' : 'Đã khóa' }}
                         </span>
                     </td>
-                    <td class="px-5 py-4 text-gray-500 text-xs">{{ $user->created_at->format('d/m/Y') }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-xs">{{ $user->created_at?->format('d/m/Y') }}</td>
                     <td class="px-5 py-4">
                         <div class="flex items-center gap-2 justify-end" x-data="{}">
+                            <a href="{{ route('admin.users.show', $user) }}" class="text-gray-400 hover:text-indigo-600 transition-colors" title="Xem">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
                             <a href="{{ route('admin.users.edit', $user) }}" class="text-gray-400 hover:text-blue-600 transition-colors" title="Sửa">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </a>
-                            @if($user->id !== auth()->id())
+                            @if($user->id !== auth('nhanvien')->id())
                             <form method="POST" action="{{ route('admin.users.toggle-status', $user) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="text-gray-400 hover:text-amber-600 transition-colors" title="{{ $user->status === 'active' ? 'Khóa' : 'Mở khóa' }}">

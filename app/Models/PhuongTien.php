@@ -10,7 +10,7 @@ class PhuongTien extends Model
     public $timestamps = false;
     protected $fillable = [
         'ten_phuong_tien', 'bien_so', 'loai_phuong_tien', 'can_ho',
-        'ngay_dang_ky', 'ngay_huy', 'trang_thai',
+        'ngay_dang_ky', 'ngay_huy', 'trang_thai', 'nguoi_cap_nhat',
     ];
 
     protected $casts = [

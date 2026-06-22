@@ -1,4 +1,4 @@
-@extends(auth()->user()->role === 'resident' ? 'layouts.resident' : (auth()->user()->role === 'admin' ? 'layouts.admin' : 'layouts.manager'))
+@extends(auth('cudan')->check() ? 'layouts.resident' : (auth('nhanvien')->user()?->isAdmin() ? 'layouts.admin' : 'layouts.manager'))
 
 @section('title', 'Đổi mật khẩu')
 @section('page-title', 'Đổi mật khẩu')
@@ -16,9 +16,13 @@
             </div>
         @endif
 
+        @if(auth('cudan')->check())
+        <form method="POST" action="{{ route('resident.change-password.update') }}" class="space-y-4">
+            @csrf @method('PUT')
+        @else
         <form method="POST" action="{{ route('password.change') }}" class="space-y-4">
             @csrf
-            @method('POST')
+        @endif
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại</label>
                 <input type="password" name="current_password" required

@@ -9,6 +9,7 @@ use App\Models\CuDanCanHo;
 use App\Models\VaiTro;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class CuDanController extends Controller
 {
@@ -18,14 +19,15 @@ class CuDanController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('ho_ten', 'like', '%' . $request->search . '%')
+                $q->where('ho_ten_dem', 'like', '%' . $request->search . '%')
+                  ->orWhere('ten', 'like', '%' . $request->search . '%')
                   ->orWhere('sdt', 'like', '%' . $request->search . '%')
                   ->orWhere('cccd', 'like', '%' . $request->search . '%')
                   ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
-        $cuDan = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $cuDan = $query->orderByDesc('createdAt')->paginate(15)->withQueryString();
         return view('manager.cu-dan.index', compact('cuDan'));
     }
 
@@ -39,26 +41,39 @@ class CuDanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ho_ten'   => 'required|string|max:255',
-            'sdt'      => 'nullable|string|max:20',
-            'cccd'     => 'nullable|string|max:50|unique:cu_dan,cccd',
-            'email'    => 'nullable|email|max:255',
-            'nam_sinh' => 'nullable|date',
-            'que_quan' => 'nullable|string|max:255',
+            'ho_ten_dem' => 'nullable|string|max:255',
+            'ten'        => 'required|string|max:100',
+            'sdt'        => 'nullable|string|max:20',
+            'cccd'       => 'nullable|string|max:50|unique:cu_dan,cccd',
+            'email'      => 'nullable|email|max:255|unique:cu_dan,email',
+            'ngay_sinh'  => 'nullable|date',
+            'gioi_tinh'  => 'nullable|in:0,1',
+            'tinh'       => 'nullable|string|max:100',
+            'dia_chi'    => 'nullable|string|max:500',
+            'mat_khau'   => 'nullable|string|min:6',
         ], [
-            'ho_ten.required' => 'Vui lòng nhập họ tên.',
-            'cccd.unique'     => 'CCCD đã tồn tại trong hệ thống.',
+            'ten.required'   => 'Vui lòng nhập tên.',
+            'cccd.unique'    => 'CCCD đã tồn tại trong hệ thống.',
+            'email.unique'   => 'Email đã tồn tại trong hệ thống.',
         ]);
 
-        $cuDan = CuDan::create($request->only('ho_ten', 'sdt', 'cccd', 'email', 'nam_sinh', 'que_quan'));
+        $matKhau = $request->filled('mat_khau')
+            ? Hash::make($request->mat_khau)
+            : Hash::make('12345678');
+
+        $data = $request->only('ho_ten_dem', 'ten', 'sdt', 'cccd', 'email', 'ngay_sinh', 'tinh', 'dia_chi');
+        $gt   = $request->input('gioi_tinh');
+        $data['gioi_tinh'] = ($gt !== null && $gt !== '') ? (int) $gt : null;
+
+        $cuDan = CuDan::create(array_merge($data, ['mat_khau' => $matKhau, 'trang_thai' => 1]));
 
         if ($request->filled('can_ho') && $request->filled('vai_tro')) {
             CuDanCanHo::create([
-                'cu_dan'        => $cuDan->id,
-                'can_ho'        => $request->can_ho,
-                'vai_tro'       => $request->vai_tro,
+                'cu_dan'          => $cuDan->id,
+                'can_ho'          => $request->can_ho,
+                'vai_tro'         => $request->vai_tro,
                 'ngay_chuyen_den' => $request->ngay_chuyen_den ?? now(),
-                'trang_thai'    => 1,
+                'trang_thai'      => 1,
             ]);
         }
 
@@ -68,7 +83,7 @@ class CuDanController extends Controller
 
     public function show(CuDan $cuDan)
     {
-        $cuDan->load(['canHoHienTai.canHo.toaNha', 'canHoHienTai.vaiTro', 'yeuCau', 'hopDong']);
+        $cuDan->load(['canHoHienTai.canHo.toaNha', 'canHoHienTai.vaiTro', 'yeuCau']);
         return view('manager.cu-dan.show', compact('cuDan'));
     }
 
@@ -83,16 +98,27 @@ class CuDanController extends Controller
     public function update(Request $request, CuDan $cuDan)
     {
         $request->validate([
-            'ho_ten'   => 'required|string|max:255',
-            'sdt'      => 'nullable|string|max:20',
-            'cccd'     => 'nullable|string|max:50|unique:cu_dan,cccd,' . $cuDan->id,
-            'email'    => 'nullable|email|max:255',
-            'nam_sinh' => 'nullable|date',
-            'que_quan' => 'nullable|string|max:255',
+            'ho_ten_dem' => 'nullable|string|max:255',
+            'ten'        => 'required|string|max:100',
+            'sdt'        => 'nullable|string|max:20',
+            'cccd'       => 'nullable|string|max:50|unique:cu_dan,cccd,' . $cuDan->id,
+            'email'      => 'nullable|email|max:255|unique:cu_dan,email,' . $cuDan->id,
+            'ngay_sinh'  => 'nullable|date',
+            'gioi_tinh'  => 'nullable|in:0,1',
+            'tinh'       => 'nullable|string|max:100',
+            'dia_chi'    => 'nullable|string|max:500',
+        ], [
+            'ten.required' => 'Vui lòng nhập tên.',
         ]);
 
-        $old = $cuDan->toArray();
-        $cuDan->update($request->only('ho_ten', 'sdt', 'cccd', 'email', 'nam_sinh', 'que_quan'));
+        $old  = $cuDan->toArray();
+        $data = $request->only('ho_ten_dem', 'ten', 'sdt', 'cccd', 'email', 'ngay_sinh', 'tinh', 'dia_chi');
+        if ($request->input('gioi_tinh') !== null && $request->input('gioi_tinh') !== '') {
+            $data['gioi_tinh'] = (int) $request->input('gioi_tinh');
+        } else {
+            $data['gioi_tinh'] = null;
+        }
+        $cuDan->update($data);
         AuditLogService::log('UPDATE', 'cu_dan', $cuDan->id, $old, $cuDan->fresh()->toArray());
 
         $canHoMoi     = $request->can_ho;
@@ -101,7 +127,6 @@ class CuDanController extends Controller
         if ($canHoMoi) {
             if ($canHoHienTai) {
                 if ($canHoHienTai->can_ho != $canHoMoi) {
-                    // Chuyển sang căn hộ khác: đóng bản ghi cũ, tạo mới
                     $canHoHienTai->update(['trang_thai' => 0, 'ngay_chuyen_di' => now()]);
                     CuDanCanHo::create([
                         'cu_dan'          => $cuDan->id,
@@ -111,11 +136,9 @@ class CuDanController extends Controller
                         'trang_thai'      => 1,
                     ]);
                 } else {
-                    // Cùng căn hộ: chỉ cập nhật vai trò
                     $canHoHienTai->update(['vai_tro' => $request->vai_tro]);
                 }
             } else {
-                // Chưa có căn hộ: tạo mới
                 CuDanCanHo::create([
                     'cu_dan'          => $cuDan->id,
                     'can_ho'          => $canHoMoi,
@@ -125,7 +148,6 @@ class CuDanController extends Controller
                 ]);
             }
         } else {
-            // Không chọn căn hộ: hủy phân công hiện tại nếu có
             if ($canHoHienTai) {
                 $canHoHienTai->update(['trang_thai' => 0, 'ngay_chuyen_di' => now()]);
             }

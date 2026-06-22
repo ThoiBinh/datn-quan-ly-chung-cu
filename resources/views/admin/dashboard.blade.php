@@ -81,7 +81,9 @@
             <h3 class="font-semibold text-gray-800">Doanh thu theo tháng {{ now()->year }}</h3>
             <span class="text-sm text-gray-500">Tổng năm: {{ number_format($doanhThuNam) }}đ</span>
         </div>
-        <canvas id="revenueChart" height="280"></canvas>
+        <div style="position:relative; height:280px;">
+            <canvas id="revenueChart"></canvas>
+        </div>
     </div>
 
     <!-- Recent Requests -->
@@ -97,8 +99,8 @@
                     <p class="text-sm font-medium text-gray-800 truncate">{{ $yc->tieu_de }}</p>
                     <p class="text-xs text-gray-500">{{ $yc->cuDan?->ho_ten }}</p>
                 </div>
-                <span class="text-xs px-2 py-0.5 rounded-full {{ $yc->muc_do_uu_tien == 3 ? 'bg-red-100 text-red-700' : ($yc->muc_do_uu_tien == 2 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700') }} flex-shrink-0">
-                    {{ $yc->muc_do_label }}
+                <span class="text-xs px-2 py-0.5 rounded-full {{ $yc->muc_do_label['class'] }} flex-shrink-0">
+                    {{ $yc->muc_do_label['text'] }}
                 </span>
             </div>
             @empty
@@ -111,6 +113,10 @@
     </div>
 </div>
 
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const ctx = document.getElementById('revenueChart').getContext('2d');
 new Chart(ctx, {
@@ -128,11 +134,21 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            y: { beginAtZero: true, ticks: { callback: v => (v/1000000).toFixed(0) + 'M' } }
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(v) {
+                        if (v >= 1000000) return (v/1000000).toFixed(0) + 'M';
+                        if (v >= 1000) return (v/1000).toFixed(0) + 'K';
+                        return v;
+                    }
+                }
+            }
         }
     }
 });
 </script>
-@endsection
+@endpush

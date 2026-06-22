@@ -17,7 +17,7 @@ class ThongBaoController extends Controller
             $query->where('tieu_de', 'like', '%' . $request->search . '%');
         }
 
-        $thongBao = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $thongBao = $query->orderByDesc('createdAt')->paginate(15)->withQueryString();
         return view('manager.thong-bao.index', compact('thongBao'));
     }
 
@@ -39,7 +39,7 @@ class ThongBaoController extends Controller
         $tb = ThongBao::create([
             'tieu_de'  => $request->tieu_de,
             'noi_dung' => $request->noi_dung,
-            'nguoi_tao' => auth()->id(),
+            'nguoi_tao' => auth('nhanvien')->id(),
         ]);
 
         AuditLogService::log('INSERT', 'thong_bao', $tb->id, null, $tb->toArray());

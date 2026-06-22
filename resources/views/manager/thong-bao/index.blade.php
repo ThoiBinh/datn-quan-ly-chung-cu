@@ -20,7 +20,7 @@
         <div class="flex items-center justify-between p-5 hover:bg-gray-50">
             <div class="min-w-0 flex-1">
                 <p class="font-medium text-gray-800 truncate">{{ $tb->tieu_de }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">{{ $tb->nguoiTao?->name }} · {{ $tb->created_at->format('d/m/Y H:i') }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ $tb->nguoiTao?->name }} · {{ $tb->created_at?->format('d/m/Y H:i') }}</p>
             </div>
             <div class="flex items-center gap-2 ml-4">
                 <a href="{{ route('manager.thong-bao.show', $tb) }}" class="text-gray-400 hover:text-indigo-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></a>

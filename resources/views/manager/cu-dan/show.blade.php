@@ -12,8 +12,8 @@
                 <div><dt class="text-gray-500">SĐT</dt><dd class="font-medium mt-0.5">{{ $cuDan->sdt ?? '-' }}</dd></div>
                 <div><dt class="text-gray-500">Email</dt><dd class="font-medium mt-0.5">{{ $cuDan->email ?? '-' }}</dd></div>
                 <div><dt class="text-gray-500">CCCD</dt><dd class="font-mono text-xs mt-0.5">{{ $cuDan->cccd ?? '-' }}</dd></div>
-                <div><dt class="text-gray-500">Ngày sinh</dt><dd class="font-medium mt-0.5">{{ $cuDan->nam_sinh?->format('d/m/Y') ?? '-' }}</dd></div>
-                <div><dt class="text-gray-500">Quê quán</dt><dd class="font-medium mt-0.5">{{ $cuDan->que_quan ?? '-' }}</dd></div>
+                <div><dt class="text-gray-500">Ngày sinh</dt><dd class="font-medium mt-0.5">{{ $cuDan->ngay_sinh?->format('d/m/Y') ?? '-' }}</dd></div>
+                <div><dt class="text-gray-500">Địa chỉ</dt><dd class="font-medium mt-0.5">{{ trim(($cuDan->tinh ?? '') . ' ' . ($cuDan->dia_chi ?? '')) ?: '-' }}</dd></div>
             </dl>
             <div class="mt-4 pt-4 border-t border-gray-100">
                 <a href="{{ route('manager.cu-dan.edit', $cuDan) }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Sửa</a>
@@ -34,7 +34,7 @@
             @forelse($cuDan->yeuCau->take(3) as $yc)
             <div class="text-sm py-1.5 border-b border-gray-100 last:border-0">
                 <p class="text-gray-700 truncate">{{ $yc->tieu_de }}</p>
-                <p class="text-xs text-gray-400">{{ $yc->trang_thai_label }}</p>
+                <p class="text-xs text-gray-400">{{ $yc->trang_thai_label['text'] }}</p>
             </div>
             @empty
             <p class="text-gray-400 text-sm">Chưa có yêu cầu</p>

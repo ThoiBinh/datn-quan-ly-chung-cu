@@ -11,15 +11,26 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
+        $guard = Auth::guard('nhanvien');
+
+        if (!$guard->check()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Chưa đăng nhập'], 401);
+            }
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập.');
+        }
+
+        $user = $guard->user();
+
+        if (!$user->isAdmin()) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Không có quyền truy cập'], 403);
             }
             return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập trang này.');
         }
 
-        if (!Auth::user()->isActive()) {
-            Auth::logout();
+        if (!$user->isActive()) {
+            $guard->logout();
             return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị khóa.');
         }
 

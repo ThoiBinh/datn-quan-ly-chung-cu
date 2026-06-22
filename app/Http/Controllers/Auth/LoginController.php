@@ -10,8 +10,11 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
-        if (Auth::check()) {
-            return $this->redirectByRole(Auth::user()->role);
+        if (Auth::guard('nhanvien')->check()) {
+            return $this->redirectByRole(Auth::guard('nhanvien')->user()->vaitro);
+        }
+        if (Auth::guard('cudan')->check()) {
+            return redirect()->route('resident.dashboard');
         }
         return view('auth.login');
     }
@@ -28,31 +31,32 @@ class LoginController extends Controller
             'password.min'      => 'Mật khẩu phải có ít nhất 6 ký tự.',
         ]);
 
-        $credentials = $request->only('email', 'password');
+        $credentials = ['email' => $request->email, 'password' => $request->password];
         $remember    = $request->boolean('remember');
         $loai        = $request->input('loai', 'nhanvien');
 
-        if (Auth::attempt($credentials, $remember)) {
-            $user = Auth::user();
-
-            if (!$user->isActive()) {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.'])->withInput($request->only('email', 'loai'));
+        if ($loai === 'nhanvien') {
+            if (Auth::guard('nhanvien')->attempt($credentials, $remember)) {
+                $user = Auth::guard('nhanvien')->user();
+                if (!$user->isActive()) {
+                    Auth::guard('nhanvien')->logout();
+                    return back()->withErrors(['email' => 'Tài khoản đã bị khóa.'])->withInput($request->only('email', 'loai'));
+                }
+                $request->session()->regenerate();
+                return $this->redirectByRole($user->vaitro);
             }
+        }
 
-            // Kiểm tra đúng loại tab đăng nhập
-            if ($loai === 'nhanvien' && $user->role === 'resident') {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Tài khoản này không phải nhân viên.'])->withInput($request->only('email', 'loai'));
+        if ($loai === 'cudan') {
+            if (Auth::guard('cudan')->attempt($credentials, $remember)) {
+                $user = Auth::guard('cudan')->user();
+                if (!$user->isActive()) {
+                    Auth::guard('cudan')->logout();
+                    return back()->withErrors(['email' => 'Tài khoản đã bị khóa.'])->withInput($request->only('email', 'loai'));
+                }
+                $request->session()->regenerate();
+                return redirect()->route('resident.dashboard');
             }
-
-            if ($loai === 'cudan' && $user->role !== 'resident') {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Tài khoản này không phải cư dân.'])->withInput($request->only('email', 'loai'));
-            }
-
-            $request->session()->regenerate();
-            return $this->redirectByRole($user->role);
         }
 
         return back()->withErrors(['email' => 'Email hoặc mật khẩu không đúng.'])->withInput($request->only('email', 'loai'));
@@ -60,7 +64,8 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('nhanvien')->logout();
+        Auth::guard('cudan')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login')->with('success', 'Đã đăng xuất thành công.');
@@ -69,10 +74,9 @@ class LoginController extends Controller
     private function redirectByRole(string $role)
     {
         return match($role) {
-            'admin'    => redirect()->route('admin.dashboard'),
-            'manager'  => redirect()->route('manager.dashboard'),
-            'resident' => redirect()->route('resident.dashboard'),
-            default    => redirect()->route('home'),
+            'admin'   => redirect()->route('admin.dashboard'),
+            'manager' => redirect()->route('manager.dashboard'),
+            default   => redirect()->route('home'),
         };
     }
 }

@@ -11,19 +11,19 @@ class ManagerMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
+        $guard = Auth::guard('nhanvien');
 
-        if (!in_array(Auth::user()->role, ['admin', 'manager'])) {
+        if (!$guard->check()) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Không có quyền truy cập'], 403);
+                return response()->json(['message' => 'Chưa đăng nhập'], 401);
             }
-            return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập trang này.');
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập.');
         }
 
-        if (!Auth::user()->isActive()) {
-            Auth::logout();
+        $user = $guard->user();
+
+        if (!$user->isActive()) {
+            $guard->logout();
             return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị khóa.');
         }
 

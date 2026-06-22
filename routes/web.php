@@ -8,11 +8,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn() => view('home'))->name('home');
 
 // Auth
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
-Route::post('/login', [LoginController::class, 'login'])->middleware('guest');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
-Route::get('/doi-mat-khau', [PasswordController::class, 'showChangeForm'])->name('password.change')->middleware('auth');
-Route::post('/doi-mat-khau', [PasswordController::class, 'change'])->middleware('auth');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Đổi mật khẩu — dùng bởi admin/manager (nhanvien guard)
+Route::get('/doi-mat-khau', [PasswordController::class, 'showChangeForm'])->name('password.change')->middleware('manager');
+Route::post('/doi-mat-khau', [PasswordController::class, 'change'])->middleware('manager');
 
 // ==================== ADMIN ====================
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
@@ -21,11 +23,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
-    // Admin cũng có quyền quản lý chung cư
-    Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class)->names([
-        'index' => 'toa-nha.index', 'create' => 'toa-nha.create', 'store' => 'toa-nha.store',
-        'edit' => 'toa-nha.edit', 'update' => 'toa-nha.update', 'destroy' => 'toa-nha.destroy',
-    ]);
+    // Admin cũng có quyền quản lý tòa nhà
+    Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class);
 });
 
 // ==================== MANAGER ====================
@@ -58,10 +57,11 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     Route::get('/phuong-tien/dang-ky', [\App\Http\Controllers\Resident\PhuongTienController::class, 'create'])->name('phuong-tien.create');
     Route::post('/phuong-tien', [\App\Http\Controllers\Resident\PhuongTienController::class, 'store'])->name('phuong-tien.store');
     Route::delete('/phuong-tien/{phuongTien}', [\App\Http\Controllers\Resident\PhuongTienController::class, 'destroy'])->name('phuong-tien.destroy');
-    Route::get('/doi-mat-khau', [\App\Http\Controllers\Auth\PasswordController::class, 'showChangeForm'])->name('change-password');
-    Route::put('/doi-mat-khau', [\App\Http\Controllers\Auth\PasswordController::class, 'change'])->name('change-password.update');
+    // Đổi mật khẩu cư dân (cudan guard)
+    Route::get('/doi-mat-khau', [PasswordController::class, 'showChangeForm'])->name('change-password');
+    Route::put('/doi-mat-khau', [PasswordController::class, 'change'])->name('change-password.update');
     Route::get('/thong-bao', fn() => view('resident.thong-bao.index', [
-        'thongBao' => \App\Models\ThongBao::orderByDesc('created_at')->paginate(10)
+        'thongBao' => \App\Models\ThongBao::orderByDesc('createdAt')->paginate(10)
     ]))->name('thong-bao.index');
     Route::get('/thong-bao/{thongBao}', fn(\App\Models\ThongBao $thongBao) => view('resident.thong-bao.show', compact('thongBao')))->name('thong-bao.show');
     Route::get('/yeu-cau', [\App\Http\Controllers\Resident\YeuCauController::class, 'index'])->name('yeu-cau.index');

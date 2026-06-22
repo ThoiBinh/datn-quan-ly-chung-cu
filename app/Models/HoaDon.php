@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class HoaDon extends Model
 {
     protected $table = 'hoa_don';
+
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
+
     protected $fillable = [
         'ma_thanh_toan', 'can_ho', 'thang', 'nam', 'tong_tien',
-        'so_tien_da_thanh_toan', 'chi_phi', 'han_thanh_toan', 'trang_thai', 'ghi_chu',
+        'so_tien_da_thanh_toan', 'chi_phi', 'han_thanh_toan', 'trang_thai', 'nguoi_cap_nhat',
     ];
 
     protected $casts = [

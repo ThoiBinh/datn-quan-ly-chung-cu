@@ -27,13 +27,13 @@ class DashboardController extends Controller
         ];
 
         $doanhThuThang = HoaDon::where('trang_thai', 2)
-            ->whereYear('updated_at', now()->year)
-            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updatedAt', now()->year)
+            ->whereMonth('updatedAt', now()->month)
             ->sum('tong_tien');
 
         $yeuCauGanDay = YeuCauCuDan::with('cuDan')
             ->whereIn('trang_thai', [1, 2])
-            ->orderByDesc('created_at')
+            ->orderByDesc('createdAt')
             ->limit(8)
             ->get();
 
@@ -46,8 +46,8 @@ class DashboardController extends Controller
         $doanhThuTheoThang = [];
         for ($i = 1; $i <= 12; $i++) {
             $doanhThuTheoThang[] = HoaDon::where('trang_thai', 2)
-                ->whereYear('updated_at', now()->year)
-                ->whereMonth('updated_at', $i)
+                ->whereYear('updatedAt', now()->year)
+                ->whereMonth('updatedAt', $i)
                 ->sum('tong_tien');
         }
 

@@ -36,7 +36,6 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Vai trò <span class="text-red-500">*</span></label>
                     <select name="role" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="resident" {{ old('role') == 'resident' ? 'selected' : '' }}>Cư dân</option>
                         <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Quản lý</option>
                         <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                     </select>

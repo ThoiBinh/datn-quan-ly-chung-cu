@@ -30,7 +30,7 @@ class HoaDonController extends Controller
             $query->where('nam', $request->nam);
         }
 
-        $hoaDon = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $hoaDon = $query->orderByDesc('createdAt')->paginate(15)->withQueryString();
         return view('manager.hoa-don.index', compact('hoaDon'));
     }
 

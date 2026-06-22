@@ -12,8 +12,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
-        $cuDan = $user->cuDan;
+        $cuDan = auth('cudan')->user();
         $canHo = $cuDan?->canHoHienTai?->canHo;
 
         $soHoaDonChuaThanhToan = 0;
@@ -34,7 +33,7 @@ class DashboardController extends Controller
             ? YeuCauCuDan::where('cu_dan', $cuDan->id)->whereIn('trang_thai', [1, 2])->count()
             : 0;
 
-        $thongBaoMoi = ThongBao::orderByDesc('created_at')->limit(5)->get();
+        $thongBaoMoi = ThongBao::orderByDesc('createdAt')->limit(5)->get();
 
         return view('resident.dashboard', compact(
             'cuDan', 'canHo',

@@ -14,40 +14,46 @@
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div class="flex items-center gap-4 mb-6">
             <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-                <span class="text-2xl font-bold text-emerald-700">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                <span class="text-2xl font-bold text-emerald-700">{{ strtoupper(substr($cuDan->name, 0, 1)) }}</span>
             </div>
             <div>
-                <h2 class="text-xl font-bold text-gray-900">{{ auth()->user()->name }}</h2>
-                <p class="text-sm text-gray-500">{{ auth()->user()->email }}</p>
+                <h2 class="text-xl font-bold text-gray-900">{{ $cuDan->ho_ten }}</h2>
+                <p class="text-sm text-gray-500">{{ $cuDan->email }}</p>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Họ tên</p>
-                <p class="text-gray-800">{{ auth()->user()->name }}</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Họ tên đệm</p>
+                <p class="text-gray-800">{{ $cuDan->ho_ten_dem ?? '-' }}</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Tên</p>
+                <p class="text-gray-800">{{ $cuDan->ten ?? '-' }}</p>
             </div>
             <div>
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Email</p>
-                <p class="text-gray-800">{{ auth()->user()->email }}</p>
+                <p class="text-gray-800">{{ $cuDan->email ?? '-' }}</p>
             </div>
             <div>
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Số điện thoại</p>
-                <p class="text-gray-800">{{ auth()->user()->phone ?? '-' }}</p>
+                <p class="text-gray-800">{{ $cuDan->sdt ?? '-' }}</p>
             </div>
-            @if($cuDan)
             <div>
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-1">CMND/CCCD</p>
-                <p class="text-gray-800">{{ $cuDan->cmnd_cccd ?? '-' }}</p>
+                <p class="text-gray-800">{{ $cuDan->cccd ?? '-' }}</p>
             </div>
             <div>
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Ngày sinh</p>
                 <p class="text-gray-800">{{ $cuDan->ngay_sinh?->format('d/m/Y') ?? '-' }}</p>
             </div>
             <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Giới tính</p>
-                <p class="text-gray-800">{{ $cuDan->gioi_tinh == 1 ? 'Nam' : ($cuDan->gioi_tinh == 2 ? 'Nữ' : '-') }}</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Tỉnh/Thành</p>
+                <p class="text-gray-800">{{ $cuDan->tinh ?? '-' }}</p>
             </div>
-            @endif
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Địa chỉ</p>
+                <p class="text-gray-800">{{ $cuDan->dia_chi ?? '-' }}</p>
+            </div>
             @if($canHo)
             <div class="col-span-2">
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Căn hộ hiện tại</p>

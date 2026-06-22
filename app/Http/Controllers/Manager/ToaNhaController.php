@@ -18,7 +18,7 @@ class ToaNhaController extends Controller
                   ->orWhere('dia_chi', 'like', '%' . $request->search . '%');
         }
 
-        $toaNha = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $toaNha = $query->orderByDesc('createdAt')->paginate(15)->withQueryString();
         return view('manager.toa-nha.index', compact('toaNha'));
     }
 

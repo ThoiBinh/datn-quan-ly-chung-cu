@@ -12,7 +12,6 @@
                 <div><dt class="text-gray-500">Tòa nhà</dt><dd class="font-medium mt-0.5">{{ $canHo->toaNha?->ten_toa_nha }}</dd></div>
                 <div><dt class="text-gray-500">Số căn hộ</dt><dd class="font-medium mt-0.5">{{ $canHo->so_can_ho }}</dd></div>
                 <div><dt class="text-gray-500">Tầng</dt><dd class="font-medium mt-0.5">{{ $canHo->tang }}</dd></div>
-                <div><dt class="text-gray-500">Diện tích</dt><dd class="font-medium mt-0.5">{{ $canHo->dien_tich ? number_format($canHo->dien_tich, 1) . ' m²' : '-' }}</dd></div>
                 <div><dt class="text-gray-500">Giá</dt><dd class="font-medium mt-0.5">{{ $canHo->gia ? number_format($canHo->gia) . 'đ' : '-' }}</dd></div>
                 <div><dt class="text-gray-500">Trạng thái</dt><dd class="mt-0.5"><span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">{{ $canHo->trangThai?->ten_trang_thai }}</span></dd></div>
                 <div><dt class="text-gray-500">Loại căn hộ</dt><dd class="font-medium mt-0.5">{{ $canHo->loaiCanHo?->ten_loai_can_ho ?? '-' }}</dd></div>
