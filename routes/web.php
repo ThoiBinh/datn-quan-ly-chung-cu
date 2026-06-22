@@ -19,8 +19,13 @@ Route::post('/doi-mat-khau', [PasswordController::class, 'change'])->middleware(
 // ==================== ADMIN ====================
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
-    Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
+    Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+    Route::get('users/{type}/{id}', [\App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show')->where('type', 'nhan-vien|cu-dan');
+    Route::get('users/{type}/{id}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit')->where('type', 'nhan-vien|cu-dan');
+    Route::put('users/{type}/{id}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update')->where('type', 'nhan-vien|cu-dan');
+    Route::patch('users/{type}/{id}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status')->where('type', 'nhan-vien|cu-dan');
     Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
     // Admin cũng có quyền quản lý tòa nhà
