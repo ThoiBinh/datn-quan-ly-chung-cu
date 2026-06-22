@@ -23,7 +23,7 @@ class YeuCauController extends Controller
             $query->where('muc_do_uu_tien', $request->muc_do);
         }
 
-        $yeuCau = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $yeuCau = $query->orderByDesc('createdAt')->paginate(15)->withQueryString();
         return view('manager.yeu-cau.index', compact('yeuCau'));
     }
 
@@ -43,7 +43,7 @@ class YeuCauController extends Controller
         $data = ['trang_thai' => $request->trang_thai];
 
         if ($request->trang_thai == YeuCauCuDan::TRANG_THAI_DANG_XU_LY) {
-            $data['nhan_vien_xu_ly'] = auth()->id();
+            $data['nhan_vien_xu_ly'] = auth('nhanvien')->id();
         }
 
         if ($request->trang_thai == YeuCauCuDan::TRANG_THAI_HOAN_THANH) {

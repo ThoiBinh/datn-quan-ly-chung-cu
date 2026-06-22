@@ -20,8 +20,7 @@ class HoaDonController extends Controller
 
     public function index()
     {
-        $user = auth()->user();
-        $cuDan = $user->cuDan;
+        $cuDan = auth('cudan')->user();
 
         if (!$cuDan || !$cuDan->canHoHienTai) {
             return view('resident.hoa-don.index', ['hoaDon' => collect()]);
@@ -38,7 +37,7 @@ class HoaDonController extends Controller
     public function show(HoaDon $hoaDon)
     {
         $this->authorize_canho($hoaDon);
-        $hoaDon->load(['chiTiet.phiDichVu', 'lichSuThanhToan', 'canHo']);
+        $hoaDon->load(['chiTiet', 'lichSuThanhToan', 'canHo']);
         return view('resident.hoa-don.show', compact('hoaDon'));
     }
 
@@ -141,7 +140,7 @@ class HoaDonController extends Controller
 
     private function authorize_canho(HoaDon $hoaDon): void
     {
-        $cuDan = auth()->user()->cuDan;
+        $cuDan = auth('cudan')->user();
         if (!$cuDan || !$cuDan->canHoHienTai || $cuDan->canHoHienTai->can_ho != $hoaDon->can_ho) {
             abort(403, 'Bạn không có quyền xem hóa đơn này.');
         }

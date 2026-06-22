@@ -6,7 +6,7 @@
 <div class="space-y-6">
     {{-- Welcome Banner --}}
     <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-white">
-        <h2 class="text-xl font-bold">Xin chào, {{ auth()->user()->name }}!</h2>
+        <h2 class="text-xl font-bold">Xin chào, {{ $cuDan?->name ?? auth('cudan')->user()?->name }}!</h2>
         <p class="text-emerald-100 text-sm mt-1">
             @if($cuDan && $canHo)
                 Căn hộ <strong class="text-white">{{ $canHo->so_can_ho }}</strong> — {{ $canHo->toaNha?->ten_toa_nha }}
@@ -73,7 +73,7 @@
                     <div class="w-2 h-2 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0"></div>
                     <div>
                         <p class="text-sm font-medium text-gray-800">{{ $tb->tieu_de }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">{{ $tb->created_at->diffForHumans() }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ $tb->created_at?->diffForHumans() }}</p>
                     </div>
                 </a>
                 @empty

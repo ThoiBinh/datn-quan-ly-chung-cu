@@ -53,10 +53,10 @@
                     {{ $yc->trang_thai == 1 ? 'bg-blue-400' : 'bg-amber-400' }}"></div>
                 <div class="min-w-0">
                     <p class="text-sm text-gray-700 truncate">{{ $yc->tieu_de }}</p>
-                    <p class="text-xs text-gray-400">{{ $yc->cuDan?->ho_ten }} · {{ $yc->created_at->diffForHumans() }}</p>
+                    <p class="text-xs text-gray-400">{{ $yc->cuDan?->ho_ten }} · {{ $yc->created_at?->diffForHumans() }}</p>
                 </div>
-                <span class="text-xs px-1.5 py-0.5 rounded {{ $yc->muc_do_uu_tien == 3 ? 'bg-red-100 text-red-600' : ($yc->muc_do_uu_tien == 2 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-600') }} flex-shrink-0">
-                    {{ $yc->muc_do_label }}
+                <span class="text-xs px-1.5 py-0.5 rounded {{ $yc->muc_do_label['class'] }} flex-shrink-0">
+                    {{ $yc->muc_do_label['text'] }}
                 </span>
             </a>
             @empty

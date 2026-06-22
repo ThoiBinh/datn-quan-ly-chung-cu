@@ -73,10 +73,10 @@
         <div class="p-3 border-t border-white/10">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    {{ strtoupper(substr(auth('nhanvien')->user()->name, 0, 1)) }}
                 </div>
                 <div x-show="sidebarOpen" class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-white truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-sm font-medium text-white truncate">{{ auth('nhanvien')->user()->name }}</p>
                     <p class="text-xs text-indigo-300">Ban quản lý</p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" x-show="sidebarOpen">

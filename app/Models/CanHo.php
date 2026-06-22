@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class CanHo extends Model
 {
     protected $table = 'can_ho';
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
     protected $fillable = [
-        'toa_nha', 'tinh_trang_so_huu', 'so_can_ho', 'tang',
-        'dien_tich', 'trang_thai', 'gia', 'loai_can_ho',
+        'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho', 'nguoi_cap_nhat',
     ];
 
     protected $casts = [
-        'dien_tich' => 'decimal:2',
         'gia' => 'decimal:2',
     ];
 
@@ -45,7 +45,7 @@ class CanHo extends Model
     public function phiDichVu()
     {
         return $this->belongsToMany(PhiDichVu::class, 'can_ho_phi_dich_vu', 'can_ho', 'phi_dich_vu')
-            ->withPivot('don_gia')->withTimestamps();
+            ->withPivot('don_gia')->withTimestamps('createdAt', 'updatedAt');
     }
 
     public function phuongTien()
@@ -58,14 +58,9 @@ class CanHo extends Model
         return $this->hasMany(HoaDon::class, 'can_ho');
     }
 
-    public function hopDong()
-    {
-        return $this->hasMany(HopDong::class, 'can_ho');
-    }
-
     public function thuocTinh()
     {
         return $this->belongsToMany(ThuocTinh::class, 'thuoc_tinh_can_ho', 'can_ho', 'thuoc_tinh')
-            ->withPivot('gia_tri_thuoc_tinh')->withTimestamps();
+            ->withPivot('gia_tri_thuoc_tinh', 'kieu_du_lieu')->withTimestamps('createdAt', 'updatedAt');
     }
 }

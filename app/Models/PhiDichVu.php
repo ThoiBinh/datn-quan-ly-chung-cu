@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class PhiDichVu extends Model
 {
     protected $table = 'phi_dich_vu';
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
     protected $fillable = [
-        'loai_phi_dich_vu', 'ten_phi_dich_vu', 'don_gia', 'don_vi_tinh', 'loai_tinh_phi',
+        'loai_phi_dich_vu', 'ten_phi_dich_vu', 'don_gia', 'don_vi_tinh', 'loai_tinh_phi', 'nguoi_cap_nhat',
     ];
 
     protected $casts = ['don_gia' => 'decimal:2'];
@@ -31,6 +33,6 @@ class PhiDichVu extends Model
     public function canHo()
     {
         return $this->belongsToMany(CanHo::class, 'can_ho_phi_dich_vu', 'phi_dich_vu', 'can_ho')
-            ->withPivot('don_gia')->withTimestamps();
+            ->withPivot('don_gia')->withTimestamps('createdAt', 'updatedAt');
     }
 }

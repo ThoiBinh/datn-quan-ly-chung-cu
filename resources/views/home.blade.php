@@ -27,18 +27,18 @@
                 <a href="#lien-he" class="text-sm text-gray-600 hover:text-emerald-600 font-medium">Liên hệ</a>
             </div>
             <div class="hidden md:flex items-center gap-3">
-                @auth
-                    @if(auth()->user()->isAdmin())
+                @if(auth('nhanvien')->check())
+                    @if(auth('nhanvien')->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Dashboard</a>
-                    @elseif(auth()->user()->isManager())
-                        <a href="{{ route('manager.dashboard') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Dashboard</a>
                     @else
-                        <a href="{{ route('resident.dashboard') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Cổng cư dân</a>
+                        <a href="{{ route('manager.dashboard') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Dashboard</a>
                     @endif
+                @elseif(auth('cudan')->check())
+                    <a href="{{ route('resident.dashboard') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Cổng cư dân</a>
                 @else
                     <a href="{{ route('login') }}" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Đăng nhập</a>
                     <a href="{{ route('login') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Bắt đầu</a>
-                @endauth
+                @endif
             </div>
             <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2 rounded-lg text-gray-600">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>

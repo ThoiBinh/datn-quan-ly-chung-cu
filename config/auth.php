@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-
 return [
 
     /*
@@ -72,15 +70,15 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
-        ],
-        'nhanvien' => [
-            'driver' => 'eloquent',
             'model' => App\Models\NhanVien::class,
         ],
+        'nhanvien' => [
+            'driver' => 'nhanvien-eloquent',   // handles legacy bcrypt → PBKDF2 upgrade
+            'model'  => App\Models\NhanVien::class,
+        ],
         'cudan' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\CuDan::class,
+            'driver' => 'cudan-eloquent',      // PBKDF2 native via Pbkdf2Hasher
+            'model'  => App\Models\CuDan::class,
         ],
     ],
 

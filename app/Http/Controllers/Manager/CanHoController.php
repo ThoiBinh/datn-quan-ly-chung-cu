@@ -47,22 +47,21 @@ class CanHoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'toa_nha'    => 'required|exists:toa_nha,id',
-            'so_can_ho'  => 'required|string|max:50',
-            'tang'       => 'required|integer|min:1',
-            'dien_tich'  => 'nullable|numeric|min:0',
-            'gia'        => 'nullable|numeric|min:0',
-            'loai_can_ho' => 'nullable|exists:loai_can_ho,id',
-            'trang_thai' => 'required|exists:trang_thai_can_ho,id',
+            'toa_nha'     => 'required|exists:toa_nha,id',
+            'so_can_ho'   => 'required|string|max:50',
+            'tang'        => 'required|integer|min:1',
+            'gia'         => 'nullable|numeric|min:0',
+            'loai_can_ho' => 'required|exists:loai_can_ho,id',
+            'trang_thai'  => 'required|exists:trang_thai_can_ho,id',
         ], [
-            'toa_nha.required'   => 'Vui lòng chọn tòa nhà.',
-            'so_can_ho.required' => 'Vui lòng nhập số căn hộ.',
-            'tang.required'      => 'Vui lòng nhập tầng.',
+            'toa_nha.required'    => 'Vui lòng chọn tòa nhà.',
+            'so_can_ho.required'  => 'Vui lòng nhập số căn hộ.',
+            'tang.required'       => 'Vui lòng nhập tầng.',
+            'loai_can_ho.required' => 'Vui lòng chọn loại căn hộ.',
         ]);
 
         $canHo = CanHo::create($request->only(
-            'toa_nha', 'tinh_trang_so_huu', 'so_can_ho', 'tang',
-            'dien_tich', 'trang_thai', 'gia', 'loai_can_ho'
+            'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho'
         ));
 
         AuditLogService::log('INSERT', 'can_ho', $canHo->id, null, $canHo->toArray());
@@ -86,18 +85,17 @@ class CanHoController extends Controller
     public function update(Request $request, CanHo $canHo)
     {
         $request->validate([
-            'toa_nha'    => 'required|exists:toa_nha,id',
-            'so_can_ho'  => 'required|string|max:50',
-            'tang'       => 'required|integer|min:1',
-            'dien_tich'  => 'nullable|numeric|min:0',
-            'gia'        => 'nullable|numeric|min:0',
-            'trang_thai' => 'required|exists:trang_thai_can_ho,id',
+            'toa_nha'     => 'required|exists:toa_nha,id',
+            'so_can_ho'   => 'required|string|max:50',
+            'tang'        => 'required|integer|min:1',
+            'gia'         => 'nullable|numeric|min:0',
+            'loai_can_ho' => 'required|exists:loai_can_ho,id',
+            'trang_thai'  => 'required|exists:trang_thai_can_ho,id',
         ]);
 
         $old = $canHo->toArray();
         $canHo->update($request->only(
-            'toa_nha', 'tinh_trang_so_huu', 'so_can_ho', 'tang',
-            'dien_tich', 'trang_thai', 'gia', 'loai_can_ho'
+            'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho'
         ));
 
         AuditLogService::log('UPDATE', 'can_ho', $canHo->id, $old, $canHo->fresh()->toArray());

@@ -3,54 +3,41 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
-use App\Models\CuDan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
     public function show()
     {
-        $user = auth()->user();
-        $cuDan = $user->cuDan;
-        return view('resident.profile.show', compact('user', 'cuDan'));
+        $cuDan = auth('cudan')->user();
+        $canHo = $cuDan?->canHoHienTai?->canHo;
+        return view('resident.profile.show', compact('cuDan', 'canHo'));
     }
 
     public function edit()
     {
-        $user = auth()->user();
-        $cuDan = $user->cuDan;
-        return view('resident.profile.edit', compact('user', 'cuDan'));
+        $cuDan = auth('cudan')->user();
+        return view('resident.profile.edit', compact('cuDan'));
     }
 
     public function update(Request $request)
     {
-        $user = auth()->user();
+        $cuDan = auth('cudan')->user();
 
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'avatar' => 'nullable|image|max:2048',
+            'ho_ten_dem' => 'nullable|string|max:255',
+            'ten'        => 'nullable|string|max:100',
+            'sdt'        => 'nullable|string|max:20',
+            'dia_chi'    => 'nullable|string|max:500',
+            'tinh'       => 'nullable|string|max:100',
         ]);
 
-        $data = $request->only('name', 'phone');
+        $data = $request->only('ho_ten_dem', 'ten', 'sdt', 'dia_chi', 'tinh');
+        $data = array_filter($data, fn($v) => $v !== null);
 
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
-
-        $user->update($data);
-
-        if ($user->cuDan) {
-            $cuDan = $user->cuDan;
-            $cuDanData = [];
-            if ($request->filled('sdt')) $cuDanData['sdt'] = $request->sdt;
-            if ($request->filled('que_quan')) $cuDanData['que_quan'] = $request->que_quan;
-            if (!empty($cuDanData)) $cuDan->update($cuDanData);
-        }
+        $cuDan->update($data);
 
         return redirect()->route('resident.profile.show')->with('success', 'Cập nhật hồ sơ thành công.');
     }

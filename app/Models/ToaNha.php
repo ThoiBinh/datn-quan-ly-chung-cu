@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class ToaNha extends Model
 {
     protected $table = 'toa_nha';
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
     protected $fillable = ['ten_toa_nha', 'dia_chi', 'so_tang'];
 
     public function canHo()

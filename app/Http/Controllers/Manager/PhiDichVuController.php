@@ -23,7 +23,7 @@ class PhiDichVuController extends Controller
             $query->where('loai_phi_dich_vu', $request->loai);
         }
 
-        $phiDichVu = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $phiDichVu = $query->orderByDesc('createdAt')->paginate(15)->withQueryString();
         $loaiPhiDichVu = LoaiPhiDichVu::all();
         return view('manager.phi-dich-vu.index', compact('phiDichVu', 'loaiPhiDichVu'));
     }

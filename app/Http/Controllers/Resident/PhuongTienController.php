@@ -11,7 +11,7 @@ class PhuongTienController extends Controller
 {
     private function getCanHoId(): ?int
     {
-        return auth()->user()->cuDan?->canHoHienTai?->can_ho;
+        return auth('cudan')->user()?->canHoHienTai?->can_ho;
     }
 
     public function index()

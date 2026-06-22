@@ -16,27 +16,25 @@
                 <input type="text" name="tieu_de" value="{{ old('tieu_de') }}" required placeholder="Mô tả ngắn gọn vấn đề..."
                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Loại yêu cầu <span class="text-red-500">*</span></label>
-                    <select name="loai_yeu_cau" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="">-- Chọn loại --</option>
-                        <option value="sua_chua" {{ old('loai_yeu_cau') == 'sua_chua' ? 'selected' : '' }}>Sửa chữa</option>
-                        <option value="khieu_nai" {{ old('loai_yeu_cau') == 'khieu_nai' ? 'selected' : '' }}>Khiếu nại</option>
-                        <option value="de_nghi" {{ old('loai_yeu_cau') == 'de_nghi' ? 'selected' : '' }}>Đề nghị</option>
-                        <option value="ho_tro" {{ old('loai_yeu_cau') == 'ho_tro' ? 'selected' : '' }}>Hỗ trợ</option>
-                        <option value="khac" {{ old('loai_yeu_cau') == 'khac' ? 'selected' : '' }}>Khác</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mức độ ưu tiên</label>
-                    <select name="muc_do" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="1" {{ old('muc_do', '1') == '1' ? 'selected' : '' }}>Thấp</option>
-                        <option value="2" {{ old('muc_do') == '2' ? 'selected' : '' }}>Trung bình</option>
-                        <option value="3" {{ old('muc_do') == '3' ? 'selected' : '' }}>Cao</option>
-                        <option value="4" {{ old('muc_do') == '4' ? 'selected' : '' }}>Khẩn cấp</option>
-                    </select>
-                </div>
+            @if($loaiYeuCau->isNotEmpty())
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Loại yêu cầu</label>
+                <select name="loai_yeu_cau" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="">-- Chọn loại yêu cầu --</option>
+                    @foreach($loaiYeuCau as $loai)
+                    <option value="{{ $loai->id }}" {{ old('loai_yeu_cau') == $loai->id ? 'selected' : '' }}>{{ $loai->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mức độ ưu tiên</label>
+                <select name="muc_do" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="1" {{ old('muc_do', '1') == '1' ? 'selected' : '' }}>Thấp</option>
+                    <option value="2" {{ old('muc_do') == '2' ? 'selected' : '' }}>Trung bình</option>
+                    <option value="3" {{ old('muc_do') == '3' ? 'selected' : '' }}>Cao</option>
+                    <option value="4" {{ old('muc_do') == '4' ? 'selected' : '' }}>Khẩn cấp</option>
+                </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nội dung chi tiết <span class="text-red-500">*</span></label>

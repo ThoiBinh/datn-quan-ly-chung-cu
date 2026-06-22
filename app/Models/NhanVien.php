@@ -2,35 +2,83 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class NhanVien extends Authenticatable
 {
     protected $table = 'nhan_vien';
 
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
+
     protected $fillable = [
-        'ho_ten', 'chuc_vu', 'sdt', 'email', 'mat_khau',
+        'ho_ten', 'chuc_vu', 'sdt', 'email',
+        // mat_khau: PBKDF2-SHA256, 100,000 iterations, 16-byte salt, 32-byte key via Hash::make().
+        // Legacy bcrypt hashes ($2y$12$...) are auto-upgraded to PBKDF2 on first login
+        // via App\Auth\NhanVienUserProvider::validateCredentials().
+        'mat_khau',
         'trang_thai', 'ma_nhan_vien', 'cccd',
+        'ngay_sinh', 'ngay_vao_lam', 'ngay_nghi_lam', 'ghi_chu', 'nguoi_cap_nhat',
     ];
 
-    protected $hidden = ['mat_khau', 'remember_token'];
+    protected $hidden = ['mat_khau'];
 
-    // Ánh xạ field password cho Laravel Auth
-    public function getAuthPassword()
+    protected $rememberTokenName = null;
+
+    protected $casts = [
+        'ngay_sinh'    => 'datetime',
+        'ngay_vao_lam' => 'datetime',
+        'ngay_nghi_lam' => 'datetime',
+    ];
+
+    public function getAuthPassword(): string
     {
         return $this->mat_khau;
     }
 
-    // Xác định vai trò dựa vào chuc_vu
+    public function getNameAttribute(): string
+    {
+        return $this->ho_ten;
+    }
+
     public function getVaitroAttribute(): string
     {
-        // chuc_vu id=3 là Admin, còn lại là manager
-        return $this->chuc_vu == 3 ? 'admin' : 'manager';
+        return $this->isAdmin() ? 'admin' : 'manager';
+    }
+
+    public function getRoleAttribute(): string
+    {
+        return $this->vaitro;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->chucVu?->chuc_vu === 'Admin';
+    }
+
+    // Accessor để view dùng $user->status hoạt động như với User model
+    public function getStatusAttribute(): string
+    {
+        return $this->trang_thai == 1 ? 'active' : 'inactive';
+    }
+
+    // Alias phone → sdt
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->sdt;
     }
 
     public function isActive(): bool
     {
         return $this->trang_thai == 1;
+    }
+
+    public function getCreatedAtAttribute(): ?Carbon
+    {
+        return isset($this->attributes['createdAt']) && $this->attributes['createdAt']
+            ? Carbon::parse($this->attributes['createdAt'])
+            : null;
     }
 
     public function chucVu()

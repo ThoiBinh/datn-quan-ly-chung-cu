@@ -40,13 +40,13 @@
                     <td class="px-5 py-4 font-medium text-gray-800">{{ $yc->tieu_de }}</td>
                     <td class="px-5 py-4 text-gray-600">{{ $yc->cuDan?->ho_ten }}</td>
                     <td class="px-5 py-4">
-                        <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $yc->muc_do_uu_tien == 3 ? 'bg-red-100 text-red-700' : ($yc->muc_do_uu_tien == 2 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600') }}">
-                            {{ $yc->muc_do_label }}
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $yc->muc_do_label['class'] }}">
+                            {{ $yc->muc_do_label['text'] }}
                         </span>
                     </td>
                     <td class="px-5 py-4">
-                        <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $yc->trang_thai == 3 ? 'bg-green-100 text-green-700' : ($yc->trang_thai == 1 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700') }}">
-                            {{ $yc->trang_thai_label }}
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $yc->trang_thai_label['class'] }}">
+                            {{ $yc->trang_thai_label['text'] }}
                         </span>
                     </td>
                     <td class="px-5 py-4 text-xs text-gray-500">{{ $yc->created_at->format('d/m/Y H:i') }}</td>
