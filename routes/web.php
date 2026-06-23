@@ -28,8 +28,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('users/{type}/{id}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status')->where('type', 'nhan-vien|cu-dan');
     Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
-    // Admin cũng có quyền quản lý tòa nhà
-    Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class);
+    // Quản lý tòa nhà
+    Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class)->except(['destroy']);
+
+    // Quản lý căn hộ
+    Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class)->except(['destroy']);
 
     // Quản lý nhân viên
     Route::resource('nhan-vien', \App\Http\Controllers\Admin\NhanVienController::class)
@@ -44,6 +47,20 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['cu-dan' => 'cuDan']);
     Route::patch('cu-dan/{cuDan}/toggle-status', [\App\Http\Controllers\Admin\CuDanController::class, 'toggleStatus'])
         ->name('cu-dan.toggle-status');
+
+    // Quản lý phương tiện
+    Route::resource('phuong-tien', \App\Http\Controllers\Admin\PhuongTienController::class)
+        ->except(['destroy'])
+        ->parameters(['phuong-tien' => 'phuongTien']);
+    Route::patch('phuong-tien/{phuongTien}/toggle-status', [\App\Http\Controllers\Admin\PhuongTienController::class, 'toggleStatus'])
+        ->name('phuong-tien.toggle-status');
+
+    // Quản lý hóa đơn
+    Route::resource('hoa-don', \App\Http\Controllers\Admin\HoaDonController::class)
+        ->except(['destroy'])
+        ->parameters(['hoa-don' => 'hoaDon']);
+    Route::patch('hoa-don/{hoaDon}/toggle-status', [\App\Http\Controllers\Admin\HoaDonController::class, 'toggleStatus'])
+        ->name('hoa-don.toggle-status');
 });
 
 // ==================== MANAGER ====================

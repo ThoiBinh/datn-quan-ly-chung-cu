@@ -2,6 +2,7 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source inline("bg-amber-500 hover:bg-amber-600 bg-amber-100 text-amber-500 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 bg-emerald-500 hover:bg-emerald-600 bg-emerald-50 bg-emerald-100 text-emerald-500 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 bg-red-500 hover:bg-red-600 bg-red-50 bg-red-100 text-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-white text-gray-900");
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',

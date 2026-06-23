@@ -55,16 +55,19 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Chỉnh sửa
             </a>
+            @if($isActive)
             <button type="button" @click="confirmToggle = true"
-                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors {{ $isActive ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white">
-                @if($isActive)
+                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-amber-500 hover:bg-amber-600 text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 Khóa tài khoản
-                @else
+            </button>
+            @else
+            <button type="button" @click="confirmToggle = true"
+                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-emerald-500 hover:bg-emerald-600 text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
                 Mở khóa
-                @endif
             </button>
+            @endif
             <a href="{{ route('admin.cu-dan.index') }}"
                class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -127,84 +130,79 @@
     </div>
 
     <!-- Modal xác nhận toggle -->
+    <template x-teleport="body">
     <div x-show="confirmToggle"
-         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"  x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in  duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-         @click.self="confirmToggle = false" style="display:none">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+         @click.self="confirmToggle = false">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden" @click.stop>
 
-            <!-- Header màu -->
-            <div class="px-6 pt-6 pb-8 text-white {{ $isActive ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500' }}">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                        @if($isActive)
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        @else
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
-                        </svg>
-                        @endif
-                    </div>
-                    <button @click="confirmToggle = false" type="button"
-                            class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/25 flex items-center justify-center transition-colors">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                <h3 class="text-lg font-bold text-white">{{ $isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}</h3>
-                <p class="text-sm text-white/75 mt-1">{{ $isActive ? 'Tài khoản sẽ bị vô hiệu hóa' : 'Tài khoản sẽ được kích hoạt lại' }}</p>
+            <!-- Close -->
+            <div class="flex justify-end px-4 pt-4">
+                <button @click="confirmToggle = false" type="button"
+                        class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
 
-            <!-- Body -->
-            <div class="px-6 py-5">
-                <!-- User info -->
-                <div class="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 dark:bg-slate-700/60 border border-gray-100 dark:border-slate-600 mb-5">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-sm font-bold text-emerald-700 dark:text-emerald-400 flex-shrink-0">
-                        {{ mb_strtoupper(mb_substr($hoTen, 0, 1)) }}
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wide">Cư dân</p>
-                        <p class="font-semibold text-gray-800 dark:text-white truncate">{{ $hoTen }}</p>
-                    </div>
-                </div>
-
-                <!-- Warning -->
-                <div class="flex items-start gap-2.5 p-3.5 rounded-xl border text-sm
-                    {{ $isActive ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800' : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' }}">
-                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 {{ $isActive ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400' }}"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <!-- Icon + title -->
+            <div class="px-6 pt-2 pb-5 text-center">
+                @if($isActive)
+                <div class="bg-amber-100 dark:bg-amber-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
-                    <p class="{{ $isActive ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400' }}">
-                        {{ $isActive
-                            ? 'Cư dân sẽ không thể đăng nhập vào hệ thống sau khi bị khóa.'
-                            : 'Cư dân sẽ có thể đăng nhập và sử dụng hệ thống sau khi mở khóa.' }}
-                    </p>
                 </div>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Khóa tài khoản</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Tài khoản sẽ bị vô hiệu hóa, không thể đăng nhập.</p>
+                @else
+                <div class="bg-emerald-100 dark:bg-emerald-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Mở khóa tài khoản</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Tài khoản sẽ được kích hoạt, có thể đăng nhập trở lại.</p>
+                @endif
+            </div>
 
-                <!-- Buttons -->
-                <div class="flex gap-3 mt-5">
-                    <button @click="confirmToggle = false" type="button"
-                            class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                        Hủy bỏ
-                    </button>
-                    <form :action="confirmAction" method="POST" class="flex-1">
-                        @csrf @method('PATCH')
-                        <button type="submit"
-                                class="w-full py-2.5 text-white text-sm font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2
-                                    {{ $isActive ? 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-300' : 'bg-emerald-500 hover:bg-emerald-600 focus:ring-emerald-300' }}">
-                            {{ $isActive ? 'Khóa tài khoản' : 'Mở khóa' }}
-                        </button>
-                    </form>
+            <!-- User info -->
+            <div class="mx-6 mb-5 flex items-center gap-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl px-4 py-3 border border-gray-100 dark:border-slate-600">
+                @if($isActive)
+                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                @else
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                @endif
+                    {{ mb_strtoupper(mb_substr($hoTen, 0, 1)) }}
                 </div>
+                <div class="min-w-0">
+                    <p class="text-xs text-gray-400 dark:text-slate-500">Cư dân</p>
+                    <p class="text-sm font-semibold text-gray-800 dark:text-white truncate">{{ $hoTen }}</p>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-3 px-6 pb-6">
+                <button @click="confirmToggle = false" type="button"
+                        class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                    Hủy bỏ
+                </button>
+                <form :action="confirmAction" method="POST" class="flex-1">
+                    @csrf @method('PATCH')
+                    @if($isActive)
+                    <button type="submit" class="block w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-sm font-semibold rounded-xl transition-colors">
+                        Khóa tài khoản
+                    </button>
+                    @else
+                    <button type="submit" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
+                        Mở khóa
+                    </button>
+                    @endif
+                </form>
             </div>
         </div>
     </div>
+    </template>
 </div>
 @endsection

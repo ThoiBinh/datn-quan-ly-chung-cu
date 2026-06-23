@@ -225,49 +225,80 @@
     @endif
 
     <!-- Modal xác nhận toggle status -->
+    <template x-teleport="body">
     <div x-show="confirmToggle"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-         @click.self="confirmToggle = false"
-         style="display:none">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+         @click.self="confirmToggle = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden" @click.stop>
+
+            <!-- Close -->
+            <div class="flex justify-end px-4 pt-4">
+                <button @click="confirmToggle = false" type="button"
+                        class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Icon + title -->
+            <div class="px-6 pt-2 pb-5 text-center">
+                @if($isActive)
+                <div class="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-gray-800">Xác nhận thay đổi trạng thái</h3>
-                    <p class="text-sm text-gray-500 mt-0.5">
-                        {{ $isActive ? 'Khóa' : 'Mở khóa' }} tài khoản <span class="font-medium text-gray-700">{{ $hoTen }}</span>?
-                    </p>
+                <h3 class="text-base font-bold text-gray-900">Khóa tài khoản</h3>
+                <p class="text-sm text-gray-500 mt-1">Tài khoản sẽ bị vô hiệu hóa, không thể đăng nhập.</p>
+                @else
+                <div class="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900">Mở khóa tài khoản</h3>
+                <p class="text-sm text-gray-500 mt-1">Tài khoản sẽ được kích hoạt, có thể đăng nhập trở lại.</p>
+                @endif
+            </div>
+
+            <!-- User info -->
+            <div class="mx-6 mb-5 flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                @if($isActive)
+                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                @else
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                @endif
+                    {{ mb_strtoupper(mb_substr($hoTen, 0, 1)) }}
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs text-gray-400">{{ $loai }}</p>
+                    <p class="text-sm font-semibold text-gray-800 truncate">{{ $hoTen }}</p>
                 </div>
             </div>
-            <div class="flex gap-3 justify-end">
+
+            <!-- Buttons -->
+            <div class="flex gap-3 px-6 pb-6">
                 <button @click="confirmToggle = false" type="button"
-                        class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                    Hủy
+                        class="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                    Hủy bỏ
                 </button>
-                <form :action="confirmAction" method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit"
-                            class="px-4 py-2 {{ $isActive ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white text-sm font-medium rounded-lg transition-colors">
-                        Xác nhận
+                <form :action="confirmAction" method="POST" class="flex-1">
+                    @csrf @method('PATCH')
+                    @if($isActive)
+                    <button type="submit" class="block w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-sm font-semibold rounded-xl transition-colors">
+                        Khóa tài khoản
                     </button>
+                    @else
+                    <button type="submit" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
+                        Mở khóa
+                    </button>
+                    @endif
                 </form>
             </div>
         </div>
     </div>
+    </template>
 
 </div>
 @endsection

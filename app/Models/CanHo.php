@@ -63,4 +63,12 @@ class CanHo extends Model
         return $this->belongsToMany(ThuocTinh::class, 'thuoc_tinh_can_ho', 'can_ho', 'thuoc_tinh')
             ->withPivot('gia_tri_thuoc_tinh', 'kieu_du_lieu')->withTimestamps('createdAt', 'updatedAt');
     }
+
+    public function chuHo()
+    {
+        return $this->hasOne(CuDanCanHo::class, 'can_ho')
+            ->whereHas('vaiTro', fn($q) => $q->where('vai_tro', 'Chủ hộ'))
+            ->where('cu_dan_can_ho.trang_thai', 1)
+            ->with(['cuDan', 'vaiTro']);
+    }
 }
