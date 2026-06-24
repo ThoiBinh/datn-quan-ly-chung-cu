@@ -43,6 +43,8 @@
                     ['route' => 'manager.hoa-don.index', 'label' => 'Hóa đơn', 'icon' => 'invoice'],
                     ['route' => 'manager.yeu-cau.index', 'label' => 'Phản ánh', 'icon' => 'chat'],
                     ['route' => 'manager.thong-bao.index', 'label' => 'Thông báo', 'icon' => 'bell'],
+                    ['route' => 'manager.bang-tin.index', 'label' => 'Bảng tin', 'icon' => 'news'],
+                    ['route' => 'manager.cau-hinh-thanh-toan.index', 'label' => 'Cấu hình TT', 'icon' => 'payment'],
                     ['route' => 'manager.users.index', 'label' => 'Tài khoản', 'icon' => 'user-manage'],
                 ];
                 $icons = [
@@ -55,6 +57,8 @@
                     'invoice'   => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
                     'chat'      => 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
                     'bell'        => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+                    'news'        => 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
+                    'payment'     => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
                     'user-manage' => 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z',
                 ];
             @endphp
@@ -127,5 +131,6 @@
     </div>
 </div>
 
+@stack('scripts')
 </body>
 </html>

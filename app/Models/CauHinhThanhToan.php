@@ -13,4 +13,9 @@ class CauHinhThanhToan extends Model
         'loai_phuong_thuc', 'ten_nha_cung_cap', 'dinh_danh_thu_huong',
         'ma_nhan_dien', 'ten_chu_tai_khoan', 'trang_thai', 'nguoi_cap_nhat',
     ];
+
+    public function nguoiCapNhat()
+    {
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+    }
 }
