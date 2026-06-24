@@ -74,26 +74,48 @@ class PhuongTienController extends Controller
     }
 
     public function update(Request $request, PhuongTien $phuongTien)
-    {
-        $request->validate([
-            'bien_so'          => 'required|string|max:50|unique:phuong_tien,bien_so,' . $phuongTien->id,
-            'loai_phuong_tien' => 'required|exists:loai_phuong_tien,id',
-            'can_ho'           => 'required|exists:can_ho,id',
-        ], [
-            'bien_so.required'          => 'Vui lòng nhập biển số xe.',
-            'bien_so.unique'            => 'Biển số xe đã tồn tại.',
-            'loai_phuong_tien.required' => 'Vui lòng chọn loại phương tiện.',
-            'loai_phuong_tien.exists'   => 'Loại phương tiện không hợp lệ.',
-            'can_ho.required'           => 'Vui lòng chọn căn hộ.',
-            'can_ho.exists'             => 'Căn hộ không hợp lệ.',
-        ]);
+{
+    $request->validate([
+        'bien_so'          => 'required|string|max:50|unique:phuong_tien,bien_so,' . $phuongTien->id,
+        'loai_phuong_tien' => 'required|exists:loai_phuong_tien,id',
+        'can_ho'           => 'required|exists:can_ho,id',
+        'trang_thai'       => 'required|in:0,1',
+    ], [
+        'bien_so.required'          => 'Vui lòng nhập biển số xe.',
+        'bien_so.unique'            => 'Biển số xe đã tồn tại.',
+        'loai_phuong_tien.required' => 'Vui lòng chọn loại phương tiện.',
+        'loai_phuong_tien.exists'   => 'Loại phương tiện không hợp lệ.',
+        'can_ho.required'           => 'Vui lòng chọn căn hộ.',
+        'can_ho.exists'             => 'Căn hộ không hợp lệ.',
+    ]);
 
-        $old = $phuongTien->toArray();
-        $phuongTien->update($request->only('ten_phuong_tien', 'bien_so', 'loai_phuong_tien', 'can_ho', 'ngay_dang_ky', 'trang_thai'));
-        AuditLogService::log('UPDATE', 'phuong_tien', $phuongTien->id, $old, $phuongTien->fresh()->toArray());
+    $old = $phuongTien->toArray();
 
-        return redirect()->route('manager.phuong-tien.index')->with('success', 'Cập nhật phương tiện thành công.');
-    }
+    $data = $request->only([
+        'ten_phuong_tien',
+        'loai_phuong_tien',
+        'can_ho',
+        'ngay_dang_ky',
+        'trang_thai',
+    ]);
+
+    $data['bien_so'] = strtoupper(trim($request->bien_so));
+    $data['nguoi_cap_nhat'] = auth('nhanvien')->id();
+
+    $phuongTien->update($data);
+
+    AuditLogService::log(
+        'UPDATE',
+        'phuong_tien',
+        $phuongTien->id,
+        $old,
+        $phuongTien->fresh()->toArray()
+    );
+
+    return redirect()
+        ->route('manager.phuong-tien.index')
+        ->with('success', 'Cập nhật phương tiện thành công.');
+}
 
     public function destroy(PhuongTien $phuongTien)
     {
