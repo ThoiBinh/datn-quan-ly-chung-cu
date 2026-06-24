@@ -67,6 +67,14 @@
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 <span x-show="sidebarOpen" class="truncate">Căn hộ</span>
             </a>
+            <a href="{{ route('admin.cu-dan-can-ho.index') }}"
+   class="sidebar-link {{ request()->routeIs('admin.cu-dan-can-ho.*') ? 'active' : 'text-slate-300' }}">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 7h18M5 7v12a2 2 0 002 2h10a2 2 0 002-2V7M9 11h6M9 15h4"/>
+    </svg>
+    <span x-show="sidebarOpen" class="truncate">Cư dân - Căn hộ</span>
+</a>
             <a href="{{ route('admin.phuong-tien.index') }}" class="sidebar-link {{ request()->routeIs('admin.phuong-tien.*') ? 'active' : 'text-slate-300' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                 <span x-show="sidebarOpen" class="truncate">Phương tiện</span>
