@@ -30,4 +30,9 @@ class ThongBao extends Model
     {
         return $this->belongsTo(NhanVien::class, 'nguoi_tao');
     }
+
+    public function daDoc()
+    {
+        return $this->hasMany(ThongBaoDaDoc::class, 'thong_bao_id');
+    }
 }

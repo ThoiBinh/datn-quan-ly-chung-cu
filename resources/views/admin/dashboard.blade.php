@@ -108,7 +108,7 @@
             @endforelse
         </div>
         @if(count($yeuCauMoi))
-        <a href="{{ route('manager.yeu-cau.index') }}" class="block text-center text-sm text-blue-600 hover:text-blue-700 mt-4">Xem tất cả →</a>
+        <a href="{{ route('admin.yeu-cau.index') }}" class="block text-center text-sm text-blue-600 hover:text-blue-700 mt-4">Xem tất cả →</a>
         @endif
     </div>
 </div>

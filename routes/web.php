@@ -5,7 +5,9 @@ use App\Http\Controllers\Auth\PasswordController;
 use Illuminate\Support\Facades\Route;
 
 // Trang chủ
-Route::get('/', fn() => view('home'))->name('home');
+Route::get('/', fn() => view('home', [
+    'dsBangTin' => \App\Models\BangTin::latest()->get(),
+]))->name('home');
 
 // Auth
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -61,6 +63,48 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['hoa-don' => 'hoaDon']);
     Route::patch('hoa-don/{hoaDon}/toggle-status', [\App\Http\Controllers\Admin\HoaDonController::class, 'toggleStatus'])
         ->name('hoa-don.toggle-status');
+
+    // Quản lý phí dịch vụ căn hộ
+    Route::resource('can-ho-phi-dich-vu', \App\Http\Controllers\Admin\CanHoPhiDichVuController::class)
+        ->except(['destroy'])
+        ->parameters(['can-ho-phi-dich-vu' => 'canHoPhiDichVu']);
+
+    // Quản lý thông báo
+    Route::resource('thong-bao', \App\Http\Controllers\Admin\ThongBaoController::class)
+        ->except(['destroy'])
+        ->parameters(['thong-bao' => 'thongBao']);
+    Route::patch('thong-bao/{thongBao}/toggle-hide', [\App\Http\Controllers\Admin\ThongBaoController::class, 'toggleHide'])
+        ->name('thong-bao.toggle-hide');
+    Route::patch('thong-bao/{id}/restore', [\App\Http\Controllers\Admin\ThongBaoController::class, 'restore'])
+        ->name('thong-bao.restore');
+
+    // Quản lý bảng tin
+    Route::resource('bang-tin', \App\Http\Controllers\Admin\BangTinController::class)
+        ->except(['destroy'])
+        ->parameters(['bang-tin' => 'bangTin']);
+    Route::patch('bang-tin/{bangTin}/toggle-hide', [\App\Http\Controllers\Admin\BangTinController::class, 'toggleHide'])
+        ->name('bang-tin.toggle-hide');
+    Route::patch('bang-tin/{id}/restore', [\App\Http\Controllers\Admin\BangTinController::class, 'restore'])
+        ->name('bang-tin.restore');
+
+    // Quản lý cấu hình thanh toán
+    Route::resource('cau-hinh-thanh-toan', \App\Http\Controllers\Admin\CauHinhThanhToanController::class)
+        ->except(['destroy'])
+        ->parameters(['cau-hinh-thanh-toan' => 'cauHinhThanhToan']);
+    Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Admin\CauHinhThanhToanController::class, 'toggleStatus'])
+        ->name('cau-hinh-thanh-toan.toggle-status');
+
+    // Quản lý yêu cầu cư dân
+    Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
+        ->only(['index', 'show', 'update'])
+        ->parameters(['yeu-cau' => 'yeuCau']);
+
+    // Quản lý cư dân căn hộ
+    Route::resource('cu-dan-can-ho', \App\Http\Controllers\Admin\CuDanCanHoController::class)
+        ->except(['destroy'])
+        ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
+    Route::patch('cu-dan-can-ho/{cuDanCanHo}/toggle-status', [\App\Http\Controllers\Admin\CuDanCanHoController::class, 'toggleStatus'])
+        ->name('cu-dan-can-ho.toggle-status');
 });
 
 // ==================== MANAGER ====================
@@ -74,9 +118,38 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class);
     Route::post('hoa-don/{hoaDon}/ghi-nhan-thanh-toan', [\App\Http\Controllers\Manager\HoaDonController::class, 'ghiNhanThanhToan'])->name('hoa-don.ghi-nhan-thanh-toan');
     Route::resource('yeu-cau', \App\Http\Controllers\Manager\YeuCauController::class)->except(['create', 'store', 'edit']);
-    Route::resource('thong-bao', \App\Http\Controllers\Manager\ThongBaoController::class);
+    Route::resource('thong-bao', \App\Http\Controllers\Manager\ThongBaoController::class)
+        ->parameters(['thong-bao' => 'thongBao']);
+    Route::patch('thong-bao/{thongBao}/toggle-hide', [\App\Http\Controllers\Manager\ThongBaoController::class, 'toggleHide'])
+        ->name('thong-bao.toggle-hide');
+    Route::patch('thong-bao/{id}/restore', [\App\Http\Controllers\Manager\ThongBaoController::class, 'restore'])
+        ->name('thong-bao.restore');
+
+    // Bảng tin
+    Route::resource('bang-tin', \App\Http\Controllers\Manager\BangTinController::class)
+        ->except(['destroy'])
+        ->parameters(['bang-tin' => 'bangTin']);
+    Route::patch('bang-tin/{bangTin}/toggle-hide', [\App\Http\Controllers\Manager\BangTinController::class, 'toggleHide'])
+        ->name('bang-tin.toggle-hide');
+    Route::patch('bang-tin/{id}/restore', [\App\Http\Controllers\Manager\BangTinController::class, 'restore'])
+        ->name('bang-tin.restore');
+
+    // Cấu hình thanh toán
+    Route::resource('cau-hinh-thanh-toan', \App\Http\Controllers\Manager\CauHinhThanhToanController::class)
+        ->except(['destroy'])
+        ->parameters(['cau-hinh-thanh-toan' => 'cauHinhThanhToan']);
+    Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Manager\CauHinhThanhToanController::class, 'toggleStatus'])
+        ->name('cau-hinh-thanh-toan.toggle-status');
+
     Route::resource('users', \App\Http\Controllers\Manager\UserController::class);
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
+
+    // Quản lý cư dân căn hộ
+    Route::resource('cu-dan-can-ho', \App\Http\Controllers\Manager\CuDanCanHoController::class)
+        ->except(['destroy'])
+        ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
+    Route::patch('cu-dan-can-ho/{cuDanCanHo}/toggle-status', [\App\Http\Controllers\Manager\CuDanCanHoController::class, 'toggleStatus'])
+        ->name('cu-dan-can-ho.toggle-status');
 });
 
 // ==================== RESIDENT ====================
@@ -96,14 +169,15 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     // Đổi mật khẩu cư dân (cudan guard)
     Route::get('/doi-mat-khau', [PasswordController::class, 'showChangeForm'])->name('change-password');
     Route::put('/doi-mat-khau', [PasswordController::class, 'change'])->name('change-password.update');
-    Route::get('/thong-bao', fn() => view('resident.thong-bao.index', [
-        'thongBao' => \App\Models\ThongBao::orderByDesc('createdAt')->paginate(10)
-    ]))->name('thong-bao.index');
-    Route::get('/thong-bao/{thongBao}', fn(\App\Models\ThongBao $thongBao) => view('resident.thong-bao.show', compact('thongBao')))->name('thong-bao.show');
+    Route::get('/thong-bao', [\App\Http\Controllers\Resident\ThongBaoController::class, 'index'])->name('thong-bao.index');
+    Route::get('/thong-bao/{thongBao}', [\App\Http\Controllers\Resident\ThongBaoController::class, 'show'])->name('thong-bao.show');
     Route::get('/yeu-cau', [\App\Http\Controllers\Resident\YeuCauController::class, 'index'])->name('yeu-cau.index');
     Route::get('/yeu-cau/gui', [\App\Http\Controllers\Resident\YeuCauController::class, 'create'])->name('yeu-cau.create');
     Route::post('/yeu-cau', [\App\Http\Controllers\Resident\YeuCauController::class, 'store'])->name('yeu-cau.store');
     Route::get('/yeu-cau/{yeuCau}', [\App\Http\Controllers\Resident\YeuCauController::class, 'show'])->name('yeu-cau.show');
+    Route::get('/yeu-cau/{yeuCau}/chinh-sua', [\App\Http\Controllers\Resident\YeuCauController::class, 'edit'])->name('yeu-cau.edit');
+    Route::put('/yeu-cau/{yeuCau}', [\App\Http\Controllers\Resident\YeuCauController::class, 'update'])->name('yeu-cau.update');
+    Route::patch('/yeu-cau/{yeuCau}/huy', [\App\Http\Controllers\Resident\YeuCauController::class, 'cancel'])->name('yeu-cau.huy');
 });
 
 // Payment Callbacks
