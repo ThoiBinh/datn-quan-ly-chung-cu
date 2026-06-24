@@ -5,7 +5,7 @@
 @section('content')
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm" x-data="{
     confirmToggle: null,
-    openToggle(name, action) { this.confirmToggle = { name, action }; },
+    openToggle(name, action, isLock) { this.confirmToggle = { name, action, isLock }; },
     closeToggle() { this.confirmToggle = null; }
 }">
 
@@ -161,7 +161,7 @@
                             @if(!$item->is_self)
                             <button type="button"
                                     title="{{ $item->trang_thai == 1 ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}"
-                                    @click="openToggle('{{ addslashes($item->ho_ten) }}', '{{ route('admin.users.toggle-status', ['type' => $item->url_type, 'id' => $item->id]) }}')"
+                                    @click="openToggle('{{ addslashes($item->ho_ten) }}', '{{ route('admin.users.toggle-status', ['type' => $item->url_type, 'id' => $item->id]) }}', {{ $item->trang_thai == 1 ? 'true' : 'false' }})"
                                     class="p-1.5 rounded-md transition-colors {{ $item->trang_thai == 1 ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50' }}">
                                 @if($item->trang_thai == 1)
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,47 +199,76 @@
     @endif
 
     <!-- Modal xác nhận toggle status -->
+    <template x-teleport="body">
     <div x-show="confirmToggle !== null"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-         @click.self="closeToggle()"
-         style="display:none">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+         @click.self="closeToggle()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden" @click.stop>
+
+            <!-- Close -->
+            <div class="flex justify-end px-4 pt-4">
+                <button @click="closeToggle()" type="button"
+                        class="w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Icon + title: khóa -->
+            <div x-show="confirmToggle?.isLock" class="px-6 pt-2 pb-5 text-center">
+                <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-gray-800">Xác nhận thay đổi trạng thái</h3>
-                    <p class="text-sm text-gray-500 mt-0.5">Tài khoản: <span class="font-medium text-gray-700" x-text="confirmToggle?.name"></span></p>
+                <h3 class="text-base font-bold text-gray-900">Khóa tài khoản</h3>
+                <p class="text-sm text-gray-500 mt-1">Tài khoản sẽ bị vô hiệu hóa, không thể đăng nhập.</p>
+            </div>
+
+            <!-- Icon + title: mở khóa -->
+            <div x-show="confirmToggle && !confirmToggle.isLock" class="px-6 pt-2 pb-5 text-center">
+                <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900">Mở khóa tài khoản</h3>
+                <p class="text-sm text-gray-500 mt-1">Tài khoản sẽ được kích hoạt, có thể đăng nhập trở lại.</p>
+            </div>
+
+            <!-- User info -->
+            <div class="mx-6 mb-5 flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0"
+                     x-text="confirmToggle?.name?.charAt(0)?.toUpperCase() || '?'"></div>
+                <div class="min-w-0">
+                    <p class="text-xs text-gray-400">Tài khoản</p>
+                    <p class="text-sm font-semibold text-gray-800 truncate" x-text="confirmToggle?.name"></p>
                 </div>
             </div>
-            <div class="flex gap-3 justify-end">
+
+            <!-- Buttons -->
+            <div class="flex gap-3 px-6 pb-6">
                 <button @click="closeToggle()" type="button"
-                        class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                    Hủy
+                        class="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                    Hủy bỏ
                 </button>
-                <form :action="confirmToggle?.action" method="POST">
+                <form :action="confirmToggle?.action" method="POST" class="flex-1">
                     @csrf
                     @method('PATCH')
-                    <button type="submit"
-                            class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
-                        Xác nhận
+                    <button x-show="confirmToggle?.isLock" type="submit"
+                            class="block w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-sm font-semibold rounded-xl transition-colors">
+                        Khóa tài khoản
+                    </button>
+                    <button x-show="confirmToggle && !confirmToggle.isLock" type="submit"
+                            class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
+                        Mở khóa
                     </button>
                 </form>
             </div>
         </div>
     </div>
+    </template>
 
 </div>
 @endsection
