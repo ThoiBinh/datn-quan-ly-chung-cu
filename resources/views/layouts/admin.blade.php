@@ -92,11 +92,6 @@
                 <span x-show="sidebarOpen" class="truncate">Dịch vụ căn hộ</span>
             </a>
 
-            <a href="{{ route('admin.cau-hinh-thanh-toan.index') }}" class="sidebar-link {{ request()->routeIs('admin.cau-hinh-thanh-toan.*') ? 'active' : 'text-slate-300' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                <span x-show="sidebarOpen" class="truncate">Cấu hình thanh toán</span>
-            </a>
-
             <div x-show="sidebarOpen" class="pt-3 pb-1">
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2">Truyền thông</p>
             </div>
@@ -107,6 +102,28 @@
             <a href="{{ route('admin.bang-tin.index') }}" class="sidebar-link {{ request()->routeIs('admin.bang-tin.*') ? 'active' : 'text-slate-300' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
                 <span x-show="sidebarOpen" class="truncate">Bảng tin</span>
+            </a>
+
+            <div x-show="sidebarOpen" class="pt-3 pb-1">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2">Cấu hình</p>
+            </div>
+            <a href="{{ route('admin.cau-hinh-thanh-toan.index') }}" class="sidebar-link {{ request()->routeIs('admin.cau-hinh-thanh-toan.*') ? 'active' : 'text-slate-300' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Cấu hình thanh toán</span>
+            </a>
+            <a href="{{ route('admin.thuoc-tinh.index') }}" class="sidebar-link {{ request()->routeIs('admin.thuoc-tinh.*') ? 'active' : 'text-slate-300' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Thuộc tính</span>
+            </a>
+            <a href="{{ route('admin.vai-tro.index') }}" class="sidebar-link {{ request()->routeIs('admin.vai-tro.*') ? 'active' : 'text-slate-300' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Vai trò</span>
             </a>
 
             <div x-show="sidebarOpen" class="pt-3 pb-1">

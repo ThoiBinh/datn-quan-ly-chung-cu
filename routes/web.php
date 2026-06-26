@@ -94,6 +94,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Admin\CauHinhThanhToanController::class, 'toggleStatus'])
         ->name('cau-hinh-thanh-toan.toggle-status');
 
+    // Quản lý thuộc tính
+    Route::resource('thuoc-tinh', \App\Http\Controllers\Admin\ThuocTinhController::class)
+        ->parameters(['thuoc-tinh' => 'thuocTinh']);
+    Route::patch('thuoc-tinh/{id}/restore', [\App\Http\Controllers\Admin\ThuocTinhController::class, 'restore'])
+        ->name('thuoc-tinh.restore');
+
+    // Quản lý vai trò
+    Route::resource('vai-tro', \App\Http\Controllers\Admin\VaiTroController::class)
+        ->parameters(['vai-tro' => 'vaiTro']);
+
     // Quản lý yêu cầu cư dân
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
         ->only(['index', 'show', 'update'])
@@ -140,6 +150,16 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
         ->parameters(['cau-hinh-thanh-toan' => 'cauHinhThanhToan']);
     Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Manager\CauHinhThanhToanController::class, 'toggleStatus'])
         ->name('cau-hinh-thanh-toan.toggle-status');
+
+    // Quản lý thuộc tính
+    Route::resource('thuoc-tinh', \App\Http\Controllers\Manager\ThuocTinhController::class)
+        ->parameters(['thuoc-tinh' => 'thuocTinh']);
+    Route::patch('thuoc-tinh/{id}/restore', [\App\Http\Controllers\Manager\ThuocTinhController::class, 'restore'])
+        ->name('thuoc-tinh.restore');
+
+    // Quản lý vai trò
+    Route::resource('vai-tro', \App\Http\Controllers\Manager\VaiTroController::class)
+        ->parameters(['vai-tro' => 'vaiTro']);
 
     Route::resource('users', \App\Http\Controllers\Manager\UserController::class);
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
