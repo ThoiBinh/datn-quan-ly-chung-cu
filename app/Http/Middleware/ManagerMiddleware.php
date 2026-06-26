@@ -27,6 +27,13 @@ class ManagerMiddleware
             return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị khóa.');
         }
 
+        if ($user->isAdmin()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Không có quyền truy cập'], 403);
+            }
+            return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập trang này.');
+        }
+
         return $next($request);
     }
 }

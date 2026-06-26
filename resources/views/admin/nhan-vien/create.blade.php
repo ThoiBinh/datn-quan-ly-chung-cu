@@ -53,8 +53,8 @@
 
             {{-- Mã nhân viên --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Mã nhân viên</label>
-                <input type="text" name="ma_nhan_vien" value="{{ old('ma_nhan_vien') }}"
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5" hidden>Mã nhân viên</label>
+                <input type="text" name="ma_nhan_vien" value="{{ old('ma_nhan_vien') }}" hidden
                        class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                        placeholder="Tự động nếu bỏ trống">
             </div>
@@ -62,7 +62,7 @@
             {{-- Email --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Email <span class="text-red-500">*</span></label>
-                <input type="email" name="email" value="{{ old('email') }}" required
+                <input type="email" name="email" required
                        class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                        placeholder="nhanvien@email.com">
             </div>

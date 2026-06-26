@@ -94,6 +94,44 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Admin\CauHinhThanhToanController::class, 'toggleStatus'])
         ->name('cau-hinh-thanh-toan.toggle-status');
 
+    // Quản lý thuộc tính
+    Route::resource('thuoc-tinh', \App\Http\Controllers\Admin\ThuocTinhController::class)
+        ->parameters(['thuoc-tinh' => 'thuocTinh']);
+    Route::patch('thuoc-tinh/{id}/restore', [\App\Http\Controllers\Admin\ThuocTinhController::class, 'restore'])
+        ->name('thuoc-tinh.restore');
+
+    // Quản lý vai trò
+    Route::resource('vai-tro', \App\Http\Controllers\Admin\VaiTroController::class)
+        ->parameters(['vai-tro' => 'vaiTro']);
+
+    // Quản lý chức vụ
+    Route::resource('chuc-vu', \App\Http\Controllers\Admin\ChucVuController::class)
+        ->parameters(['chuc-vu' => 'chucVu']);
+    Route::patch('chuc-vu/{id}/restore', [\App\Http\Controllers\Admin\ChucVuController::class, 'restore'])
+        ->name('chuc-vu.restore');
+
+    // Quản lý loại phương tiện
+    Route::resource('loai-phuong-tien', \App\Http\Controllers\Admin\LoaiPhuongTienController::class)
+        ->parameters(['loai-phuong-tien' => 'loaiPhuongTien']);
+
+    // Quản lý loại yêu cầu
+    Route::resource('loai-yeu-cau', \App\Http\Controllers\Admin\LoaiYeuCauController::class)
+        ->parameters(['loai-yeu-cau' => 'loaiYeuCau']);
+    Route::patch('loai-yeu-cau/{id}/restore', [\App\Http\Controllers\Admin\LoaiYeuCauController::class, 'restore'])
+        ->name('loai-yeu-cau.restore');
+
+    // Quản lý loại căn hộ
+    Route::resource('loai-can-ho', \App\Http\Controllers\Admin\LoaiCanHoController::class)
+        ->parameters(['loai-can-ho' => 'loaiCanHo']);
+
+    // Quản lý loại phí dịch vụ
+    Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Admin\LoaiPhiDichVuController::class)
+        ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
+
+    // Quản lý đơn vị tính phí dịch vụ
+    Route::resource('don-vi-tinh-phi-dich-vu', \App\Http\Controllers\Admin\DonViTinhPhiDichVuController::class)
+        ->parameters(['don-vi-tinh-phi-dich-vu' => 'donViTinhPhiDichVu']);
+
     // Quản lý yêu cầu cư dân
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
         ->only(['index', 'show', 'update'])
@@ -140,6 +178,44 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
         ->parameters(['cau-hinh-thanh-toan' => 'cauHinhThanhToan']);
     Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Manager\CauHinhThanhToanController::class, 'toggleStatus'])
         ->name('cau-hinh-thanh-toan.toggle-status');
+
+    // Quản lý thuộc tính
+    Route::resource('thuoc-tinh', \App\Http\Controllers\Manager\ThuocTinhController::class)
+        ->parameters(['thuoc-tinh' => 'thuocTinh']);
+    Route::patch('thuoc-tinh/{id}/restore', [\App\Http\Controllers\Manager\ThuocTinhController::class, 'restore'])
+        ->name('thuoc-tinh.restore');
+
+    // Quản lý vai trò
+    Route::resource('vai-tro', \App\Http\Controllers\Manager\VaiTroController::class)
+        ->parameters(['vai-tro' => 'vaiTro']);
+
+    // Quản lý chức vụ
+    Route::resource('chuc-vu', \App\Http\Controllers\Manager\ChucVuController::class)
+        ->parameters(['chuc-vu' => 'chucVu']);
+    Route::patch('chuc-vu/{id}/restore', [\App\Http\Controllers\Manager\ChucVuController::class, 'restore'])
+        ->name('chuc-vu.restore');
+
+    // Quản lý loại phương tiện
+    Route::resource('loai-phuong-tien', \App\Http\Controllers\Manager\LoaiPhuongTienController::class)
+        ->parameters(['loai-phuong-tien' => 'loaiPhuongTien']);
+
+    // Quản lý loại yêu cầu
+    Route::resource('loai-yeu-cau', \App\Http\Controllers\Manager\LoaiYeuCauController::class)
+        ->parameters(['loai-yeu-cau' => 'loaiYeuCau']);
+    Route::patch('loai-yeu-cau/{id}/restore', [\App\Http\Controllers\Manager\LoaiYeuCauController::class, 'restore'])
+        ->name('loai-yeu-cau.restore');
+
+    // Quản lý loại căn hộ
+    Route::resource('loai-can-ho', \App\Http\Controllers\Manager\LoaiCanHoController::class)
+        ->parameters(['loai-can-ho' => 'loaiCanHo']);
+
+    // Quản lý loại phí dịch vụ
+    Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Manager\LoaiPhiDichVuController::class)
+        ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
+
+    // Quản lý đơn vị tính phí dịch vụ
+    Route::resource('don-vi-tinh-phi-dich-vu', \App\Http\Controllers\Manager\DonViTinhPhiDichVuController::class)
+        ->parameters(['don-vi-tinh-phi-dich-vu' => 'donViTinhPhiDichVu']);
 
     Route::resource('users', \App\Http\Controllers\Manager\UserController::class);
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
