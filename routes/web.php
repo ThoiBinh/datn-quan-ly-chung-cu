@@ -118,6 +118,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('loai-can-ho', \App\Http\Controllers\Admin\LoaiCanHoController::class)
         ->parameters(['loai-can-ho' => 'loaiCanHo']);
 
+    // Quản lý loại phí dịch vụ
+    Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Admin\LoaiPhiDichVuController::class)
+        ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
+
     // Quản lý yêu cầu cư dân
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
         ->only(['index', 'show', 'update'])
@@ -188,6 +192,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     // Quản lý loại căn hộ
     Route::resource('loai-can-ho', \App\Http\Controllers\Manager\LoaiCanHoController::class)
         ->parameters(['loai-can-ho' => 'loaiCanHo']);
+
+    // Quản lý loại phí dịch vụ
+    Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Manager\LoaiPhiDichVuController::class)
+        ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
 
     Route::resource('users', \App\Http\Controllers\Manager\UserController::class);
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
