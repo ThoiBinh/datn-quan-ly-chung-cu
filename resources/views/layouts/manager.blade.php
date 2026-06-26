@@ -101,6 +101,13 @@
                 </svg>
                 <span x-show="sidebarOpen" class="truncate">Vai trò</span>
             </a>
+            <a href="{{ route('manager.loai-phuong-tien.index') }}"
+               class="sidebar-link {{ request()->routeIs('manager.loai-phuong-tien.*') ? 'active' : 'text-indigo-200' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Loại phương tiện</span>
+            </a>
         </nav>
 
         <div class="p-3 border-t border-white/10">

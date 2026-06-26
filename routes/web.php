@@ -104,6 +104,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('vai-tro', \App\Http\Controllers\Admin\VaiTroController::class)
         ->parameters(['vai-tro' => 'vaiTro']);
 
+    // Quản lý loại phương tiện
+    Route::resource('loai-phuong-tien', \App\Http\Controllers\Admin\LoaiPhuongTienController::class)
+        ->parameters(['loai-phuong-tien' => 'loaiPhuongTien']);
+
     // Quản lý yêu cầu cư dân
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
         ->only(['index', 'show', 'update'])
@@ -160,6 +164,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     // Quản lý vai trò
     Route::resource('vai-tro', \App\Http\Controllers\Manager\VaiTroController::class)
         ->parameters(['vai-tro' => 'vaiTro']);
+
+    // Quản lý loại phương tiện
+    Route::resource('loai-phuong-tien', \App\Http\Controllers\Manager\LoaiPhuongTienController::class)
+        ->parameters(['loai-phuong-tien' => 'loaiPhuongTien']);
 
     Route::resource('users', \App\Http\Controllers\Manager\UserController::class);
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');

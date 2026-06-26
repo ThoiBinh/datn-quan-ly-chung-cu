@@ -125,6 +125,12 @@
                 </svg>
                 <span x-show="sidebarOpen" class="truncate">Vai trò</span>
             </a>
+            <a href="{{ route('admin.loai-phuong-tien.index') }}" class="sidebar-link {{ request()->routeIs('admin.loai-phuong-tien.*') ? 'active' : 'text-slate-300' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Loại phương tiện</span>
+            </a>
 
             <div x-show="sidebarOpen" class="pt-3 pb-1">
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2">Hệ thống</p>
