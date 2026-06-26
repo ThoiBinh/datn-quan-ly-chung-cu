@@ -131,6 +131,18 @@
                 </svg>
                 <span x-show="sidebarOpen" class="truncate">Loại phương tiện</span>
             </a>
+            <a href="{{ route('admin.loai-yeu-cau.index') }}" class="sidebar-link {{ request()->routeIs('admin.loai-yeu-cau.*') ? 'active' : 'text-slate-300' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Loại yêu cầu</span>
+            </a>
+            <a href="{{ route('admin.loai-can-ho.index') }}" class="sidebar-link {{ request()->routeIs('admin.loai-can-ho.*') ? 'active' : 'text-slate-300' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Loại căn hộ</span>
+            </a>
 
             <div x-show="sidebarOpen" class="pt-3 pb-1">
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2">Hệ thống</p>

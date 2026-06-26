@@ -21,4 +21,9 @@ class LoaiYeuCau extends Model
     {
         return $this->hasMany(YeuCauCuDan::class, 'loai_yeu_cau');
     }
+
+    public function nguoiCapNhat()
+    {
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+    }
 }
