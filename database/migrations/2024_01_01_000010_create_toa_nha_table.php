@@ -9,11 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('toa_nha', function (Blueprint $table) {
-            $table->id();
-            $table->string('ten_toa_nha');
-            $table->string('dia_chi')->nullable();
-            $table->integer('so_tang')->nullable();
-            $table->timestamps();
+            $table->integer('id')->autoIncrement();
+            $table->string('ten_toa_nha', 255);
+            $table->string('dia_chi', 255);
+            $table->integer('so_tang')->default(1);
+            $table->dateTime('createdAt')->useCurrent();
+            $table->dateTime('updatedAt')->useCurrent()->useCurrentOnUpdate();
         });
     }
 
