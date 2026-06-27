@@ -24,7 +24,7 @@
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Loại xe</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tên xe</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Ngày đăng ký</th>
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">TT</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Trạng Thái</th>
                         <th class="px-5 py-3"></th>
                     </tr>
                 </thead>

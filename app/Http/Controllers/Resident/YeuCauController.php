@@ -82,28 +82,30 @@ class YeuCauController extends Controller
             'loai_yeu_cau' => 'nullable|integer|exists:loai_yeu_cau,id',
         ];
         if ($isDangKyPT) {
-            $rules['bien_so']          = 'required|string|max:50|unique:phuong_tien,bien_so';
+            $rules['bien_so']          = 'required|string|max:50';
             $rules['loai_phuong_tien'] = 'required|integer|exists:loai_phuong_tien,id';
-            $rules['ten_phuong_tien']  = 'nullable|string|max:255';
+            $rules['hang_xe']          = 'nullable|string|max:100';
+            $rules['mau_xe']           = 'nullable|string|max:50';
         }
 
         $request->validate($rules, [
             'tieu_de.required'          => 'Vui lòng nhập tiêu đề.',
             'noi_dung.required'         => 'Vui lòng nhập nội dung.',
             'bien_so.required'          => 'Vui lòng nhập biển số xe.',
-            'bien_so.unique'            => 'Biển số xe này đã được đăng ký trong hệ thống.',
             'loai_phuong_tien.required' => 'Vui lòng chọn loại phương tiện.',
         ]);
 
         if ($isDangKyPT) {
-            $loaiPT  = LoaiPhuongTien::find($request->loai_phuong_tien);
-            $bienSo  = strtoupper(trim($request->bien_so));
-            $noiDung = "Biển số: {$bienSo}\n"
-                . "Loại phương tiện: " . ($loaiPT?->ten_loai_phuong_tien ?? '') . "\n"
-                . "Tên phương tiện: " . ($request->ten_phuong_tien ?: '—');
-            if ($request->filled('noi_dung')) {
-                $noiDung .= "\nGhi chú: " . $request->noi_dung;
+            $bienSo = strtoupper(trim($request->bien_so));
+            if (PhuongTien::where('bien_so', $bienSo)->where('trang_thai', 1)->exists()) {
+                return back()->withErrors(['bien_so' => 'Biển số xe này đã được đăng ký và đang hoạt động.'])->withInput();
             }
+            $noiDung = json_encode([
+                'loai_phuong_tien' => (int)$request->loai_phuong_tien,
+                'bien_so'          => $bienSo,
+                'hang_xe'          => trim($request->hang_xe ?? ''),
+                'mau_xe'           => trim($request->mau_xe ?? ''),
+            ], JSON_UNESCAPED_UNICODE);
         } else {
             $noiDung = $request->noi_dung ?? '';
         }
@@ -118,20 +120,6 @@ class YeuCauController extends Controller
             'trang_thai'     => YeuCauCuDan::TRANG_THAI_MOI,
         ]);
 
-        if ($isDangKyPT) {
-            $canHoId = $cuDan->canHoHienTai?->can_ho;
-            if ($canHoId) {
-                PhuongTien::create([
-                    'ten_phuong_tien'  => $request->ten_phuong_tien,
-                    'bien_so'          => strtoupper(trim($request->bien_so)),
-                    'loai_phuong_tien' => $request->loai_phuong_tien,
-                    'can_ho'           => $canHoId,
-                    'ngay_dang_ky'     => now()->toDateString(),
-                    'trang_thai'       => 1,
-                ]);
-            }
-        }
-
         return redirect()->route('resident.yeu-cau.index')->with('success', 'Gửi yêu cầu thành công.');
     }
 
@@ -142,7 +130,16 @@ class YeuCauController extends Controller
             abort(403);
         }
         $yeuCau->load(['loaiYeuCau', 'nhanVienXuLy.chucVu', 'cuDan.canHoHienTai.canHo.toaNha']);
-        return view('resident.yeu-cau.show', compact('yeuCau'));
+        $loaiDangKyPTId   = LoaiYeuCau::where('name', 'Đăng ký phương tiện')->value('id');
+        $isDangKyPT       = $loaiDangKyPTId && (int)$yeuCau->loai_yeu_cau === (int)$loaiDangKyPTId;
+        $duLieuPhuongTien = null;
+        if ($isDangKyPT) {
+            $data = json_decode($yeuCau->noi_dung ?? '', true);
+            if (json_last_error() === JSON_ERROR_NONE && isset($data['bien_so'])) {
+                $duLieuPhuongTien = $data;
+            }
+        }
+        return view('resident.yeu-cau.show', compact('yeuCau', 'isDangKyPT', 'duLieuPhuongTien'));
     }
 
     public function edit(YeuCauCuDan $yeuCau)

@@ -34,9 +34,29 @@
             </div>
         </div>
         <div class="px-6 py-5">
+            @if($isDangKyPT && $duLieuPhuongTien)
+            {{-- Hiển thị thông tin phương tiện dạng grid thay vì JSON thô --}}
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                    <p class="text-xs text-gray-400 mb-0.5">Biển số xe</p>
+                    <p class="text-sm font-bold text-gray-800 font-mono">{{ $duLieuPhuongTien['bien_so'] ?? '—' }}</p>
+                </div>
+                <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                    <p class="text-xs text-gray-400 mb-0.5">Hãng xe</p>
+                    <p class="text-sm font-semibold text-gray-700">{{ $duLieuPhuongTien['hang_xe'] ?: '—' }}</p>
+                </div>
+                <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                    <p class="text-xs text-gray-400 mb-0.5">Màu xe</p>
+                    <p class="text-sm font-semibold text-gray-700">{{ $duLieuPhuongTien['mau_xe'] ?: '—' }}</p>
+                </div>
+            </div>
+            @else
             <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $yeuCau->noi_dung }}</p>
+            @endif
         </div>
-        @if($yeuCau->trang_thai == \App\Models\YeuCauCuDan::TRANG_THAI_MOI)
+
+        {{-- Chỉ hiện Edit/Cancel cho yêu cầu thường (không phải đăng ký PT) ở trạng thái Mới --}}
+        @if(!$isDangKyPT && $yeuCau->trang_thai == \App\Models\YeuCauCuDan::TRANG_THAI_MOI)
         <div class="px-6 pb-5 flex items-center gap-3 border-t border-gray-100 pt-4">
             <a href="{{ route('resident.yeu-cau.edit', $yeuCau) }}"
                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors">
@@ -60,6 +80,19 @@
         </div>
         @endif
     </div>
+
+    {{-- CARD — Lý do từ chối (nếu bị từ chối) --}}
+    @if($isDangKyPT && $duLieuPhuongTien && isset($duLieuPhuongTien['ly_do_tu_choi']))
+    <div class="bg-white rounded-2xl border border-red-200 shadow-sm">
+        <div class="px-6 py-4 border-b border-red-100 flex items-center gap-2">
+            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <h2 class="text-sm font-semibold text-red-700">Lý do từ chối</h2>
+        </div>
+        <div class="px-6 py-4">
+            <p class="text-sm text-gray-700">{{ $duLieuPhuongTien['ly_do_tu_choi'] }}</p>
+        </div>
+    </div>
+    @endif
 
     {{-- CARD 2 — Thông tin yêu cầu --}}
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">

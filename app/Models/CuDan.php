@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Storage;
 
 class CuDan extends Authenticatable
 {
@@ -77,5 +78,42 @@ class CuDan extends Authenticatable
     public function yeuCau()
     {
         return $this->hasMany(YeuCauCuDan::class, 'cu_dan');
+    }
+
+    public function thongBaoDaDoc()
+    {
+        return $this->hasMany(ThongBaoDaDoc::class, 'cu_dan_id');
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        foreach (['jpg', 'jpeg', 'png', 'webp'] as $ext) {
+            if (Storage::disk('public')->exists("avatars/{$this->id}.{$ext}")) {
+                return Storage::disk('public')->url("avatars/{$this->id}.{$ext}");
+            }
+        }
+        return null;
+    }
+
+    public function getTrangThaiLabelAttribute(): array
+    {
+        return match((int) $this->trang_thai) {
+            1 => ['text' => 'Đang cư trú',  'class' => 'bg-emerald-100 text-emerald-700'],
+            2 => ['text' => 'Tạm vắng',      'class' => 'bg-amber-100 text-amber-700'],
+            3 => ['text' => 'Đã chuyển đi',  'class' => 'bg-gray-100 text-gray-600'],
+            default => ['text' => 'Không xác định', 'class' => 'bg-gray-100 text-gray-500'],
+        };
+    }
+
+    public function getGioiTinhLabelAttribute(): string
+    {
+        if ($this->gioi_tinh === null) {
+            return '—';
+        }
+        return match((int) $this->gioi_tinh) {
+            0 => 'Nữ',
+            1 => 'Nam',
+            default => '—',
+        };
     }
 }

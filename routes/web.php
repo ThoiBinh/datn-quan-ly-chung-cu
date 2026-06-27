@@ -58,6 +58,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->name('phuong-tien.toggle-status');
 
     // Quản lý hóa đơn
+    Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Admin\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
+    Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Admin\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Admin\HoaDonController::class)
         ->except(['destroy'])
         ->parameters(['hoa-don' => 'hoaDon']);
@@ -136,6 +138,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
         ->only(['index', 'show', 'update'])
         ->parameters(['yeu-cau' => 'yeuCau']);
+    Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'approve'])->name('yeu-cau.approve');
+    Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'reject'])->name('yeu-cau.reject');
 
     // Quản lý cư dân căn hộ
     Route::resource('cu-dan-can-ho', \App\Http\Controllers\Admin\CuDanCanHoController::class)
@@ -153,9 +157,14 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);
     Route::resource('phuong-tien', \App\Http\Controllers\Manager\PhuongTienController::class);
     Route::resource('phi-dich-vu', \App\Http\Controllers\Manager\PhiDichVuController::class);
-    Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class);
+    Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Manager\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
+    Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
+    Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class)->except(['destroy'])->parameters(['hoa-don' => 'hoaDon']);
+    Route::patch('hoa-don/{hoaDon}/toggle-status', [\App\Http\Controllers\Manager\HoaDonController::class, 'toggleStatus'])->name('hoa-don.toggle-status');
     Route::post('hoa-don/{hoaDon}/ghi-nhan-thanh-toan', [\App\Http\Controllers\Manager\HoaDonController::class, 'ghiNhanThanhToan'])->name('hoa-don.ghi-nhan-thanh-toan');
     Route::resource('yeu-cau', \App\Http\Controllers\Manager\YeuCauController::class)->except(['create', 'store', 'edit']);
+    Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Manager\YeuCauController::class, 'approve'])->name('yeu-cau.approve');
+    Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Manager\YeuCauController::class, 'reject'])->name('yeu-cau.reject');
     Route::resource('thong-bao', \App\Http\Controllers\Manager\ThongBaoController::class)
         ->parameters(['thong-bao' => 'thongBao']);
     Route::patch('thong-bao/{thongBao}/toggle-hide', [\App\Http\Controllers\Manager\ThongBaoController::class, 'toggleHide'])
@@ -234,6 +243,9 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     Route::get('/profile', [\App\Http\Controllers\Resident\ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [\App\Http\Controllers\Resident\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [\App\Http\Controllers\Resident\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [\App\Http\Controllers\Resident\ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::get('/profile/change-password', [\App\Http\Controllers\Resident\ProfileController::class, 'showChangePassword'])->name('profile.change-password');
+    Route::post('/profile/change-password', [\App\Http\Controllers\Resident\ProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::get('/hoa-don', [\App\Http\Controllers\Resident\HoaDonController::class, 'index'])->name('hoa-don.index');
     Route::get('/hoa-don/{hoaDon}', [\App\Http\Controllers\Resident\HoaDonController::class, 'show'])->name('hoa-don.show');
     Route::post('/hoa-don/{hoaDon}/momo', [\App\Http\Controllers\Resident\HoaDonController::class, 'thanhToanMomo'])->name('hoa-don.momo');

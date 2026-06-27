@@ -83,11 +83,19 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên phương tiện</label>
-                    <input type="text" name="ten_phuong_tien" value="{{ old('ten_phuong_tien') }}"
-                           placeholder="Ví dụ: Toyota Camry 2022"
-                           class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Hãng xe</label>
+                        <input type="text" name="hang_xe" value="{{ old('hang_xe') }}"
+                               placeholder="Ví dụ: Honda, Toyota..."
+                               class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Màu xe</label>
+                        <input type="text" name="mau_xe" value="{{ old('mau_xe') }}"
+                               placeholder="Ví dụ: Đỏ, Trắng..."
+                               class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white">
+                    </div>
                 </div>
             </div>
             @endif
