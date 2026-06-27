@@ -31,7 +31,7 @@
                 <tbody>
                 @foreach($hoaDon->chiTiet as $ct)
                 <tr class="border-t border-gray-50">
-                    <td class="py-2 text-gray-700">{{ $ct->phiDichVu?->ten_phi_dich_vu }}</td>
+                    <td class="py-2 text-gray-700">{{ $ct->ten_phi_dich_vu }}</td>
                     <td class="py-2 text-right text-gray-600">{{ number_format($ct->don_gia) }}đ</td>
                     <td class="py-2 text-right text-gray-600">{{ $ct->so_luong }}</td>
                     <td class="py-2 text-right font-medium text-gray-800">{{ number_format($ct->thanh_tien) }}đ</td>

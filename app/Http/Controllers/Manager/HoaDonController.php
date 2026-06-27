@@ -63,13 +63,12 @@ class HoaDonController extends Controller
 
     public function show(HoaDon $hoaDon)
     {
-        $hoaDon->load(['canHo.toaNha', 'chiTiet.phiDichVu', 'lichSuThanhToan']);
+        $hoaDon->load(['canHo.toaNha', 'chiTiet', 'lichSuThanhToan']);
         return view('manager.hoa-don.show', compact('hoaDon'));
     }
 
     public function edit(HoaDon $hoaDon)
     {
-        $hoaDon->load(['chiTiet.phiDichVu']);
         return view('manager.hoa-don.edit', compact('hoaDon'));
     }
 

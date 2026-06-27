@@ -136,6 +136,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
         ->only(['index', 'show', 'update'])
         ->parameters(['yeu-cau' => 'yeuCau']);
+    Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'approve'])->name('yeu-cau.approve');
+    Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'reject'])->name('yeu-cau.reject');
 
     // Quản lý cư dân căn hộ
     Route::resource('cu-dan-can-ho', \App\Http\Controllers\Admin\CuDanCanHoController::class)
@@ -156,6 +158,8 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class);
     Route::post('hoa-don/{hoaDon}/ghi-nhan-thanh-toan', [\App\Http\Controllers\Manager\HoaDonController::class, 'ghiNhanThanhToan'])->name('hoa-don.ghi-nhan-thanh-toan');
     Route::resource('yeu-cau', \App\Http\Controllers\Manager\YeuCauController::class)->except(['create', 'store', 'edit']);
+    Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Manager\YeuCauController::class, 'approve'])->name('yeu-cau.approve');
+    Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Manager\YeuCauController::class, 'reject'])->name('yeu-cau.reject');
     Route::resource('thong-bao', \App\Http\Controllers\Manager\ThongBaoController::class)
         ->parameters(['thong-bao' => 'thongBao']);
     Route::patch('thong-bao/{thongBao}/toggle-hide', [\App\Http\Controllers\Manager\ThongBaoController::class, 'toggleHide'])

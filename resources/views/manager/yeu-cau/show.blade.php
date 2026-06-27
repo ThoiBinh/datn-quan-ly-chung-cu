@@ -2,7 +2,7 @@
 @section('title', 'Chi tiết yêu cầu #' . $yeuCau->id)
 
 @section('content')
-<div class="max-w-4xl space-y-5">
+<div class="max-w-4xl space-y-5" x-data="{ showReject: {{ $errors->has('ly_do_tu_choi') ? 'true' : 'false' }} }">
 
     {{-- Breadcrumb --}}
     <nav class="flex items-center gap-2 text-sm text-gray-500">
@@ -12,6 +12,13 @@
         </svg>
         <span class="text-gray-700 font-medium">#{{ $yeuCau->id }}</span>
     </nav>
+
+    @if(session('success'))
+    <div class="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{{ session('error') }}</div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {{-- Left: main content --}}
@@ -33,9 +40,42 @@
                     </div>
                 </div>
                 <div class="px-6 py-5">
+                    @if($isDangKyPT && $duLieuPhuongTien)
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                            <p class="text-xs text-gray-400 mb-0.5">Biển số xe</p>
+                            <p class="text-sm font-bold text-gray-800 font-mono">{{ $duLieuPhuongTien['bien_so'] ?? '—' }}</p>
+                        </div>
+                        <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                            <p class="text-xs text-gray-400 mb-0.5">Loại phương tiện</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ $duLieuPhuongTien['ten_loai_phuong_tien'] ?? '—' }}</p>
+                        </div>
+                        <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                            <p class="text-xs text-gray-400 mb-0.5">Hãng xe</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ $duLieuPhuongTien['hang_xe'] ?: '—' }}</p>
+                        </div>
+                        <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                            <p class="text-xs text-gray-400 mb-0.5">Màu xe</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ $duLieuPhuongTien['mau_xe'] ?: '—' }}</p>
+                        </div>
+                    </div>
+                    @else
                     <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $yeuCau->noi_dung }}</p>
+                    @endif
                 </div>
             </div>
+
+            {{-- CARD — Lý do từ chối --}}
+            @if($isDangKyPT && $duLieuPhuongTien && isset($duLieuPhuongTien['ly_do_tu_choi']))
+            <div class="bg-white rounded-2xl border border-red-200 shadow-sm">
+                <div class="px-6 py-4 border-b border-red-100">
+                    <h2 class="text-sm font-semibold text-red-700 uppercase tracking-wide">Lý do từ chối</h2>
+                </div>
+                <div class="px-6 py-4">
+                    <p class="text-sm text-gray-700">{{ $duLieuPhuongTien['ly_do_tu_choi'] }}</p>
+                </div>
+            </div>
+            @endif
 
             {{-- CARD 2 — Thông tin cư dân --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
@@ -117,11 +157,11 @@
                 </div>
             </div>
 
-            {{-- CARD 4 — Phương tiện đăng ký (nếu có) --}}
+            {{-- CARD 4 — Phương tiện đã duyệt (nếu có) --}}
             @if($phuongTienLienQuan)
-            <div class="bg-white rounded-2xl border border-amber-200 shadow-sm">
-                <div class="px-6 py-4 border-b border-amber-100 flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-amber-700 uppercase tracking-wide">Phương tiện đăng ký</h2>
+            <div class="bg-white rounded-2xl border border-green-200 shadow-sm">
+                <div class="px-6 py-4 border-b border-green-100 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-green-700 uppercase tracking-wide">Phương tiện đã đăng ký</h2>
                     @php
                         $ptTrangThai = $phuongTienLienQuan->trang_thai
                             ? ['text' => 'Đang hoạt động', 'class' => 'bg-green-100 text-green-700']
@@ -133,19 +173,19 @@
                 </div>
                 <div class="px-6 py-5">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-amber-50 rounded-xl p-3 border border-amber-100">
+                        <div class="bg-green-50 rounded-xl p-3 border border-green-100">
                             <p class="text-xs text-gray-400 mb-0.5">Biển số</p>
                             <p class="text-sm font-bold text-gray-800 font-mono">{{ $phuongTienLienQuan->bien_so }}</p>
                         </div>
-                        <div class="bg-amber-50 rounded-xl p-3 border border-amber-100">
+                        <div class="bg-green-50 rounded-xl p-3 border border-green-100">
                             <p class="text-xs text-gray-400 mb-0.5">Loại</p>
                             <p class="text-sm font-semibold text-gray-700">{{ $phuongTienLienQuan->loaiPhuongTien?->ten_loai_phuong_tien ?? '—' }}</p>
                         </div>
-                        <div class="bg-amber-50 rounded-xl p-3 border border-amber-100">
+                        <div class="bg-green-50 rounded-xl p-3 border border-green-100">
                             <p class="text-xs text-gray-400 mb-0.5">Tên phương tiện</p>
                             <p class="text-sm font-semibold text-gray-700">{{ $phuongTienLienQuan->ten_phuong_tien ?: '—' }}</p>
                         </div>
-                        <div class="bg-amber-50 rounded-xl p-3 border border-amber-100">
+                        <div class="bg-green-50 rounded-xl p-3 border border-green-100">
                             <p class="text-xs text-gray-400 mb-0.5">Ngày đăng ký</p>
                             <p class="text-sm font-semibold text-gray-700">{{ $phuongTienLienQuan->ngay_dang_ky?->format('d/m/Y') ?? '—' }}</p>
                         </div>
@@ -155,7 +195,7 @@
             @endif
         </div>
 
-        {{-- Right: metadata + update form --}}
+        {{-- Right: metadata + action panel --}}
         <div class="space-y-5">
 
             {{-- Metadata --}}
@@ -187,7 +227,57 @@
                 </div>
             </div>
 
-            {{-- Update form --}}
+            {{-- Duyệt / Từ chối (chỉ hiện khi là đăng ký PT và trạng thái Mới) --}}
+            @if($isDangKyPT && $yeuCau->trang_thai == \App\Models\YeuCauCuDan::TRANG_THAI_MOI)
+            <div class="bg-white rounded-2xl border border-indigo-200 shadow-sm">
+                <div class="px-5 py-4 border-b border-indigo-100">
+                    <h2 class="text-sm font-semibold text-indigo-700 uppercase tracking-wide">Xét duyệt phương tiện</h2>
+                </div>
+                <div class="px-5 py-4 space-y-3">
+                    <form method="POST" action="{{ route('manager.yeu-cau.approve', $yeuCau) }}">
+                        @csrf @method('PATCH')
+                        <button type="submit"
+                                class="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Duyệt — Đăng ký phương tiện
+                        </button>
+                    </form>
+
+                    <div x-show="!showReject">
+                        <button @click="showReject = true" type="button"
+                                class="w-full px-4 py-2.5 border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Từ chối yêu cầu
+                        </button>
+                    </div>
+
+                    <div x-show="showReject" x-cloak>
+                        <form method="POST" action="{{ route('manager.yeu-cau.reject', $yeuCau) }}" class="space-y-3">
+                            @csrf @method('PATCH')
+                            @if($errors->has('ly_do_tu_choi'))
+                            <p class="text-xs text-red-600">{{ $errors->first('ly_do_tu_choi') }}</p>
+                            @endif
+                            <textarea name="ly_do_tu_choi" rows="3" required
+                                      placeholder="Nhập lý do từ chối..."
+                                      class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 resize-none">{{ old('ly_do_tu_choi') }}</textarea>
+                            <div class="flex gap-2">
+                                <button type="button" @click="showReject = false"
+                                        class="flex-1 py-2 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50">
+                                    Hủy
+                                </button>
+                                <button type="submit"
+                                        class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg">
+                                    Xác nhận từ chối
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Update form thông thường --}}
+            @if(!($isDangKyPT && $yeuCau->trang_thai == \App\Models\YeuCauCuDan::TRANG_THAI_MOI))
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Cập nhật</h2>
@@ -239,6 +329,7 @@
                     </button>
                 </form>
             </div>
+            @endif
 
             <a href="{{ route('manager.yeu-cau.index') }}"
                class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
