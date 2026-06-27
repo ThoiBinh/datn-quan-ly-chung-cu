@@ -74,6 +74,7 @@ class PhuongTienController extends Controller
             'can_ho'           => $request->can_ho,
             'ngay_dang_ky'     => $request->ngay_dang_ky ?: null,
             'trang_thai'       => 1,
+            'nguoi_cap_nhat'   => auth('nhanvien')->id(),
         ]);
 
         AuditLogService::log('INSERT', 'phuong_tien', $pt->id, null, $pt->toArray());
