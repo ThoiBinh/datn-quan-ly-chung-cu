@@ -9,7 +9,7 @@
     @endif
 
     <div class="flex justify-end">
-        <a href="{{ route('resident.phuong-tien.create') }}" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
+        <a href="{{ route('resident.yeu-cau.store') }}" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Đăng ký xe mới
         </a>
