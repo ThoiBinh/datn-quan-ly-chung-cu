@@ -234,6 +234,9 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     Route::get('/profile', [\App\Http\Controllers\Resident\ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [\App\Http\Controllers\Resident\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [\App\Http\Controllers\Resident\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [\App\Http\Controllers\Resident\ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::get('/profile/change-password', [\App\Http\Controllers\Resident\ProfileController::class, 'showChangePassword'])->name('profile.change-password');
+    Route::post('/profile/change-password', [\App\Http\Controllers\Resident\ProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::get('/hoa-don', [\App\Http\Controllers\Resident\HoaDonController::class, 'index'])->name('hoa-don.index');
     Route::get('/hoa-don/{hoaDon}', [\App\Http\Controllers\Resident\HoaDonController::class, 'show'])->name('hoa-don.show');
     Route::post('/hoa-don/{hoaDon}/momo', [\App\Http\Controllers\Resident\HoaDonController::class, 'thanhToanMomo'])->name('hoa-don.momo');
