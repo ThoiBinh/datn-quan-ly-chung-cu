@@ -155,31 +155,36 @@
         @endif
 
         <!-- Actions row -->
-        <div class="flex items-center justify-between">
-            @if($hoaDon->trang_thai == \App\Models\HoaDon::TRANG_THAI_CHUA_THANH_TOAN)
-            <form action="{{ route('admin.hoa-don.destroy', $hoaDon) }}" method="POST"
-                  onsubmit="return confirm('Xóa hóa đơn {{ $hoaDon->ma_thanh_toan }}? Thao tác này không thể hoàn tác.')">
-                @csrf @method('DELETE')
-                <button type="submit"
-                        class="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
-                    Xóa hóa đơn
-                </button>
-            </form>
-            @else
-            <div></div>
-            @endif
+<!-- Actions row -->
+<div class="flex items-center justify-between">
 
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.hoa-don.show', $hoaDon) }}"
-                   class="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                    Hủy
-                </a>
-                <button type="submit"
-                        class="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold rounded-lg transition-colors">
-                    Lưu thay đổi
-                </button>
-            </div>
-        </div>
+    {{-- Nút xóa --}}
+    @if($hoaDon->trang_thai == \App\Models\HoaDon::TRANG_THAI_CHUA_THANH_TOAN)
+        <button
+            type="submit"
+            form="delete-form"
+            onclick="return confirm('Xóa hóa đơn {{ $hoaDon->ma_thanh_toan }}? Thao tác này không thể hoàn tác.')"
+            class="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+            Xóa hóa đơn
+        </button>
+    @else
+        <div></div>
+    @endif
+
+    <div class="flex items-center gap-3">
+        <a href="{{ route('admin.hoa-don.show', $hoaDon) }}"
+           class="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+            Hủy
+        </a>
+
+        <button
+            type="submit"
+            class="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold rounded-lg transition-colors">
+            Lưu thay đổi
+        </button>
+    </div>
+
+</div>
     </form>
 </div>
 @endsection
