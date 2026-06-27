@@ -255,6 +255,42 @@ $statusConfig = match($hoaDon->trang_thai) {
                 @endif
             </div>
 
+            <!-- Người cập nhật -->
+            @if($hoaDon->nguoiCapNhat)
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
+                    <div class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-violet-500 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </div>
+                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Người cập nhật</h2>
+                </div>
+                <dl class="divide-y divide-gray-50 dark:divide-slate-700/50">
+                    <div class="flex items-baseline px-5 py-3">
+                        <dt class="w-24 text-xs text-gray-400 dark:text-slate-500 flex-shrink-0">Họ tên</dt>
+                        <dd class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ $hoaDon->nguoiCapNhat->ho_ten }}</dd>
+                    </div>
+                    @if($hoaDon->nguoiCapNhat->chucVu)
+                    <div class="flex items-baseline px-5 py-3">
+                        <dt class="w-24 text-xs text-gray-400 dark:text-slate-500 flex-shrink-0">Chức vụ</dt>
+                        <dd class="text-sm text-gray-600 dark:text-slate-300">{{ $hoaDon->nguoiCapNhat->chucVu->chuc_vu }}</dd>
+                    </div>
+                    @endif
+                    @if($hoaDon->nguoiCapNhat->email)
+                    <div class="flex items-baseline px-5 py-3">
+                        <dt class="w-24 text-xs text-gray-400 dark:text-slate-500 flex-shrink-0">Email</dt>
+                        <dd class="text-xs text-gray-500 dark:text-slate-400">{{ $hoaDon->nguoiCapNhat->email }}</dd>
+                    </div>
+                    @endif
+                    @if($hoaDon->updatedAt)
+                    <div class="flex items-baseline px-5 py-3">
+                        <dt class="w-24 text-xs text-gray-400 dark:text-slate-500 flex-shrink-0">Cập nhật</dt>
+                        <dd class="text-xs text-gray-500 dark:text-slate-400">{{ $hoaDon->updatedAt->format('d/m/Y H:i') }}</dd>
+                    </div>
+                    @endif
+                </dl>
+            </div>
+            @endif
+
             <!-- Chủ hộ -->
             @php $chuHo = $hoaDon->canHo?->chuHo?->cuDan; @endphp
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">

@@ -58,6 +58,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->name('phuong-tien.toggle-status');
 
     // Quản lý hóa đơn
+    Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Admin\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
+    Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Admin\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Admin\HoaDonController::class)
         ->except(['destroy'])
         ->parameters(['hoa-don' => 'hoaDon']);
@@ -155,7 +157,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);
     Route::resource('phuong-tien', \App\Http\Controllers\Manager\PhuongTienController::class);
     Route::resource('phi-dich-vu', \App\Http\Controllers\Manager\PhiDichVuController::class);
-    Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class);
+    Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Manager\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
+    Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
+    Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class)->except(['destroy'])->parameters(['hoa-don' => 'hoaDon']);
+    Route::patch('hoa-don/{hoaDon}/toggle-status', [\App\Http\Controllers\Manager\HoaDonController::class, 'toggleStatus'])->name('hoa-don.toggle-status');
     Route::post('hoa-don/{hoaDon}/ghi-nhan-thanh-toan', [\App\Http\Controllers\Manager\HoaDonController::class, 'ghiNhanThanhToan'])->name('hoa-don.ghi-nhan-thanh-toan');
     Route::resource('yeu-cau', \App\Http\Controllers\Manager\YeuCauController::class)->except(['create', 'store', 'edit']);
     Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Manager\YeuCauController::class, 'approve'])->name('yeu-cau.approve');

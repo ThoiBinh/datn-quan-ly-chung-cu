@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreHoaDonRequest;
+use App\Http\Requests\Admin\UpdateHoaDonRequest;
 use App\Models\CanHo;
+use App\Models\ChiTietHoaDon;
 use App\Models\HoaDon;
 use App\Models\ToaNha;
 use App\Services\AuditLogService;
 use App\Services\HoaDonService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HoaDonController extends Controller
 {
     public function __construct(private HoaDonService $hoaDonService) {}
 
-    private const SORTABLE = ['createdAt', 'tong_tien', 'han_thanh_toan', 'thang', 'nam'];
+    private const SORTABLE = ['id', 'createdAt', 'tong_tien', 'han_thanh_toan', 'thang', 'nam'];
 
     public function index(Request $request)
     {
@@ -24,7 +28,13 @@ class HoaDonController extends Controller
         $query = HoaDon::with(['canHo.toaNha', 'canHo.chuHo.cuDan']);
 
         if ($request->filled('search')) {
-            $query->where('ma_thanh_toan', 'like', '%' . $request->search . '%');
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('ma_thanh_toan', 'like', "%$s%")
+                  ->orWhereHas('canHo', fn ($q2) => $q2->where('so_can_ho', 'like', "%$s%"))
+                  ->orWhereHas('canHo.toaNha', fn ($q2) => $q2->where('ten_toa_nha', 'like', "%$s%"))
+                  ->orWhereHas('canHo.chuHo.cuDan', fn ($q2) => $q2->where('ho_ten', 'like', "%$s%"));
+            });
         }
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
@@ -36,13 +46,14 @@ class HoaDonController extends Controller
             $query->where('nam', $request->nam);
         }
         if ($request->filled('toa_nha')) {
-            $query->whereHas('canHo', fn($q) => $q->where('toa_nha', $request->toa_nha));
+            $query->whereHas('canHo', fn ($q) => $q->where('toa_nha', $request->toa_nha));
         }
 
         $hoaDon   = $query->orderBy($sort, $direction)->paginate(15)->withQueryString();
         $dsToaNha = ToaNha::orderBy('ten_toa_nha')->get();
+        $stats    = $this->layThongKe();
 
-        return view('admin.hoa-don.index', compact('hoaDon', 'dsToaNha', 'sort', 'direction'));
+        return view('admin.hoa-don.index', compact('hoaDon', 'dsToaNha', 'sort', 'direction', 'stats'));
     }
 
     public function create()
@@ -51,17 +62,32 @@ class HoaDonController extends Controller
         return view('admin.hoa-don.create', compact('dsCanHo'));
     }
 
-    public function store(Request $request)
+    public function previewPhi(Request $request)
     {
         $request->validate([
-            'can_ho' => 'required|exists:can_ho,id',
+            'can_ho' => 'required|integer|exists:can_ho,id',
             'thang'  => 'required|integer|min:1|max:12',
             'nam'    => 'required|integer|min:2020',
-        ], [
-            'can_ho.required' => 'Vui lòng chọn căn hộ.',
-            'thang.required'  => 'Vui lòng chọn tháng.',
-            'nam.required'    => 'Vui lòng nhập năm.',
         ]);
+
+        try {
+            $data = $this->hoaDonService->previewPhi($request->can_ho, $request->thang, $request->nam);
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    public function store(StoreHoaDonRequest $request)
+    {
+        // Validate chi_so: moi >= cu
+        foreach ($request->input('chi_so', []) as $phiId => $values) {
+            $cu  = (int) ($values['cu']  ?? 0);
+            $moi = (int) ($values['moi'] ?? 0);
+            if ($moi < $cu) {
+                return back()->withInput()->with('error', 'Chỉ số mới không được nhỏ hơn chỉ số cũ.');
+            }
+        }
 
         $exists = HoaDon::where('can_ho', $request->can_ho)
             ->where('thang', $request->thang)
@@ -69,42 +95,85 @@ class HoaDonController extends Controller
             ->exists();
 
         if ($exists) {
-            return back()->with('error', 'Hóa đơn tháng này đã tồn tại cho căn hộ này.');
+            return back()->withInput()->with('error', 'Hóa đơn tháng này đã tồn tại cho căn hộ này.');
         }
 
-        $hoaDon = $this->hoaDonService->taoHoaDon($request->can_ho, $request->thang, $request->nam);
-        return redirect()->route('admin.hoa-don.show', $hoaDon)
-            ->with('success', 'Tạo hóa đơn thành công.');
+        $hoaDon = $this->hoaDonService->taoHoaDon(
+            $request->can_ho,
+            $request->thang,
+            $request->nam,
+            $request->input('chi_so', [])
+        );
+
+        return redirect()->route('admin.hoa-don.show', $hoaDon)->with('success', 'Tạo hóa đơn thành công.');
     }
 
     public function show(HoaDon $hoaDon)
     {
-        $hoaDon->load(['canHo.toaNha', 'canHo.chuHo.cuDan', 'chiTiet', 'lichSuThanhToan.nguoiThanhToan', 'lichSuThanhToan.nguonTao']);
+        $hoaDon->load([
+            'canHo.toaNha', 'canHo.chuHo.cuDan',
+            'chiTiet', 'nguoiCapNhat.chucVu',
+            'lichSuThanhToan.nguoiThanhToan', 'lichSuThanhToan.nguonTao',
+        ]);
         $isCanHuy = $hoaDon->trang_thai != HoaDon::TRANG_THAI_DA_HUY;
         return view('admin.hoa-don.show', compact('hoaDon', 'isCanHuy'));
     }
 
     public function edit(HoaDon $hoaDon)
     {
+        $hoaDon->load('chiTiet', 'canHo.toaNha');
         return view('admin.hoa-don.edit', compact('hoaDon'));
     }
 
-    public function update(Request $request, HoaDon $hoaDon)
+    public function update(UpdateHoaDonRequest $request, HoaDon $hoaDon)
     {
-        $request->validate([
-            'han_thanh_toan' => 'nullable|date',
-            'trang_thai'     => 'required|integer|in:1,2,3,4',
-        ], [
-            'trang_thai.required' => 'Vui lòng chọn trạng thái.',
-            'trang_thai.in'       => 'Trạng thái không hợp lệ.',
-        ]);
+        // chi_so edit only when CHUA_THANH_TOAN
+        $isCurrentlyChuaTT = $hoaDon->trang_thai == HoaDon::TRANG_THAI_CHUA_THANH_TOAN;
+
+        if ($isCurrentlyChuaTT && $request->has('chi_tiet')) {
+            foreach ($request->chi_tiet as $id => $values) {
+                $cu  = (int) ($values['chi_so_cu']  ?? 0);
+                $moi = (int) ($values['chi_so_moi'] ?? 0);
+                if ($moi < $cu) {
+                    return back()->withInput()->with('error', 'Chỉ số mới không được nhỏ hơn chỉ số cũ.');
+                }
+            }
+        }
 
         $old = $hoaDon->toArray();
-        $hoaDon->update($request->only('han_thanh_toan', 'trang_thai'));
+
+        DB::transaction(function () use ($request, $hoaDon, $isCurrentlyChuaTT) {
+            $hoaDon->update(array_merge(
+                $request->only('han_thanh_toan', 'trang_thai'),
+                ['nguoi_cap_nhat' => auth('nhanvien')->id()]
+            ));
+
+            if ($isCurrentlyChuaTT && $request->has('chi_tiet')) {
+                $this->hoaDonService->capNhatChiSo($hoaDon, $request->chi_tiet);
+            }
+        });
+
         AuditLogService::log('UPDATE', 'hoa_don', $hoaDon->id, $old, $hoaDon->fresh()->toArray());
 
-        return redirect()->route('admin.hoa-don.show', $hoaDon)
-            ->with('success', 'Cập nhật hóa đơn thành công.');
+        return redirect()->route('admin.hoa-don.show', $hoaDon)->with('success', 'Cập nhật hóa đơn thành công.');
+    }
+
+    public function destroy(HoaDon $hoaDon)
+    {
+        if ($hoaDon->trang_thai !== HoaDon::TRANG_THAI_CHUA_THANH_TOAN) {
+            return back()->with('error', 'Chỉ có thể xóa hóa đơn chưa thanh toán.');
+        }
+
+        $old        = $hoaDon->toArray();
+        $maHoaDon   = $hoaDon->ma_thanh_toan;
+
+        DB::transaction(function () use ($hoaDon, $old) {
+            $hoaDon->chiTiet()->delete();
+            $hoaDon->delete();
+            AuditLogService::log('DELETE', 'hoa_don', $hoaDon->id, $old, null);
+        });
+
+        return redirect()->route('admin.hoa-don.index')->with('success', "Xóa hóa đơn «{$maHoaDon}» thành công.");
     }
 
     public function toggleStatus(HoaDon $hoaDon)
@@ -114,10 +183,28 @@ class HoaDonController extends Controller
             ? HoaDon::TRANG_THAI_CHUA_THANH_TOAN
             : HoaDon::TRANG_THAI_DA_HUY;
 
-        $hoaDon->update(['trang_thai' => $newVal]);
+        $hoaDon->update(['trang_thai' => $newVal, 'nguoi_cap_nhat' => auth('nhanvien')->id()]);
         AuditLogService::log('UPDATE', 'hoa_don', $hoaDon->id, $old, $hoaDon->fresh()->toArray());
 
         $msg = $newVal == HoaDon::TRANG_THAI_DA_HUY ? 'Hủy' : 'Khôi phục';
         return back()->with('success', "$msg hóa đơn «{$hoaDon->ma_thanh_toan}» thành công.");
+    }
+
+    private function layThongKe(): array
+    {
+        $row = HoaDon::whereIn('trang_thai', [
+            HoaDon::TRANG_THAI_CHUA_THANH_TOAN,
+            HoaDon::TRANG_THAI_QUA_HAN,
+        ])->selectRaw('COALESCE(SUM(tong_tien - so_tien_da_thanh_toan), 0) as cong_no')->first();
+
+        return [
+            'tong'      => HoaDon::count(),
+            'chua_tt'   => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_CHUA_THANH_TOAN)->count(),
+            'da_tt'     => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->count(),
+            'qua_han'   => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_QUA_HAN)->count(),
+            'da_huy'    => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_HUY)->count(),
+            'doanh_thu' => (float) HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->sum('so_tien_da_thanh_toan'),
+            'cong_no'   => (float) ($row?->cong_no ?? 0),
+        ];
     }
 }

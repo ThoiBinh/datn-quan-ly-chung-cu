@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\NhanVien;
 use Illuminate\Database\Eloquent\Model;
 
 class HoaDon extends Model
@@ -41,6 +42,11 @@ class HoaDon extends Model
     public function lichSuThanhToan()
     {
         return $this->hasMany(LichSuThanhToan::class, 'hoa_don');
+    }
+
+    public function nguoiCapNhat()
+    {
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
     }
 
     public function conNo(): float
