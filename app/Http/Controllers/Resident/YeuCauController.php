@@ -118,19 +118,20 @@ class YeuCauController extends Controller
             'trang_thai'     => YeuCauCuDan::TRANG_THAI_MOI,
         ]);
 
-        if ($isDangKyPT) {
-            $canHoId = $cuDan->canHoHienTai?->can_ho;
-            if ($canHoId) {
-                PhuongTien::create([
-                    'ten_phuong_tien'  => $request->ten_phuong_tien,
-                    'bien_so'          => strtoupper(trim($request->bien_so)),
-                    'loai_phuong_tien' => $request->loai_phuong_tien,
-                    'can_ho'           => $canHoId,
-                    'ngay_dang_ky'     => now()->toDateString(),
-                    'trang_thai'       => 1,
-                ]);
-            }
-        }
+      if ($isDangKyPT) {
+
+    $noiDung = json_encode([
+        'bien_so' => strtoupper(trim($request->bien_so)),
+        'loai_phuong_tien' => (int) $request->loai_phuong_tien,
+        'ten_phuong_tien' => $request->ten_phuong_tien,
+        'ghi_chu' => $request->noi_dung,
+    ], JSON_UNESCAPED_UNICODE);
+
+} else {
+
+    $noiDung = $request->noi_dung;
+
+}
 
         return redirect()->route('resident.yeu-cau.index')->with('success', 'Gửi yêu cầu thành công.');
     }
