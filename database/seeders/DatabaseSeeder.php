@@ -3,26 +3,38 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Seed chuc_vu 'Admin' nếu chưa có (dùng name lookup để không conflict với data gốc)
-        $this->seedAdminChucVu();
+        $this->call([
+            // Bảng phụ (không có foreign key)
+            ChucVuSeeder::class,
+            LoaiCanHoSeeder::class,
+            LoaiPhiDichVuSeeder::class,
+            DonViTinhPhiDichVuSeeder::class,
+            LoaiTinhPhiDichVuSeeder::class,
+            LoaiPhuongTienSeeder::class,
+            TrangThaiCanHoSeeder::class,
+            VaiTroSeeder::class,
+            NguonTaoSeeder::class,
+            ThuocTinhSeeder::class,
 
-        $this->call(UserSeeder::class);
-    }
-
-    private function seedAdminChucVu(): void
-    {
-        if (!DB::table('chuc_vu')->where('chuc_vu', 'Admin')->exists()) {
-            DB::table('chuc_vu')->insert([
-                'chuc_vu'   => 'Admin',
-                'createdAt' => now(),
-                'updatedAt' => now(),
-            ]);
-        }
+            // Bảng chính (theo thứ tự phụ thuộc)
+            ToaNhaSeeder::class,
+            NhanVienSeeder::class,
+            LoaiYeuCauSeeder::class,
+            CuDanSeeder::class,
+            CanHoSeeder::class,
+            CuDanCanHoSeeder::class,
+            PhiDichVuSeeder::class,
+            CanHoPhiDichVuSeeder::class,
+            HoaDonSeeder::class,
+            ChiTietHoaDonSeeder::class,
+            PhuongTienSeeder::class,
+            YeuCauCuDanSeeder::class,
+            BangTinSeeder::class,
+        ]);
     }
 }
