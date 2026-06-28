@@ -74,7 +74,7 @@ class PhuongTienController extends Controller
             abort(403);
         }
 
-        $phuongTien->update(['trang_thai' => 0]);
+        $phuongTien->update(['trang_thai' => 0, 'ngay_huy' => now()]);
         return redirect()->route('resident.phuong-tien.index')->with('success', 'Đã hủy đăng ký phương tiện.');
     }
 }

@@ -17,10 +17,11 @@ class StoreHoaDonRequest extends FormRequest
             'can_ho'       => 'required|integer|exists:can_ho,id',
             'thang'        => 'required|integer|min:1|max:12',
             'nam'          => 'required|integer|min:2020|max:' . (date('Y') + 2),
-            'chi_so'       => 'nullable|array',
-            'chi_so.*'     => 'array',
-            'chi_so.*.cu'  => 'nullable|integer|min:0',
-            'chi_so.*.moi' => 'nullable|integer|min:0',
+            'chi_so'              => 'nullable|array',
+            'chi_so.*'            => 'array',
+            'chi_so.*.cu'         => 'nullable|integer|min:0',
+            'chi_so.*.moi'        => 'nullable|integer|min:0',
+            'chi_so.*.so_luong'   => 'nullable|numeric|min:1',
         ];
     }
 
@@ -34,8 +35,10 @@ class StoreHoaDonRequest extends FormRequest
             'thang.max'         => 'Tháng phải từ 1 đến 12.',
             'nam.required'      => 'Vui lòng nhập năm.',
             'nam.min'           => 'Năm không hợp lệ (tối thiểu 2020).',
-            'chi_so.*.cu.min'   => 'Chỉ số cũ không được âm.',
-            'chi_so.*.moi.min'  => 'Chỉ số mới không được âm.',
+            'chi_so.*.cu.min'         => 'Chỉ số cũ không được âm.',
+            'chi_so.*.moi.min'        => 'Chỉ số mới không được âm.',
+            'chi_so.*.so_luong.min'   => 'Số lượng phải lớn hơn hoặc bằng 1.',
+            'chi_so.*.so_luong.numeric' => 'Số lượng phải là số.',
         ];
     }
 }
