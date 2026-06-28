@@ -12,18 +12,32 @@
          loading: false,
          fetchError: null,
          oldChiSo: {{ Js::from(old('chi_so', [])) }},
+         soLuongMap: {},
+         phuongTienInfo: [],
 
          async fetchPreview() {
-             if (!this.canHo || !this.thang || !this.nam) { this.fees = null; return; }
+             if (!this.canHo || !this.thang || !this.nam) { this.fees = null; this.phuongTienInfo = []; return; }
              this.loading = true;
              this.fetchError = null;
              try {
                  const url = '{{ route('manager.hoa-don.preview-phi') }}?can_ho=' + this.canHo + '&thang=' + this.thang + '&nam=' + this.nam;
                  const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
                  const data = await r.json();
-                 if (data.error) { this.fetchError = data.error; this.fees = null; }
-                 else { this.fees = data.fees; }
-             } catch(e) { this.fetchError = 'Không thể tải dữ liệu phí.'; this.fees = null; }
+                 if (data.error) { this.fetchError = data.error; this.fees = null; this.phuongTienInfo = []; }
+                 else {
+                     this.fees = data.fees;
+                     this.phuongTienInfo = data.phuong_tien_info || [];
+                     data.fees.forEach(fee => {
+                         if (fee.billing_type === 'fixed') {
+                             const id = String(fee.phi_dich_vu_id);
+                             if (!(id in this.soLuongMap)) {
+                                 const oldVal = (this.oldChiSo[id] || {}).so_luong;
+                                 this.soLuongMap[id] = oldVal ? parseInt(oldVal) : 1;
+                             }
+                         }
+                     });
+                 }
+             } catch(e) { this.fetchError = 'Không thể tải dữ liệu phí.'; this.fees = null; this.phuongTienInfo = []; }
              this.loading = false;
          },
 
@@ -32,9 +46,17 @@
              return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
          },
 
+         getFeeTotal(fee) {
+             if (fee.billing_type === 'fixed') {
+                 const sl = parseInt(this.soLuongMap[String(fee.phi_dich_vu_id)] || 1);
+                 return sl * fee.don_gia;
+             }
+             return fee.thanh_tien;
+         },
+
          previewTotal() {
              if (!this.fees) return 0;
-             return this.fees.reduce((s, f) => s + (f.thanh_tien || 0), 0);
+             return this.fees.reduce((s, f) => s + (this.getFeeTotal(f) || 0), 0);
          }
      }"
      x-init="$nextTick(() => { if (canHo) fetchPreview(); })">
@@ -121,12 +143,28 @@
 
                 <template x-if="fees && fees.length > 0">
                     <div class="space-y-3">
+
+                        {{-- Tóm tắt phương tiện được tính trong tháng --}}
+                        <template x-if="phuongTienInfo && phuongTienInfo.length > 0">
+                            <div class="p-3 bg-green-50/70 border border-green-100 rounded-lg">
+                                <p class="text-xs font-semibold text-green-700 mb-2">Phương tiện được tính trong tháng</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <template x-for="pt in phuongTienInfo" :key="pt.ten_loai">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-green-200 rounded-md text-xs">
+                                            <span class="text-gray-700" x-text="pt.ten_loai"></span>
+                                            <span class="font-semibold text-green-700" x-text="pt.so_luong + ' chiếc'"></span>
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
                         <template x-for="fee in fees" :key="fee.phi_dich_vu_id">
                             <div class="border border-gray-200 rounded-lg overflow-hidden">
                                 <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
                                     <span class="text-sm font-medium text-gray-800" x-text="fee.ten_phi_dich_vu"></span>
                                     <span class="text-sm font-semibold text-gray-900 tabular-nums"
-                                          x-text="fee.billing_type === 'meter' ? '(nhập chỉ số)' : fmtMoney(fee.thanh_tien)"></span>
+                                          x-text="fee.billing_type === 'meter' ? '(nhập chỉ số)' : fmtMoney(getFeeTotal(fee))"></span>
                                 </div>
 
                                 <template x-if="fee.billing_type === 'meter'">
@@ -172,14 +210,34 @@
                                 </template>
 
                                 <template x-if="fee.billing_type === 'area'">
-                                    <div class="px-4 py-2 text-xs text-gray-500 bg-indigo-50/40">
-                                        <span x-text="fee.so_luong"></span> m² × <span x-text="fee.don_gia_fmt"></span> = <span x-text="fmtMoney(fee.thanh_tien)"></span>
+                                    <div class="px-4 py-3 bg-indigo-50/40">
+                                        <div class="flex items-center gap-3 flex-wrap">
+                                            <span class="text-xs text-gray-500">Diện tích căn hộ:</span>
+                                            <span class="text-xs font-medium text-indigo-700" x-text="fee.so_luong + ' m²'"></span>
+                                            <span class="text-xs text-gray-400">×</span>
+                                            <span class="text-xs text-gray-600" x-text="fee.don_gia_fmt"></span>
+                                            <span class="text-xs text-gray-400">=</span>
+                                            <span class="text-sm font-semibold text-indigo-700 tabular-nums" x-text="fmtMoney(fee.thanh_tien)"></span>
+                                        </div>
                                     </div>
                                 </template>
 
                                 <template x-if="fee.billing_type === 'fixed'">
-                                    <div class="px-4 py-2 text-xs text-gray-500 bg-indigo-50/20">
-                                        <span x-text="fee.so_luong"></span> × <span x-text="fee.don_gia_fmt"></span> = <span x-text="fmtMoney(fee.thanh_tien)"></span>
+                                    <div class="px-4 py-3 bg-indigo-50/20">
+                                        <div class="flex items-center gap-3 flex-wrap">
+                                            <label class="text-xs text-gray-500">Số lượng:</label>
+                                            <input type="number"
+                                                   :name="'chi_so[' + fee.phi_dich_vu_id + '][so_luong]'"
+                                                   min="1"
+                                                   :value="soLuongMap[String(fee.phi_dich_vu_id)] ?? 1"
+                                                   @input="soLuongMap[String(fee.phi_dich_vu_id)] = Math.max(1, parseInt($event.target.value) || 1)"
+                                                   class="w-20 px-2 py-1.5 border border-indigo-300 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                            <span class="text-xs text-gray-400">×</span>
+                                            <span class="text-xs text-gray-600" x-text="fee.don_gia_fmt"></span>
+                                            <span class="text-xs text-gray-400">=</span>
+                                            <span class="text-sm font-semibold text-indigo-700 tabular-nums"
+                                                  x-text="fmtMoney((soLuongMap[String(fee.phi_dich_vu_id)] ?? 1) * fee.don_gia)"></span>
+                                        </div>
                                     </div>
                                 </template>
                             </div>

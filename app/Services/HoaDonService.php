@@ -158,9 +158,10 @@ class HoaDonService
         }
 
         return [
-            'fees'      => $fees,
-            'so_can_ho' => $canHo->so_can_ho,
-            'dien_tich' => $this->layDienTich($canHo),
+            'fees'             => $fees,
+            'so_can_ho'        => $canHo->so_can_ho,
+            'dien_tich'        => $this->layDienTich($canHo),
+            'phuong_tien_info' => $this->layThongTinPhuongTien($canHo, $thang, $nam),
         ];
     }
 
@@ -377,7 +378,8 @@ class HoaDonService
                     break;
 
                 default: // 'fixed'
-                    $result = $this->calculateFixedFee($donGia);
+                    $soLuong = max(1, (int) ($chiSoData[$phi->id]['so_luong'] ?? 1));
+                    $result  = $this->calculateFixedFee($donGia, $soLuong);
                     ChiTietHoaDon::create([
                         'hoa_don'         => $hoaDon->id,
                         'ten_phi_dich_vu' => $phi->ten_phi_dich_vu,
@@ -443,6 +445,38 @@ class HoaDonService
         $daysActive = $activeStart->diffInDays($activeEnd) + 1;
 
         return min(1.0, $daysActive / $daysInMonth);
+    }
+
+    /**
+     * Trả về danh sách phương tiện hợp lệ trong tháng, nhóm theo loại, dùng collection đã eager-load.
+     */
+    private function layThongTinPhuongTien(CanHo $canHo, int $thang, int $nam): array
+    {
+        $startDate = Carbon::create($nam, $thang, 1)->startOfDay();
+        $endDate   = Carbon::create($nam, $thang, 1)->endOfMonth()->endOfDay();
+
+        $valid = $canHo->phuongTien->filter(function ($pt) use ($startDate, $endDate) {
+            if (!$pt->ngay_dang_ky) {
+                return false;
+            }
+            $dangKy = $pt->ngay_dang_ky instanceof Carbon ? $pt->ngay_dang_ky : Carbon::parse($pt->ngay_dang_ky);
+            if ($dangKy->gt($endDate)) {
+                return false;
+            }
+            if ($pt->ngay_huy) {
+                $huy = $pt->ngay_huy instanceof Carbon ? $pt->ngay_huy : Carbon::parse($pt->ngay_huy);
+                return $huy->gte($startDate);
+            }
+            return true;
+        });
+
+        return $valid->groupBy('loai_phuong_tien')
+            ->map(fn ($group) => [
+                'ten_loai' => $group->first()->loaiPhuongTien?->ten_loai_phuong_tien ?? 'Không rõ loại',
+                'so_luong' => $group->count(),
+            ])
+            ->values()
+            ->toArray();
     }
 
     /**
