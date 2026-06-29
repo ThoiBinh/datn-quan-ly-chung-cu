@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreHoaDonRequest;
 use App\Http\Requests\Admin\UpdateHoaDonRequest;
 use App\Models\CanHo;
+use App\Models\CauHinhThanhToan;
 use App\Models\ChiTietHoaDon;
 use App\Models\HoaDon;
 use App\Models\ToaNha;
@@ -129,12 +130,14 @@ class HoaDonController extends Controller
         $this->hoaDonService->capNhatTrangThaiTreHan();
         $hoaDon->refresh();
         $hoaDon->load([
-            'canHo.toaNha', 'canHo.chuHo.cuDan',
+            'canHo.toaNha', 'canHo.chuHo.cuDan', 'canHo.cuDanHienTai.cuDan',
             'chiTiet', 'nguoiCapNhat.chucVu',
-            'lichSuThanhToan.nguoiThanhToan', 'lichSuThanhToan.nguonTao',
+            'lichSuThanhToan' => fn ($q) => $q->orderBy('ngay_thanh_toan'),
+            'lichSuThanhToan.nguoiThanhToan',
+            'lichSuThanhToan.nguonTao',
         ]);
-        $isCanHuy = $hoaDon->trang_thai != HoaDon::TRANG_THAI_DA_HUY;
-        return view('admin.hoa-don.show', compact('hoaDon', 'isCanHuy'));
+        $phuongThuc = CauHinhThanhToan::where('trang_thai', 1)->orderBy('loai_phuong_thuc')->get();
+        return view('admin.hoa-don.show', compact('hoaDon', 'phuongThuc'));
     }
 
     public function edit(HoaDon $hoaDon)
@@ -165,13 +168,15 @@ class HoaDonController extends Controller
 
         DB::transaction(function () use ($request, $hoaDon, $isCurrentlyChuaTT) {
             $hoaDon->update(array_merge(
-                $request->only('han_thanh_toan', 'trang_thai'),
+                $request->only('han_thanh_toan'),
                 ['nguoi_cap_nhat' => auth('nhanvien')->id()]
             ));
 
             if ($isCurrentlyChuaTT && $request->has('chi_tiet')) {
                 $this->hoaDonService->capNhatChiSo($hoaDon, $request->chi_tiet);
             }
+
+            $this->hoaDonService->syncStatus($hoaDon->refresh());
         });
 
         AuditLogService::log('UPDATE', 'hoa_don', $hoaDon->id, $old, $hoaDon->fresh()->toArray());
@@ -183,6 +188,10 @@ class HoaDonController extends Controller
     {
         if ($hoaDon->trang_thai === HoaDon::TRANG_THAI_DA_THANH_TOAN) {
             return back()->with('error', 'Hóa đơn đã thanh toán nên không thể xóa.');
+        }
+
+        if ($hoaDon->lichSuThanhToan()->exists()) {
+            return back()->with('error', 'Không thể xóa hóa đơn đã có lịch sử thanh toán. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.');
         }
 
         $old      = $hoaDon->toArray();
@@ -220,20 +229,6 @@ class HoaDonController extends Controller
         ]);
     }
 
-    public function toggleStatus(HoaDon $hoaDon)
-    {
-        $old    = $hoaDon->toArray();
-        $newVal = $hoaDon->trang_thai == HoaDon::TRANG_THAI_DA_HUY
-            ? HoaDon::TRANG_THAI_CHUA_THANH_TOAN
-            : HoaDon::TRANG_THAI_DA_HUY;
-
-        $hoaDon->update(['trang_thai' => $newVal, 'nguoi_cap_nhat' => auth('nhanvien')->id()]);
-        AuditLogService::log('UPDATE', 'hoa_don', $hoaDon->id, $old, $hoaDon->fresh()->toArray());
-
-        $msg = $newVal == HoaDon::TRANG_THAI_DA_HUY ? 'Hủy' : 'Khôi phục';
-        return back()->with('success', "$msg hóa đơn «{$hoaDon->ma_thanh_toan}» thành công.");
-    }
-
     private function layThongKe(): array
     {
         $row = HoaDon::whereIn('trang_thai', [
@@ -246,7 +241,6 @@ class HoaDonController extends Controller
             'chua_tt'   => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_CHUA_THANH_TOAN)->count(),
             'da_tt'     => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->count(),
             'qua_han'   => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_QUA_HAN)->count(),
-            'da_huy'    => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_HUY)->count(),
             'doanh_thu' => (float) HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->sum('so_tien_da_thanh_toan'),
             'cong_no'   => (float) ($row?->cong_no ?? 0),
         ];

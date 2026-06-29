@@ -65,8 +65,12 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('hoa-don', \App\Http\Controllers\Admin\HoaDonController::class)
         ->except(['destroy'])
         ->parameters(['hoa-don' => 'hoaDon']);
-    Route::patch('hoa-don/{hoaDon}/toggle-status', [\App\Http\Controllers\Admin\HoaDonController::class, 'toggleStatus'])
-        ->name('hoa-don.toggle-status');
+
+    // Thanh toán hóa đơn (immutable — no edit/delete)
+    Route::get('thanh-toan', [\App\Http\Controllers\Admin\ThanhToanController::class, 'index'])->name('thanh-toan.index');
+    Route::get('thanh-toan/{lichSu}', [\App\Http\Controllers\Admin\ThanhToanController::class, 'show'])->name('thanh-toan.show');
+    Route::get('hoa-don/{hoaDon}/thanh-toan/create', [\App\Http\Controllers\Admin\ThanhToanController::class, 'create'])->name('thanh-toan.create');
+    Route::post('hoa-don/{hoaDon}/thanh-toan', [\App\Http\Controllers\Admin\ThanhToanController::class, 'store'])->name('thanh-toan.store');
 
     // Quản lý phí dịch vụ
     Route::resource('phi-dich-vu', \App\Http\Controllers\Admin\PhiDichVuController::class)
@@ -168,8 +172,13 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::delete('hoa-don/{hoaDon}/chi-tiet/{chiTiet}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroyChiTiet'])->name('hoa-don.chi-tiet.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class)->except(['destroy'])->parameters(['hoa-don' => 'hoaDon']);
-    Route::patch('hoa-don/{hoaDon}/toggle-status', [\App\Http\Controllers\Manager\HoaDonController::class, 'toggleStatus'])->name('hoa-don.toggle-status');
-    Route::post('hoa-don/{hoaDon}/ghi-nhan-thanh-toan', [\App\Http\Controllers\Manager\HoaDonController::class, 'ghiNhanThanhToan'])->name('hoa-don.ghi-nhan-thanh-toan');
+
+    // Thanh toán hóa đơn (immutable — no edit/delete)
+    Route::get('thanh-toan', [\App\Http\Controllers\Manager\ThanhToanController::class, 'index'])->name('thanh-toan.index');
+    Route::get('thanh-toan/{lichSu}', [\App\Http\Controllers\Manager\ThanhToanController::class, 'show'])->name('thanh-toan.show');
+    Route::get('hoa-don/{hoaDon}/thanh-toan/create', [\App\Http\Controllers\Manager\ThanhToanController::class, 'create'])->name('thanh-toan.create');
+    Route::post('hoa-don/{hoaDon}/thanh-toan', [\App\Http\Controllers\Manager\ThanhToanController::class, 'store'])->name('thanh-toan.store');
+
     Route::resource('yeu-cau', \App\Http\Controllers\Manager\YeuCauController::class)->except(['create', 'store', 'edit']);
     Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Manager\YeuCauController::class, 'approve'])->name('yeu-cau.approve');
     Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Manager\YeuCauController::class, 'reject'])->name('yeu-cau.reject');

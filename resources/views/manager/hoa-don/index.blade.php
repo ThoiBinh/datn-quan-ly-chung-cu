@@ -16,11 +16,7 @@ $sortIcon = function($col) use ($sort, $direction) {
 };
 @endphp
 
-<div class="space-y-4" x-data="{
-    confirmToggle: null,
-    openToggle(ma, action, isCancel) { this.confirmToggle = { ma, action, isCancel }; },
-    closeToggle() { this.confirmToggle = null; }
-}">
+<div class="space-y-4">
 
     @if(session('success'))
     <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl px-4 py-3">{{ session('success') }}</div>
@@ -100,8 +96,7 @@ $sortIcon = function($col) use ($sort, $direction) {
                 <option value="">Tất cả trạng thái</option>
                 <option value="1" {{ request('trang_thai') === '1' ? 'selected' : '' }}>Chưa thanh toán</option>
                 <option value="2" {{ request('trang_thai') === '2' ? 'selected' : '' }}>Đã thanh toán</option>
-                <option value="3" {{ request('trang_thai') === '3' ? 'selected' : '' }}>Quá hạn</option>
-                <option value="4" {{ request('trang_thai') === '4' ? 'selected' : '' }}>Đã hủy</option>
+                <option value="3" {{ request('trang_thai') === '3' ? 'selected' : '' }}>Trễ hạn</option>
             </select>
             <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">Lọc</button>
             @if(request()->hasAny(['search','toa_nha','thang','nam','trang_thai']))
@@ -146,7 +141,6 @@ $sortIcon = function($col) use ($sort, $direction) {
                             1 => 'bg-amber-100 text-amber-700',
                             2 => 'bg-emerald-100 text-emerald-700',
                             3 => 'bg-red-100 text-red-700',
-                            4 => 'bg-gray-100 text-gray-500',
                             default => 'bg-gray-100 text-gray-500',
                         };
                     @endphp
@@ -196,18 +190,6 @@ $sortIcon = function($col) use ($sort, $direction) {
                                    class="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
-                                @if(in_array($hd->trang_thai, [1, 3, 4]))
-                                <button type="button"
-                                        title="{{ $hd->trang_thai == 4 ? 'Khôi phục' : 'Hủy hóa đơn' }}"
-                                        @click="openToggle('{{ addslashes($hd->ma_thanh_toan) }}', '{{ route('manager.hoa-don.toggle-status', $hd) }}', {{ $hd->trang_thai != 4 ? 'true' : 'false' }})"
-                                        class="p-1.5 rounded-md transition-colors {{ $hd->trang_thai == 4 ? 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:text-red-600 hover:bg-red-50' }}">
-                                    @if($hd->trang_thai == 4)
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                    @else
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                    @endif
-                                </button>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -230,52 +212,5 @@ $sortIcon = function($col) use ($sort, $direction) {
         @endif
     </div>
 
-    {{-- Modal toggle --}}
-    <template x-teleport="body">
-    <div x-show="confirmToggle !== null"
-         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
-         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-         @click.self="closeToggle()">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden" @click.stop>
-            <div class="flex justify-end px-4 pt-4">
-                <button @click="closeToggle()" class="w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div x-show="confirmToggle?.isCancel" class="px-6 pt-2 pb-5 text-center">
-                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                </div>
-                <h3 class="text-base font-bold text-gray-900">Hủy hóa đơn</h3>
-                <p class="text-sm text-gray-500 mt-1">Hóa đơn sẽ được chuyển sang trạng thái đã hủy.</p>
-            </div>
-            <div x-show="confirmToggle && !confirmToggle.isCancel" class="px-6 pt-2 pb-5 text-center">
-                <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                </div>
-                <h3 class="text-base font-bold text-gray-900">Khôi phục hóa đơn</h3>
-                <p class="text-sm text-gray-500 mt-1">Hóa đơn sẽ được khôi phục về trạng thái chưa thanh toán.</p>
-            </div>
-            <div class="mx-6 mb-5 flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-xs text-gray-400">Mã hóa đơn</p>
-                    <p class="text-sm font-semibold text-gray-800 font-mono truncate" x-text="confirmToggle?.ma"></p>
-                </div>
-            </div>
-            <div class="flex gap-3 px-6 pb-6">
-                <button @click="closeToggle()" class="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Hủy bỏ</button>
-                <form :action="confirmToggle?.action" method="POST" class="flex-1">
-                    @csrf @method('PATCH')
-                    <button x-show="confirmToggle?.isCancel" type="submit" class="block w-full py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-colors">Hủy hóa đơn</button>
-                    <button x-show="confirmToggle && !confirmToggle.isCancel" type="submit" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">Khôi phục</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    </template>
 </div>
 @endsection
