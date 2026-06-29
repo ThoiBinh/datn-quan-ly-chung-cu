@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Manager;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Manager\StorePhiDichVuRequest;
-use App\Http\Requests\Manager\UpdatePhiDichVuRequest;
+use App\Http\Requests\Admin\StorePhiDichVuRequest;
+use App\Http\Requests\Admin\UpdatePhiDichVuRequest;
 use App\Models\DonViTinhPhiDichVu;
 use App\Models\LoaiPhiDichVu;
 use App\Models\LoaiTinhPhiDichVu;
@@ -22,9 +22,9 @@ class PhiDichVuController extends Controller
         $sort      = in_array($request->sort, self::SORTABLE) ? $request->sort : 'id';
         $direction = $request->direction === 'desc' ? 'desc' : 'asc';
 
-        $tongTatCa      = PhiDichVu::count();
-        $tongDangSuDung = PhiDichVu::whereHas('canHo')->count();
-        $tongCanHo      = DB::table('can_ho_phi_dich_vu')->distinct('can_ho')->count('can_ho');
+        $tongTatCa       = PhiDichVu::count();
+        $tongDangSuDung  = PhiDichVu::whereHas('canHo')->count();
+        $tongCanHo       = DB::table('can_ho_phi_dich_vu')->distinct('can_ho')->count('can_ho');
 
         $query = PhiDichVu::with(['loaiPhiDichVu', 'donViTinh', 'loaiTinhPhi', 'nguoiCapNhat'])
             ->withCount('canHo');
@@ -64,7 +64,7 @@ class PhiDichVuController extends Controller
         $dsDonViTinh   = DonViTinhPhiDichVu::orderBy('don_vi')->get();
         $dsLoaiTinhPhi = LoaiTinhPhiDichVu::orderBy('ten_loai')->get();
 
-        return view('manager.phi-dich-vu.index', compact(
+        return view('admin.phi-dich-vu.index', compact(
             'dsPhi', 'dsLoaiPhi', 'dsDonViTinh', 'dsLoaiTinhPhi',
             'sort', 'direction',
             'tongTatCa', 'tongDangSuDung', 'tongCanHo'
@@ -77,7 +77,7 @@ class PhiDichVuController extends Controller
         $dsDonViTinh   = DonViTinhPhiDichVu::orderBy('don_vi')->get();
         $dsLoaiTinhPhi = LoaiTinhPhiDichVu::orderBy('ten_loai')->get();
 
-        return view('manager.phi-dich-vu.create', compact('dsLoaiPhi', 'dsDonViTinh', 'dsLoaiTinhPhi'));
+        return view('admin.phi-dich-vu.create', compact('dsLoaiPhi', 'dsDonViTinh', 'dsLoaiTinhPhi'));
     }
 
     public function store(StorePhiDichVuRequest $request)
@@ -95,7 +95,7 @@ class PhiDichVuController extends Controller
 
         AuditLogService::log('INSERT', 'phi_dich_vu', $phi->id, null, $phi->toArray());
 
-        return redirect()->route('manager.phi-dich-vu.show', $phi)
+        return redirect()->route('admin.phi-dich-vu.show', $phi)
             ->with('success', "Thêm phí dịch vụ «{$phi->ten_phi_dich_vu}» thành công.");
     }
 
@@ -112,7 +112,7 @@ class PhiDichVuController extends Controller
 
         $soCanHo = $phiDichVu->canHo->count();
 
-        return view('manager.phi-dich-vu.show', compact('phiDichVu', 'soCanHo'));
+        return view('admin.phi-dich-vu.show', compact('phiDichVu', 'soCanHo'));
     }
 
     public function edit(PhiDichVu $phiDichVu)
@@ -122,7 +122,7 @@ class PhiDichVuController extends Controller
         $dsDonViTinh   = DonViTinhPhiDichVu::orderBy('don_vi')->get();
         $dsLoaiTinhPhi = LoaiTinhPhiDichVu::orderBy('ten_loai')->get();
 
-        return view('manager.phi-dich-vu.edit', compact('phiDichVu', 'dsLoaiPhi', 'dsDonViTinh', 'dsLoaiTinhPhi'));
+        return view('admin.phi-dich-vu.edit', compact('phiDichVu', 'dsLoaiPhi', 'dsDonViTinh', 'dsLoaiTinhPhi'));
     }
 
     public function update(UpdatePhiDichVuRequest $request, PhiDichVu $phiDichVu)
@@ -142,7 +142,7 @@ class PhiDichVuController extends Controller
 
         AuditLogService::log('UPDATE', 'phi_dich_vu', $phiDichVu->id, $old, $phiDichVu->fresh()->toArray());
 
-        return redirect()->route('manager.phi-dich-vu.show', $phiDichVu)
+        return redirect()->route('admin.phi-dich-vu.show', $phiDichVu)
             ->with('success', "Cập nhật phí dịch vụ «{$phiDichVu->ten_phi_dich_vu}» thành công.");
     }
 
@@ -158,7 +158,7 @@ class PhiDichVuController extends Controller
             $phiDichVu->delete();
         });
 
-        return redirect()->route('manager.phi-dich-vu.index')
+        return redirect()->route('admin.phi-dich-vu.index')
             ->with('success', "Đã xóa phí dịch vụ «{$phiDichVu->ten_phi_dich_vu}».");
     }
 }

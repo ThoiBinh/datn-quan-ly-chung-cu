@@ -21,7 +21,10 @@ class StoreHoaDonRequest extends FormRequest
             'chi_so.*'            => 'array',
             'chi_so.*.cu'         => 'nullable|integer|min:0',
             'chi_so.*.moi'        => 'nullable|integer|min:0',
-            'chi_so.*.so_luong'   => 'nullable|numeric|min:1',
+            'chi_so.*.so_luong'   => 'nullable|numeric|min:0',
+            'excluded_services'   => 'nullable|array',
+            'excluded_services.*' => 'integer',
+            'han_thanh_toan'      => 'nullable|date',
         ];
     }
 
@@ -39,6 +42,7 @@ class StoreHoaDonRequest extends FormRequest
             'chi_so.*.moi.min'        => 'Chỉ số mới không được âm.',
             'chi_so.*.so_luong.min'   => 'Số lượng phải lớn hơn hoặc bằng 1.',
             'chi_so.*.so_luong.numeric' => 'Số lượng phải là số.',
+            'han_thanh_toan.date'     => 'Hạn thanh toán không đúng định dạng ngày.',
         ];
     }
 }

@@ -22,6 +22,8 @@ class HoaDonController extends Controller
 
     public function index(Request $request)
     {
+        $this->hoaDonService->capNhatTrangThaiTreHan();
+
         $sort      = in_array($request->sort, self::SORTABLE) ? $request->sort : 'createdAt';
         $direction = $request->direction === 'asc' ? 'asc' : 'desc';
 
@@ -62,6 +64,17 @@ class HoaDonController extends Controller
         return view('admin.hoa-don.create', compact('dsCanHo'));
     }
 
+    public function canHoServices(Request $request)
+    {
+        $request->validate(['can_ho' => 'required|integer|exists:can_ho,id']);
+        try {
+            $services = $this->hoaDonService->layDichVuCanHo($request->can_ho);
+            return response()->json(['services' => $services]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
     public function previewPhi(Request $request)
     {
         $request->validate([
@@ -98,11 +111,14 @@ class HoaDonController extends Controller
             return back()->withInput()->with('error', 'Hóa đơn tháng này đã tồn tại cho căn hộ này.');
         }
 
+        $excludedPhiIds = array_map('intval', $request->input('excluded_services', []));
+
         $hoaDon = $this->hoaDonService->taoHoaDon(
             $request->can_ho,
             $request->thang,
             $request->nam,
-            $request->input('chi_so', [])
+            $request->input('chi_so', []),
+            $excludedPhiIds
         );
 
         return redirect()->route('admin.hoa-don.show', $hoaDon)->with('success', 'Tạo hóa đơn thành công.');
@@ -110,6 +126,8 @@ class HoaDonController extends Controller
 
     public function show(HoaDon $hoaDon)
     {
+        $this->hoaDonService->capNhatTrangThaiTreHan();
+        $hoaDon->refresh();
         $hoaDon->load([
             'canHo.toaNha', 'canHo.chuHo.cuDan',
             'chiTiet', 'nguoiCapNhat.chucVu',
@@ -121,8 +139,11 @@ class HoaDonController extends Controller
 
     public function edit(HoaDon $hoaDon)
     {
+        $this->hoaDonService->capNhatTrangThaiTreHan();
+        $hoaDon->refresh();
         $hoaDon->load('chiTiet', 'canHo.toaNha');
-        return view('admin.hoa-don.edit', compact('hoaDon'));
+        $isDaTT = $hoaDon->trang_thai === HoaDon::TRANG_THAI_DA_THANH_TOAN;
+        return view('admin.hoa-don.edit', compact('hoaDon', 'isDaTT'));
     }
 
     public function update(UpdateHoaDonRequest $request, HoaDon $hoaDon)
@@ -160,12 +181,12 @@ class HoaDonController extends Controller
 
     public function destroy(HoaDon $hoaDon)
     {
-        if ($hoaDon->trang_thai !== HoaDon::TRANG_THAI_CHUA_THANH_TOAN) {
-            return back()->with('error', 'Chỉ có thể xóa hóa đơn chưa thanh toán.');
+        if ($hoaDon->trang_thai === HoaDon::TRANG_THAI_DA_THANH_TOAN) {
+            return back()->with('error', 'Hóa đơn đã thanh toán nên không thể xóa.');
         }
 
-        $old        = $hoaDon->toArray();
-        $maHoaDon   = $hoaDon->ma_thanh_toan;
+        $old      = $hoaDon->toArray();
+        $maHoaDon = $hoaDon->ma_thanh_toan;
 
         DB::transaction(function () use ($hoaDon, $old) {
             $hoaDon->chiTiet()->delete();
@@ -174,6 +195,29 @@ class HoaDonController extends Controller
         });
 
         return redirect()->route('admin.hoa-don.index')->with('success', "Xóa hóa đơn «{$maHoaDon}» thành công.");
+    }
+
+    public function destroyChiTiet(HoaDon $hoaDon, ChiTietHoaDon $chiTiet)
+    {
+        if ($chiTiet->hoa_don !== $hoaDon->id) {
+            return response()->json(['error' => 'Chi tiết không thuộc hóa đơn này.'], 403);
+        }
+        if ($hoaDon->trang_thai === HoaDon::TRANG_THAI_DA_THANH_TOAN) {
+            return response()->json(['error' => 'Không thể xóa chi tiết hóa đơn đã thanh toán.'], 403);
+        }
+
+        DB::transaction(function () use ($hoaDon, $chiTiet) {
+            $chiTiet->delete();
+            $this->hoaDonService->calculateInvoiceTotal($hoaDon);
+        });
+
+        $hoaDon->refresh();
+
+        return response()->json([
+            'success'       => true,
+            'tong_tien'     => (float) $hoaDon->tong_tien,
+            'tong_tien_fmt' => number_format((float) $hoaDon->tong_tien, 0, ',', '.') . 'đ',
+        ]);
     }
 
     public function toggleStatus(HoaDon $hoaDon)

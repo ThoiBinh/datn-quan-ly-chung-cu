@@ -9,23 +9,39 @@
          thang: {{ old('thang', now()->month) }},
          nam: {{ old('nam', now()->year) }},
          fees: null,
+         cachedFees: null,
          loading: false,
          fetchError: null,
          oldChiSo: {{ Js::from(old('chi_so', [])) }},
          soLuongMap: {},
          phuongTienInfo: [],
+         removedFeeIds: [],
+
+         serviceModal: false,
+         modalLoading: false,
+         modalServices: [],
+         selectedInModal: [],
+
+         confirmDeleteFeeId: null,
 
          async fetchPreview() {
-             if (!this.canHo || !this.thang || !this.nam) { this.fees = null; this.phuongTienInfo = []; return; }
+             if (!this.canHo || !this.thang || !this.nam) {
+                 this.fees = null; this.cachedFees = null;
+                 this.phuongTienInfo = []; this.removedFeeIds = [];
+                 return;
+             }
              this.loading = true;
              this.fetchError = null;
              try {
                  const url = '{{ route('admin.hoa-don.preview-phi') }}?can_ho=' + this.canHo + '&thang=' + this.thang + '&nam=' + this.nam;
                  const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
                  const data = await r.json();
-                 if (data.error) { this.fetchError = data.error; this.fees = null; this.phuongTienInfo = []; }
-                 else {
-                     this.fees = data.fees;
+                 if (data.error) {
+                     this.fetchError = data.error; this.fees = null; this.cachedFees = null; this.phuongTienInfo = [];
+                 } else {
+                     this.fees = data.fees.map(f => ({...f}));
+                     this.cachedFees = data.fees.map(f => ({...f}));
+                     this.removedFeeIds = [];
                      this.phuongTienInfo = data.phuong_tien_info || [];
                      data.fees.forEach(fee => {
                          if (fee.billing_type === 'fixed') {
@@ -37,8 +53,50 @@
                          }
                      });
                  }
-             } catch(e) { this.fetchError = 'Không thể tải dữ liệu phí dịch vụ.'; this.fees = null; this.phuongTienInfo = []; }
+             } catch(e) {
+                 this.fetchError = 'Không thể tải dữ liệu phí dịch vụ.'; this.fees = null; this.cachedFees = null; this.phuongTienInfo = [];
+             }
              this.loading = false;
+         },
+
+         removeFee(phiId) {
+             this.fees = this.fees.filter(f => f.phi_dich_vu_id !== phiId);
+             if (!this.removedFeeIds.includes(phiId)) this.removedFeeIds.push(phiId);
+             this.confirmDeleteFeeId = null;
+         },
+
+         async openServiceModal() {
+             if (!this.canHo) return;
+             this.serviceModal = true;
+             this.selectedInModal = [];
+             this.modalLoading = true;
+             try {
+                 const url = '{{ route('admin.hoa-don.can-ho-services') }}?can_ho=' + this.canHo;
+                 const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                 const data = await r.json();
+                 this.modalServices = data.services || [];
+             } catch(e) { this.modalServices = []; }
+             this.modalLoading = false;
+         },
+
+         isInFees(phiId) {
+             return this.fees ? this.fees.some(f => f.phi_dich_vu_id === phiId) : false;
+         },
+
+         addSelectedToFees() {
+             if (!this.cachedFees) return;
+             this.selectedInModal.forEach(idStr => {
+                 const phiId = parseInt(idStr);
+                 if (!this.fees.find(f => f.phi_dich_vu_id === phiId)) {
+                     const fee = this.cachedFees.find(f => f.phi_dich_vu_id === phiId);
+                     if (fee) {
+                         this.fees = [...this.fees, {...fee}];
+                         this.removedFeeIds = this.removedFeeIds.filter(id => id !== phiId);
+                     }
+                 }
+             });
+             this.selectedInModal = [];
+             this.serviceModal = false;
          },
 
          fmtMoney(n) {
@@ -48,7 +106,7 @@
 
          getFeeTotal(fee) {
              if (fee.billing_type === 'fixed') {
-                 const sl = parseInt(this.soLuongMap[String(fee.phi_dich_vu_id)] || 1);
+                 const sl = parseInt(this.soLuongMap[String(fee.phi_dich_vu_id)] ?? 1);
                  return sl * fee.don_gia;
              }
              return fee.thanh_tien;
@@ -85,6 +143,11 @@
     <form method="POST" action="{{ route('admin.hoa-don.store') }}" class="space-y-5">
         @csrf
 
+        <!-- Hidden excluded_services inputs -->
+        <template x-for="id in removedFeeIds" :key="id">
+            <input type="hidden" name="excluded_services[]" :value="id">
+        </template>
+
         <!-- Basic info -->
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
@@ -106,6 +169,18 @@
                         @endforeach
                     </select>
                     @error('can_ho')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <!-- "Thêm dịch vụ căn hộ" button -->
+                <div x-show="canHo && fees !== null" x-cloak>
+                    <button type="button" @click="openServiceModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Thêm dịch vụ căn hộ
+                        <template x-if="removedFeeIds.length > 0">
+                            <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-violet-600 text-white" x-text="removedFeeIds.length"></span>
+                        </template>
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -135,7 +210,12 @@
                     <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                         <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                     </div>
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Chi tiết phí dịch vụ</h2>
+                    <div>
+                        <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Chi tiết phí dịch vụ</h2>
+                        <template x-if="fees && fees.length > 0">
+                            <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5" x-text="fees.length + ' dịch vụ'"></p>
+                        </template>
+                    </div>
                 </div>
                 <div x-show="loading" class="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
                     <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -149,13 +229,13 @@
                 </div>
                 <div x-show="fetchError && !loading" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-600 dark:text-red-400" x-text="fetchError"></div>
                 <div x-show="fees !== null && fees.length === 0 && !loading" class="text-center py-8 text-sm text-amber-600 dark:text-amber-400">
-                    Căn hộ này chưa được gán phí dịch vụ nào.
+                    Căn hộ này chưa có dịch vụ nào trong hóa đơn. Nhấn "Thêm dịch vụ căn hộ" để thêm.
                 </div>
 
                 <template x-if="fees && fees.length > 0">
                     <div class="space-y-3">
 
-                        {{-- Tóm tắt phương tiện được tính trong tháng --}}
+                        {{-- Tóm tắt phương tiện --}}
                         <template x-if="phuongTienInfo && phuongTienInfo.length > 0">
                             <div class="p-3 bg-green-50/70 dark:bg-green-900/10 border border-green-100 dark:border-green-800/30 rounded-lg">
                                 <p class="text-xs font-semibold text-green-700 dark:text-green-400 mb-2">Phương tiện được tính trong tháng</p>
@@ -174,8 +254,16 @@
                             <div class="border border-gray-200 dark:border-slate-600 rounded-lg overflow-hidden">
                                 <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-slate-700/50">
                                     <span class="text-sm font-medium text-gray-800 dark:text-white" x-text="fee.ten_phi_dich_vu"></span>
-                                    <span class="text-sm font-semibold text-gray-900 dark:text-white tabular-nums"
-                                          x-text="fee.billing_type === 'meter' ? '(nhập chỉ số)' : fmtMoney(getFeeTotal(fee))"></span>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-white tabular-nums"
+                                              x-text="fee.billing_type === 'meter' ? '(nhập chỉ số)' : fmtMoney(getFeeTotal(fee))"></span>
+                                        <!-- Delete fee button -->
+                                        <button type="button" @click="confirmDeleteFeeId = fee.phi_dich_vu_id"
+                                                title="Loại dịch vụ này khỏi hóa đơn"
+                                                class="p-1 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {{-- meter: chi_so inputs --}}
@@ -203,7 +291,7 @@
                                     </div>
                                 </template>
 
-                                {{-- vehicle: breakdown by type --}}
+                                {{-- vehicle --}}
                                 <template x-if="fee.billing_type === 'vehicle' && fee.preview_rows && fee.preview_rows.length > 0">
                                     <div class="px-4 py-3 bg-green-50/50 dark:bg-green-900/10">
                                         <table class="w-full text-xs text-gray-600 dark:text-slate-400">
@@ -224,7 +312,7 @@
                                     </div>
                                 </template>
 
-                                {{-- area: diện tích × đơn giá (readonly) --}}
+                                {{-- area --}}
                                 <template x-if="fee.billing_type === 'area'">
                                     <div class="px-4 py-3 bg-violet-50/40 dark:bg-violet-900/10">
                                         <div class="flex items-center gap-3 flex-wrap">
@@ -238,16 +326,16 @@
                                     </div>
                                 </template>
 
-                                {{-- fixed: nhập số lượng --}}
+                                {{-- fixed --}}
                                 <template x-if="fee.billing_type === 'fixed'">
                                     <div class="px-4 py-3 bg-indigo-50/30 dark:bg-indigo-900/10">
                                         <div class="flex items-center gap-3 flex-wrap">
                                             <label class="text-xs text-gray-500 dark:text-slate-400">Số lượng:</label>
                                             <input type="number"
                                                    :name="'chi_so[' + fee.phi_dich_vu_id + '][so_luong]'"
-                                                   min="1"
+                                                   min="0"
                                                    :value="soLuongMap[String(fee.phi_dich_vu_id)] ?? 1"
-                                                   @input="soLuongMap[String(fee.phi_dich_vu_id)] = Math.max(1, parseInt($event.target.value) || 1)"
+                                                   @input="soLuongMap[String(fee.phi_dich_vu_id)] = Math.max(0, parseInt($event.target.value) || 0)"
                                                    class="w-20 px-2 py-1.5 border border-indigo-300 dark:border-indigo-600 rounded-lg text-sm text-center bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                             <span class="text-xs text-gray-400 dark:text-slate-500">×</span>
                                             <span class="text-xs text-gray-600 dark:text-slate-300" x-text="fee.don_gia_fmt"></span>
@@ -257,6 +345,7 @@
                                         </div>
                                     </div>
                                 </template>
+                            </div>
                         </template>
 
                         <div class="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-slate-600">
@@ -280,5 +369,137 @@
             </button>
         </div>
     </form>
+
+    <!-- Modal: Thêm dịch vụ căn hộ -->
+    <template x-teleport="body">
+        <div x-show="serviceModal" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+            <div class="absolute inset-0 bg-black/50" @click="serviceModal = false"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex-shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-white">Thêm dịch vụ vào hóa đơn</h3>
+                            <p class="text-xs text-gray-400 dark:text-slate-500">Chọn dịch vụ muốn thêm</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="serviceModal = false"
+                            class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <!-- Body -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                    <!-- Loading -->
+                    <template x-if="modalLoading">
+                        <div class="text-center py-10">
+                            <svg class="w-6 h-6 animate-spin text-violet-500 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            <p class="text-sm text-gray-400 mt-2">Đang tải...</p>
+                        </div>
+                    </template>
+                    <!-- Empty -->
+                    <template x-if="!modalLoading && modalServices.length === 0">
+                        <div class="text-center py-10 text-sm text-gray-400 dark:text-slate-500">
+                            Căn hộ này chưa được gán dịch vụ nào.
+                        </div>
+                    </template>
+                    <!-- Services list -->
+                    <template x-if="!modalLoading && modalServices.length > 0">
+                        <div class="space-y-2">
+                            <template x-for="svc in modalServices" :key="svc.phi_dich_vu_id">
+                                <label :class="isInFees(svc.phi_dich_vu_id) ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-slate-700/30' : 'cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/20 bg-white dark:bg-slate-700/50'"
+                                       class="flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-600 rounded-xl transition-colors">
+                                    <div class="flex-shrink-0">
+                                        <template x-if="!isInFees(svc.phi_dich_vu_id)">
+                                            <input type="checkbox"
+                                                   :value="String(svc.phi_dich_vu_id)"
+                                                   x-model="selectedInModal"
+                                                   class="w-4 h-4 rounded border-gray-300 dark:border-slate-500 text-violet-600 focus:ring-violet-400">
+                                        </template>
+                                        <template x-if="isInFees(svc.phi_dich_vu_id)">
+                                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        </template>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white" x-text="svc.ten_phi_dich_vu"></p>
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                                            <span class="text-xs text-gray-500 dark:text-slate-400" x-text="svc.loai_phi_dich_vu"></span>
+                                            <span class="text-xs text-gray-300 dark:text-slate-600">•</span>
+                                            <span class="text-xs text-gray-500 dark:text-slate-400" x-text="svc.loai_tinh_phi"></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <span class="text-sm font-semibold text-gray-800 dark:text-white" x-text="svc.don_gia_fmt"></span>
+                                        <p class="text-xs text-gray-400 dark:text-slate-500" x-text="'/' + svc.don_vi_tinh"></p>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <!-- Footer -->
+                <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-100 dark:border-slate-700 flex-shrink-0">
+                    <span class="text-xs text-gray-500 dark:text-slate-400" x-text="selectedInModal.length + ' đã chọn'"></span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="serviceModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                            Hủy
+                        </button>
+                        <button type="button" @click="addSelectedToFees()"
+                                :disabled="selectedInModal.length === 0"
+                                :class="selectedInModal.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-violet-700'"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg transition-colors">
+                            Thêm vào hóa đơn
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal: Xác nhận xóa dịch vụ -->
+    <template x-teleport="body">
+        <div x-show="confirmDeleteFeeId !== null" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+            <div class="absolute inset-0 bg-black/50" @click="confirmDeleteFeeId = null"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <div class="flex flex-col items-center text-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-800 dark:text-white">Loại dịch vụ khỏi hóa đơn?</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                            Nếu xóa, dịch vụ sẽ bị loại khỏi hóa đơn này. Bạn có thể thêm lại qua nút "Thêm dịch vụ căn hộ".
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full">
+                        <button type="button" @click="confirmDeleteFeeId = null"
+                                class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                            Giữ lại
+                        </button>
+                        <button type="button" @click="removeFee(confirmDeleteFeeId)"
+                                class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                            Loại bỏ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 @endsection

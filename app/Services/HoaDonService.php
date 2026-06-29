@@ -20,9 +20,9 @@ class HoaDonService
     //  Core invoice creation
     // ─────────────────────────────────────────────────────────────
 
-    public function taoHoaDon(int $canHoId, int $thang, int $nam, array $chiSoData = []): HoaDon
+    public function taoHoaDon(int $canHoId, int $thang, int $nam, array $chiSoData = [], array $excludedPhiIds = []): HoaDon
     {
-        return DB::transaction(function () use ($canHoId, $thang, $nam, $chiSoData) {
+        return DB::transaction(function () use ($canHoId, $thang, $nam, $chiSoData, $excludedPhiIds) {
             $canHo = CanHo::with([
                 'phiDichVu.loaiTinhPhi',
                 'phuongTien.loaiPhuongTien',
@@ -42,7 +42,7 @@ class HoaDonService
                 'nguoi_cap_nhat'        => auth('nhanvien')->id(),
             ]);
 
-            $tongTien = $this->hinhThanhChiTiet($hoaDon, $canHo, $thang, $nam, $chiSoData);
+            $tongTien = $this->hinhThanhChiTiet($hoaDon, $canHo, $thang, $nam, $chiSoData, $excludedPhiIds);
             $hoaDon->update(['tong_tien' => $tongTien]);
 
             AuditLogService::log('INSERT', 'hoa_don', $hoaDon->id, null, $hoaDon->fresh()->toArray());
@@ -93,6 +93,48 @@ class HoaDonService
             'tong_tien'      => $tongTien,
             'nguoi_cap_nhat' => auth('nhanvien')->id(),
         ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Auto-update overdue invoices (called on index/show/edit)
+    // ─────────────────────────────────────────────────────────────
+
+    public function capNhatTrangThaiTreHan(): void
+    {
+        HoaDon::whereNotIn('trang_thai', [
+            HoaDon::TRANG_THAI_DA_THANH_TOAN,
+            HoaDon::TRANG_THAI_QUA_HAN,
+            HoaDon::TRANG_THAI_DA_HUY,
+        ])
+        ->whereNotNull('han_thanh_toan')
+        ->where('han_thanh_toan', '<', now())
+        ->update(['trang_thai' => HoaDon::TRANG_THAI_QUA_HAN]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Services for apartment (modal in create form)
+    // ─────────────────────────────────────────────────────────────
+
+    public function layDichVuCanHo(int $canHoId): array
+    {
+        $canHo = CanHo::with([
+            'phiDichVu.loaiPhiDichVu',
+            'phiDichVu.donViTinh',
+            'phiDichVu.loaiTinhPhi',
+        ])->findOrFail($canHoId);
+
+        return $canHo->phiDichVu->map(function ($phi) {
+            $donGia = (float) ($phi->pivot->don_gia ?? $phi->don_gia);
+            return [
+                'phi_dich_vu_id'   => $phi->id,
+                'ten_phi_dich_vu'  => $phi->ten_phi_dich_vu,
+                'loai_phi_dich_vu' => $phi->loaiPhiDichVu?->ten_loai_phi_dich_vu ?? '—',
+                'don_vi_tinh'      => $phi->donViTinh?->don_vi ?? '—',
+                'loai_tinh_phi'    => $phi->loaiTinhPhi?->ten_loai ?? '—',
+                'don_gia'          => $donGia,
+                'don_gia_fmt'      => number_format($donGia, 0, ',', '.') . 'đ',
+            ];
+        })->values()->toArray();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -338,11 +380,15 @@ class HoaDonService
     /**
      * Build chi_tiet rows for all fee services of the apartment.
      */
-    private function hinhThanhChiTiet(HoaDon $hoaDon, CanHo $canHo, int $thang, int $nam, array $chiSoData): float
+    private function hinhThanhChiTiet(HoaDon $hoaDon, CanHo $canHo, int $thang, int $nam, array $chiSoData, array $excludedPhiIds = []): float
     {
         $tongTien = 0.0;
 
         foreach ($canHo->phiDichVu as $phi) {
+            if (in_array($phi->id, $excludedPhiIds)) {
+                continue;
+            }
+
             $billingType = $this->identifyBillingType($phi);
             $donGia      = (float) ($phi->pivot->don_gia ?? $phi->don_gia);
 

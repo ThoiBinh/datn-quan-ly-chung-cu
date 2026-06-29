@@ -21,7 +21,9 @@ class StoreHoaDonRequest extends FormRequest
             'chi_so.*'            => 'array',
             'chi_so.*.cu'         => 'nullable|integer|min:0',
             'chi_so.*.moi'        => 'nullable|integer|min:0',
-            'chi_so.*.so_luong'   => 'nullable|numeric|min:1',
+            'chi_so.*.so_luong'   => 'nullable|numeric|min:0',
+            'excluded_services'   => 'nullable|array',
+            'excluded_services.*' => 'integer',
         ];
     }
 
