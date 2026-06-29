@@ -211,13 +211,15 @@ class HoaDonController extends Controller
         if ($chiTiet->hoa_don !== $hoaDon->id) {
             return response()->json(['error' => 'Chi tiết không thuộc hóa đơn này.'], 403);
         }
-        if ($hoaDon->trang_thai === HoaDon::TRANG_THAI_DA_THANH_TOAN) {
-            return response()->json(['error' => 'Không thể xóa chi tiết hóa đơn đã thanh toán.'], 403);
+
+        if ($hoaDon->lichSuThanhToan()->exists()) {
+            return response()->json(['error' => 'Không thể xóa chi tiết hóa đơn vì hóa đơn này đã phát sinh lịch sử thanh toán.'], 422);
         }
 
         DB::transaction(function () use ($hoaDon, $chiTiet) {
             $chiTiet->delete();
             $this->hoaDonService->calculateInvoiceTotal($hoaDon);
+            $this->hoaDonService->syncStatus($hoaDon->refresh());
         });
 
         $hoaDon->refresh();
