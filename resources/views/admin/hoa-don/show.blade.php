@@ -15,7 +15,38 @@ $statusConfig = match($hoaDon->trang_thai) {
 };
 @endphp
 
-<div class="space-y-5" x-data="{ confirmToggle: false }">
+<div class="space-y-5" x-data="{
+    confirmToggle: false,
+    chiTietToDelete: null,
+    chiTietDeleteUrl: '',
+    deletingChiTiet: false,
+    tongTienHoaDon: {{ (int)($hoaDon->tong_tien ?? 0) }},
+    daTTHoaDon: {{ (int)($hoaDon->so_tien_da_thanh_toan ?? 0) }},
+    chiTietCount: {{ $hoaDon->chiTiet->count() }},
+    fmtMoney(n) { return new Intl.NumberFormat('vi-VN').format(n) + 'đ'; },
+    getConNo() { return Math.max(0, this.tongTienHoaDon - this.daTTHoaDon); },
+    async xoaChiTiet() {
+        if (!this.chiTietToDelete || !this.chiTietDeleteUrl) return;
+        this.deletingChiTiet = true;
+        try {
+            const r = await fetch(this.chiTietDeleteUrl, {
+                method: 'DELETE',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            });
+            const data = await r.json();
+            if (data.success) {
+                document.getElementById('chi-tiet-row-' + this.chiTietToDelete).remove();
+                this.tongTienHoaDon = data.tong_tien;
+                this.chiTietCount--;
+            } else {
+                alert(data.error || 'Có lỗi xảy ra khi xóa.');
+            }
+        } catch(e) { alert('Có lỗi xảy ra khi xóa.'); }
+        this.deletingChiTiet = false;
+        this.chiTietToDelete = null;
+        this.chiTietDeleteUrl = '';
+    }
+}">
 
     <!-- Breadcrumb + actions -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -87,7 +118,7 @@ $statusConfig = match($hoaDon->trang_thai) {
                         <svg class="w-4 h-4 text-violet-500 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                     </div>
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Chi tiết khoản thu</h2>
-                    <span class="ml-auto text-xs text-gray-400 dark:text-slate-500">{{ $hoaDon->chiTiet->count() }} khoản</span>
+                    <span class="ml-auto text-xs text-gray-400 dark:text-slate-500" x-text="chiTietCount + ' khoản'">{{ $hoaDon->chiTiet->count() }} khoản</span>
                 </div>
                 @if($hoaDon->chiTiet->isNotEmpty())
                 <table class="w-full text-sm">
@@ -97,11 +128,14 @@ $statusConfig = match($hoaDon->trang_thai) {
                             <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-slate-400">Đơn giá</th>
                             <th class="px-4 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-slate-400">Số lượng</th>
                             <th class="px-5 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-slate-400">Thành tiền</th>
+                            @if($hoaDon->trang_thai !== \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN)
+                            <th class="px-3 py-2.5 text-xs font-medium text-gray-500 dark:text-slate-400 w-12"></th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50 dark:divide-slate-700/50">
                         @foreach($hoaDon->chiTiet as $ct)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/30">
+                        <tr id="chi-tiet-row-{{ $ct->id }}" class="hover:bg-gray-50 dark:hover:bg-slate-700/30">
                             <td class="px-5 py-3 text-gray-700 dark:text-slate-200">{{ $ct->ten_phi_dich_vu }}</td>
                             <td class="px-4 py-3 text-right text-gray-500 dark:text-slate-400 tabular-nums">{{ number_format($ct->don_gia ?? 0, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-right text-gray-500 dark:text-slate-400 tabular-nums">
@@ -116,13 +150,24 @@ $statusConfig = match($hoaDon->trang_thai) {
                             <td class="px-5 py-3 text-right font-semibold text-gray-800 dark:text-slate-100 tabular-nums">
                                 {{ number_format($ct->thanh_tien ?? 0, 0, ',', '.') }}đ
                             </td>
+                            @if($hoaDon->trang_thai !== \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN)
+                            <td class="px-3 py-3">
+                                <button type="button"
+                                        @click="chiTietToDelete = {{ $ct->id }}; chiTietDeleteUrl = '{{ route('admin.hoa-don.chi-tiet.destroy', [$hoaDon, $ct]) }}'"
+                                        title="Xóa khoản này"
+                                        class="p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </td>
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="border-t border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/30">
                         <tr>
-                            <td colspan="3" class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-slate-200 text-right">Tổng cộng</td>
-                            <td class="px-5 py-3 text-right font-bold text-gray-900 dark:text-white tabular-nums">
+                            <td colspan="{{ $hoaDon->trang_thai !== \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN ? 4 : 3 }}" class="px-5 py-3 text-sm font-semibold text-gray-700 dark:text-slate-200 text-right">Tổng cộng</td>
+                            <td class="px-5 py-3 text-right font-bold text-gray-900 dark:text-white tabular-nums"
+                                x-text="fmtMoney(tongTienHoaDon)">
                                 {{ number_format($hoaDon->tong_tien ?? 0, 0, ',', '.') }}đ
                             </td>
                         </tr>
@@ -145,7 +190,8 @@ $statusConfig = match($hoaDon->trang_thai) {
             <div class="grid grid-cols-3 gap-4">
                 <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-4 text-center">
                     <p class="text-xs text-gray-400 dark:text-slate-500 mb-1">Tổng tiền</p>
-                    <p class="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{{ number_format($hoaDon->tong_tien ?? 0, 0, ',', '.') }}đ</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white tabular-nums"
+                       x-text="fmtMoney(tongTienHoaDon)">{{ number_format($hoaDon->tong_tien ?? 0, 0, ',', '.') }}đ</p>
                 </div>
                 <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-4 text-center">
                     <p class="text-xs text-gray-400 dark:text-slate-500 mb-1">Đã thanh toán</p>
@@ -153,11 +199,9 @@ $statusConfig = match($hoaDon->trang_thai) {
                 </div>
                 <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-4 text-center">
                     <p class="text-xs text-gray-400 dark:text-slate-500 mb-1">Còn nợ</p>
-                    @if($conNo > 0)
-                    <p class="text-lg font-bold text-red-600 dark:text-red-400 tabular-nums">
-                    @else
-                    <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    @endif
+                    <p class="text-lg font-bold tabular-nums"
+                       :class="getConNo() > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'"
+                       x-text="getConNo() > 0 ? fmtMoney(getConNo()) : 'Đã đủ'">
                         {{ $conNo > 0 ? number_format($conNo, 0, ',', '.') . 'đ' : 'Đã đủ' }}
                     </p>
                 </div>
@@ -323,6 +367,47 @@ $statusConfig = match($hoaDon->trang_thai) {
         </div>
 
     </div>
+
+    <!-- Modal xác nhận xóa chi tiết -->
+    @if($hoaDon->trang_thai !== \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN)
+    <template x-teleport="body">
+        <div x-show="chiTietToDelete !== null" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+            <div class="absolute inset-0 bg-black/50" @click="chiTietToDelete = null; chiTietDeleteUrl = ''"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <div class="flex flex-col items-center text-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-800 dark:text-white">Xóa khoản phí này?</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                            Nếu xóa, dịch vụ sẽ bị loại khỏi hóa đơn và tổng tiền sẽ được cập nhật.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full">
+                        <button type="button" @click="chiTietToDelete = null; chiTietDeleteUrl = ''"
+                                class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                            Giữ lại
+                        </button>
+                        <button type="button" @click="xoaChiTiet()" :disabled="deletingChiTiet"
+                                class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50">
+                            <span x-show="!deletingChiTiet">Xóa</span>
+                            <span x-show="deletingChiTiet" class="flex items-center justify-center gap-1.5">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                Đang xóa...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    @endif
 
     <!-- Modal xác nhận toggle -->
     @if(in_array($hoaDon->trang_thai, [1, 3, 4]))

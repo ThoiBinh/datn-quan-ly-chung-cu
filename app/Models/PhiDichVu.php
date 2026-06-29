@@ -35,4 +35,9 @@ class PhiDichVu extends Model
         return $this->belongsToMany(CanHo::class, 'can_ho_phi_dich_vu', 'phi_dich_vu', 'can_ho')
             ->withPivot('don_gia')->withTimestamps('createdAt', 'updatedAt');
     }
+
+    public function nguoiCapNhat()
+    {
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+    }
 }

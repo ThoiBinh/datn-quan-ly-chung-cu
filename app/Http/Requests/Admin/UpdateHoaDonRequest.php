@@ -14,7 +14,7 @@ class UpdateHoaDonRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'han_thanh_toan' => 'nullable|date',
+            'han_thanh_toan' => 'required|date',
             'trang_thai'     => 'required|integer|in:1,2,3,4',
         ];
     }
@@ -24,6 +24,7 @@ class UpdateHoaDonRequest extends FormRequest
         return [
             'trang_thai.required' => 'Vui lòng chọn trạng thái.',
             'trang_thai.in'       => 'Trạng thái không hợp lệ.',
+            'han_thanh_toan.required' => 'Vui lòng nhập hạn thanh toán.',
             'han_thanh_toan.date' => 'Hạn thanh toán không đúng định dạng ngày.',
         ];
     }
