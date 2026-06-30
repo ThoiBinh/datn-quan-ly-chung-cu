@@ -143,23 +143,51 @@
     </div>
 
     <!-- Thuộc tính -->
-    @if($canHo->thuocTinh->isNotEmpty())
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
             <h3 class="font-semibold text-gray-700 dark:text-slate-200 text-sm uppercase tracking-wide">
                 Thuộc tính ({{ $canHo->thuocTinh->count() }})
             </h3>
+            <a href="{{ route('admin.can-ho.edit', $canHo) }}"
+               class="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors">
+                Chỉnh sửa
+            </a>
         </div>
-        <div class="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            @foreach($canHo->thuocTinh as $tt)
-            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-100 dark:border-slate-600">
-                <dt class="text-xs font-medium text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-1.5">{{ $tt->ten_thuoc_tinh }}</dt>
-                <dd class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}</dd>
-            </div>
-            @endforeach
+        @if($canHo->thuocTinh->isEmpty())
+        <div class="py-8 text-center text-sm text-gray-400 dark:text-slate-500">Chưa có thuộc tính nào</div>
+        @else
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-600">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tên thuộc tính</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Giá trị</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Kiểu dữ liệu</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                    @foreach($canHo->thuocTinh as $tt)
+                    <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-700/40 transition-colors">
+                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ $tt->ten_thuoc_tinh }}</td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200">
+                            <span class="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-xs font-medium">
+                                {{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">
+                            @switch($tt->pivot->kieu_du_lieu)
+                                @case(1) Số nguyên @break
+                                @case(3) Ngày giờ @break
+                                @default Văn bản
+                            @endswitch
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
+        @endif
     </div>
-    @endif
 
     <!-- Phương tiện -->
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
@@ -217,6 +245,7 @@
                         <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tổng tiền</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Hạn TT</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
@@ -239,6 +268,15 @@
                         </td>
                         <td class="px-4 py-3 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
                             {{ $hd->han_thanh_toan?->format('d/m/Y') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <a href="{{ route('admin.hoa-don.show', $hd) }}"
+                               class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
+                            <a href="{{ route('admin.hoa-don.edit', $hd) }}"
+                               class="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </td>
                     </tr>
                     @endforeach
