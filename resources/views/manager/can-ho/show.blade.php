@@ -318,6 +318,7 @@
                                 <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Còn nợ</th>
                                 <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Hạn TT</th>
                                 <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Trạng thái</th>
+                                <th class="px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Hành động</th>
 
                             </tr>
                         </thead>
@@ -349,6 +350,11 @@
                                         {{ $hd->trangThaiLabel }}
                                     </span>
                                 </td>
+                                <td class="px-4 py-3 text-right">
+                                    <a href="{{ route('manager.hoa-don.show', $hd) }}"
+                                       class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors">
+                                        Xem
+                                    </a>
                             </tr>
                             @endforeach
                         </tbody>
