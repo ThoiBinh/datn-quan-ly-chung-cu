@@ -4,6 +4,21 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
+
+{{-- Export buttons --}}
+<div class="flex items-center justify-between mb-5">
+    <div>
+        <h2 class="text-lg font-bold text-gray-800 dark:text-white">Tổng quan hệ thống</h2>
+        <p class="text-xs text-gray-400 dark:text-slate-400 mt-0.5">Dữ liệu thống kê toàn bộ hệ thống</p>
+    </div>
+    @include('reports.export-modal', [
+        'filterOptions' => $filterOptions,
+        'pdfRoute'      => 'admin.dashboard.export.pdf',
+        'excelRoute'    => 'admin.dashboard.export.excel',
+        'darkMode'      => true,
+    ])
+</div>
+
 <!-- Stats Grid -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     @php

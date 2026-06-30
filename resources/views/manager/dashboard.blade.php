@@ -5,6 +5,20 @@
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+{{-- Export buttons --}}
+<div class="flex items-center justify-between mb-5">
+    <div>
+        <h2 class="text-lg font-bold text-gray-800">Tổng quan hệ thống</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Dữ liệu thống kê toàn bộ hệ thống</p>
+    </div>
+    @include('reports.export-modal', [
+        'filterOptions' => $filterOptions,
+        'pdfRoute'      => 'manager.dashboard.export.pdf',
+        'excelRoute'    => 'manager.dashboard.export.excel',
+        'darkMode'      => false,
+    ])
+</div>
+
 <!-- Stats -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     @php

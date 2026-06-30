@@ -21,6 +21,8 @@ Route::post('/doi-mat-khau', [PasswordController::class, 'change'])->middleware(
 // ==================== ADMIN ====================
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export/pdf',   [\App\Http\Controllers\Admin\DashboardController::class, 'exportPdf'])->name('dashboard.export.pdf');
+    Route::get('/dashboard/export/excel', [\App\Http\Controllers\Admin\DashboardController::class, 'exportExcel'])->name('dashboard.export.excel');
     Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
     Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
     Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
@@ -164,6 +166,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 // ==================== MANAGER ====================
 Route::prefix('manager')->name('manager.')->middleware('manager')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Manager\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export/pdf',   [\App\Http\Controllers\Manager\DashboardController::class, 'exportPdf'])->name('dashboard.export.pdf');
+    Route::get('/dashboard/export/excel', [\App\Http\Controllers\Manager\DashboardController::class, 'exportExcel'])->name('dashboard.export.excel');
     Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class);
     Route::resource('can-ho', \App\Http\Controllers\Manager\CanHoController::class);
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);

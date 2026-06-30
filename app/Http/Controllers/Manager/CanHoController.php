@@ -61,7 +61,7 @@ class CanHoController extends Controller
         ]);
 
         $canHo = CanHo::create($request->only(
-            'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho'
+            'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho','người_cap_nhat'
         ));
 
         AuditLogService::log('INSERT', 'can_ho', $canHo->id, null, $canHo->toArray());
@@ -94,9 +94,15 @@ class CanHoController extends Controller
         ]);
 
         $old = $canHo->toArray();
-        $canHo->update($request->only(
-            'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho'
-        ));
+       $canHo->update([
+    'toa_nha'         => $request->toa_nha,
+    'so_can_ho'       => $request->so_can_ho,
+    'tang'            => $request->tang,
+    'trang_thai'      => $request->trang_thai,
+    'gia'             => $request->gia,
+    'loai_can_ho'     => $request->loai_can_ho,
+    'nguoi_cap_nhat'  => auth('nhanvien')->id(), 
+]);
 
         AuditLogService::log('UPDATE', 'can_ho', $canHo->id, $old, $canHo->fresh()->toArray());
         return redirect()->route('manager.can-ho.index')->with('success', 'Cập nhật căn hộ thành công.');
