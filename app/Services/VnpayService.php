@@ -13,13 +13,13 @@ class VnpayService
 
     public function __construct()
     {
-        $this->tmnCode    = config('services.vnpay.tmn_code', '');
-        $this->hashSecret = config('services.vnpay.hash_secret', '');
-        $this->vnpayUrl   = config('services.vnpay.url', '');
-        $this->returnUrl  = config('services.vnpay.return_url', '');
+        $this->tmnCode    = trim((string) config('vnpay.tmn_code', ''));
+        $this->hashSecret = trim((string) config('vnpay.hash_secret', ''));
+        $this->vnpayUrl   = trim((string) config('vnpay.url', ''));
+        $this->returnUrl  = trim((string) config('vnpay.return_url', ''));
     }
 
-    public function taoUrlThanhToan(string $orderId, int $amount, string $orderInfo): string
+    public function taoUrlThanhToan(string $txnRef, int $amount, string $orderInfo): string
     {
         $vnp_Params = [
             'vnp_Version'    => '2.1.0',
@@ -27,7 +27,7 @@ class VnpayService
             'vnp_TmnCode'    => $this->tmnCode,
             'vnp_Amount'     => $amount * 100,
             'vnp_CurrCode'   => 'VND',
-            'vnp_TxnRef'     => $orderId,
+            'vnp_TxnRef'     => $txnRef,
             'vnp_OrderInfo'  => $orderInfo,
             'vnp_OrderType'  => 'other',
             'vnp_Locale'     => 'vn',
@@ -37,28 +37,27 @@ class VnpayService
         ];
 
         ksort($vnp_Params);
-        $query = http_build_query($vnp_Params);
-        $hashData = $query;
-        $vnpSecureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
+        $hashData      = http_build_query($vnp_Params);
+        $secureHash    = hash_hmac('sha512', $hashData, $this->hashSecret);
 
-        return $this->vnpayUrl . '?' . $query . '&vnp_SecureHash=' . $vnpSecureHash;
+        return $this->vnpayUrl . '?' . $hashData . '&vnp_SecureHash=' . $secureHash;
     }
 
     public function xacMinhChuKy(Request $request): bool
     {
-        $vnp_SecureHash = $request->vnp_SecureHash;
-        $inputData = [];
+        $vnpSecureHash = $request->vnp_SecureHash ?? '';
+        $inputData     = [];
 
         foreach ($request->all() as $key => $value) {
-            if (str_starts_with($key, 'vnp_') && $key !== 'vnp_SecureHash') {
+            if (str_starts_with($key, 'vnp_') && $key !== 'vnp_SecureHash' && $key !== 'vnp_SecureHashType') {
                 $inputData[$key] = $value;
             }
         }
 
         ksort($inputData);
-        $hashData = http_build_query($inputData);
-        $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
+        $hashData   = http_build_query($inputData);
+        $calculated = hash_hmac('sha512', $hashData, $this->hashSecret);
 
-        return $secureHash === $vnp_SecureHash;
+        return hash_equals($calculated, $vnpSecureHash);
     }
 }

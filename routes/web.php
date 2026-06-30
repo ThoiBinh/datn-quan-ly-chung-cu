@@ -71,6 +71,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('thanh-toan/{lichSu}', [\App\Http\Controllers\Admin\ThanhToanController::class, 'show'])->name('thanh-toan.show');
     Route::get('hoa-don/{hoaDon}/thanh-toan/create', [\App\Http\Controllers\Admin\ThanhToanController::class, 'create'])->name('thanh-toan.create');
     Route::post('hoa-don/{hoaDon}/thanh-toan', [\App\Http\Controllers\Admin\ThanhToanController::class, 'store'])->name('thanh-toan.store');
+    Route::post('hoa-don/{hoaDon}/momo', [\App\Http\Controllers\Admin\ThanhToanController::class, 'initiateMomo'])->name('thanh-toan.momo');
+    Route::post('hoa-don/{hoaDon}/vnpay', [\App\Http\Controllers\Admin\ThanhToanController::class, 'initiateVnpay'])->name('thanh-toan.vnpay');
 
     // Quản lý phí dịch vụ
     Route::resource('phi-dich-vu', \App\Http\Controllers\Admin\PhiDichVuController::class)
@@ -178,6 +180,8 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::get('thanh-toan/{lichSu}', [\App\Http\Controllers\Manager\ThanhToanController::class, 'show'])->name('thanh-toan.show');
     Route::get('hoa-don/{hoaDon}/thanh-toan/create', [\App\Http\Controllers\Manager\ThanhToanController::class, 'create'])->name('thanh-toan.create');
     Route::post('hoa-don/{hoaDon}/thanh-toan', [\App\Http\Controllers\Manager\ThanhToanController::class, 'store'])->name('thanh-toan.store');
+    Route::post('hoa-don/{hoaDon}/momo', [\App\Http\Controllers\Manager\ThanhToanController::class, 'initiateMomo'])->name('thanh-toan.momo');
+    Route::post('hoa-don/{hoaDon}/vnpay', [\App\Http\Controllers\Manager\ThanhToanController::class, 'initiateVnpay'])->name('thanh-toan.vnpay');
 
     Route::resource('yeu-cau', \App\Http\Controllers\Manager\YeuCauController::class)->except(['create', 'store', 'edit']);
     Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Manager\YeuCauController::class, 'approve'])->name('yeu-cau.approve');
@@ -285,6 +289,14 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     Route::patch('/yeu-cau/{yeuCau}/huy', [\App\Http\Controllers\Resident\YeuCauController::class, 'cancel'])->name('yeu-cau.huy');
 });
 
-// Payment Callbacks
+// Payment Callbacks (legacy — redirect URL đã chuyển sang payment.momo.return)
 Route::get('/resident/payment/momo/callback', [\App\Http\Controllers\Resident\HoaDonController::class, 'callbackMomo'])->name('payment.momo.callback');
 Route::get('/resident/payment/vnpay/callback', [\App\Http\Controllers\Resident\HoaDonController::class, 'callbackVnpay'])->name('payment.vnpay.callback');
+
+// MoMo Payment — nằm ngoài mọi auth middleware
+Route::get('/payment/momo/return', [\App\Http\Controllers\Payment\MomoController::class, 'return'])->name('payment.momo.return');
+Route::post('/payment/momo/ipn', [\App\Http\Controllers\Payment\MomoController::class, 'ipn'])->name('payment.momo.ipn');
+
+// VNPay Payment — nằm ngoài mọi auth middleware
+Route::get('/payment/vnpay/return', [\App\Http\Controllers\Payment\VnpayController::class, 'return'])->name('payment.vnpay.return');
+Route::post('/payment/vnpay/ipn', [\App\Http\Controllers\Payment\VnpayController::class, 'ipn'])->name('payment.vnpay.ipn');

@@ -32,9 +32,57 @@ $statusConfig = match($hoaDon->trang_thai) {
     thanhToanSoTien: {{ $conNo }},
     phuongThucSelected: '{{ $phuongThuc->first()?->loai_phuong_thuc ?? '' }}',
 
+    showMomo: false,
+    momoSoTien: {{ (int) $conNo }},
+    momoLoading: false,
+    momoError: '',
+
+    showVnpay: false,
+    vnpaySoTien: {{ (int) $conNo }},
+    vnpayLoading: false,
+    vnpayError: '',
+
     fmtMoney(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + 'đ'; },
     getConNo() { return Math.max(0, this.tongTienHoaDon - this.daTTHoaDon); },
     todayStr() { return new Date().toISOString().split('T')[0]; },
+
+    validateMomoSoTien() {
+        const conNo = this.getConNo();
+        if (!this.momoSoTien || this.momoSoTien <= 0) {
+            this.momoError = 'Số tiền phải lớn hơn 0.';
+            return false;
+        }
+        if (this.momoSoTien > conNo) {
+            this.momoError = 'Số tiền không được lớn hơn ' + this.fmtMoney(conNo) + '.';
+            return false;
+        }
+        this.momoError = '';
+        return true;
+    },
+    submitMomo() {
+        if (!this.validateMomoSoTien()) return;
+        this.momoLoading = true;
+        this.$refs.momoForm.submit();
+    },
+
+    validateVnpaySoTien() {
+        const conNo = this.getConNo();
+        if (!this.vnpaySoTien || this.vnpaySoTien <= 0) {
+            this.vnpayError = 'Số tiền phải lớn hơn 0.';
+            return false;
+        }
+        if (this.vnpaySoTien > conNo) {
+            this.vnpayError = 'Số tiền không được lớn hơn ' + this.fmtMoney(conNo) + '.';
+            return false;
+        }
+        this.vnpayError = '';
+        return true;
+    },
+    submitVnpay() {
+        if (!this.validateVnpaySoTien()) return;
+        this.vnpayLoading = true;
+        this.$refs.vnpayForm.submit();
+    },
 
     async xoaChiTiet() {
         if (!this.chiTietToDelete || !this.chiTietDeleteUrl) return;
@@ -102,6 +150,22 @@ $statusConfig = match($hoaDon->trang_thai) {
                         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     Thanh toán
+                </button>
+                <button @click="showMomo = true" type="button"
+                        style="background: linear-gradient(135deg, #a50064, #d82d8b);"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all
+                               focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1
+                               text-white shadow-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                    MoMo
+                </button>
+                <button @click="showVnpay = true" type="button"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all
+                               bg-blue-600 hover:bg-blue-700
+                               focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1
+                               text-white shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    VNPay
                 </button>
                 @endif
             @endif
@@ -464,8 +528,10 @@ $statusConfig = match($hoaDon->trang_thai) {
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">Ngày thanh toán <span class="text-red-500">*</span></label>
+                    
                         <input type="date" name="ngay_thanh_toan"
-                               :max="todayStr()"
+                               max="{{ date('Y-m-d') }}"
+                               readonly
                                value="{{ date('Y-m-d') }}" required
                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     </div>
@@ -515,6 +581,284 @@ $statusConfig = match($hoaDon->trang_thai) {
                     <button type="submit"
                             class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors">
                         Xác nhận thanh toán
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </template>
+    @endif
+
+    {{-- Modal: Thanh toán bằng MoMo --}}
+    @if($isCanTT)
+    <template x-teleport="body">
+    <div x-show="showMomo" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         x-transition:enter="transition duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition duration-150" x-transition:leave-end="opacity-0"
+         @click.self="showMomo = false; momoLoading = false">
+        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+             x-transition:enter="transition duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             @click.stop>
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center"
+                         style="background: linear-gradient(135deg, #a50064, #d82d8b)">
+                        <span class="text-white font-black text-sm tracking-tight">M</span>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Thanh toán bằng MoMo</h3>
+                </div>
+                <button @click="showMomo = false; momoLoading = false"
+                        class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Invoice summary --}}
+            <div class="px-6 py-4 bg-gray-50 dark:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700">
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Mã hóa đơn</p>
+                        <p class="font-mono font-semibold text-gray-800 dark:text-slate-200">{{ $hoaDon->ma_thanh_toan }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Căn hộ</p>
+                        <p class="font-semibold text-gray-800 dark:text-slate-200">{{ $hoaDon->canHo?->so_can_ho ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Tổng tiền HĐ</p>
+                        <p class="font-semibold text-gray-900 dark:text-white tabular-nums" x-text="fmtMoney(tongTienHoaDon)"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Kỳ</p>
+                        <p class="font-semibold text-gray-800 dark:text-slate-200">{{ $hoaDon->thang }}/{{ $hoaDon->nam }}</p>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-slate-600 grid grid-cols-2 gap-3">
+                    <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2">
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mb-0.5">Đã thanh toán</p>
+                        <p class="font-bold text-emerald-700 dark:text-emerald-300 tabular-nums" x-text="fmtMoney(daTTHoaDon)"></p>
+                    </div>
+                    <div class="bg-pink-50 dark:bg-pink-900/20 rounded-lg px-3 py-2">
+                        <p class="text-xs text-pink-600 dark:text-pink-400 mb-0.5">Còn phải thanh toán</p>
+                        <p class="font-bold text-pink-700 dark:text-pink-300 tabular-nums" x-text="fmtMoney(getConNo())"></p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Form --}}
+            <form x-ref="momoForm" method="POST" action="{{ route('admin.thanh-toan.momo', $hoaDon) }}" class="px-6 py-5 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Số tiền thanh toán (đ) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="number" name="so_tien"
+                               x-model.number="momoSoTien"
+                               @input="validateMomoSoTien()"
+                               :max="getConNo()" min="1" step="1" required
+                               :disabled="momoLoading"
+                               class="w-full px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700
+                                      text-gray-900 dark:text-white tabular-nums
+                                      focus:outline-none focus:ring-2 focus:ring-pink-400
+                                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                               :class="momoError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'">
+                    </div>
+                    <p x-show="momoError" x-text="momoError"
+                       class="mt-1.5 text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                    </p>
+                    <p x-show="!momoError" class="mt-1 text-xs text-gray-400 dark:text-slate-500">
+                        Mặc định là toàn bộ số tiền còn nợ.
+                        Tối đa: <span class="font-medium text-pink-600 dark:text-pink-400" x-text="fmtMoney(getConNo())"></span>
+                    </p>
+                </div>
+
+                {{-- Gợi ý chọn nhanh --}}
+                <div class="flex gap-2">
+                    <button type="button"
+                            @click="momoSoTien = getConNo(); validateMomoSoTien()"
+                            :disabled="momoLoading"
+                            class="flex-1 py-1.5 text-xs font-medium rounded-lg border border-pink-200 dark:border-pink-800
+                                   text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20
+                                   disabled:opacity-50 transition-colors">
+                        Toàn bộ nợ (<span x-text="fmtMoney(getConNo())"></span>)
+                    </button>
+                    <button type="button"
+                            @click="momoSoTien = Math.floor(getConNo() / 2); validateMomoSoTien()"
+                            :disabled="momoLoading"
+                            class="flex-1 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-slate-600
+                                   text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700
+                                   disabled:opacity-50 transition-colors">
+                        Nửa số nợ
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3 pt-1">
+                    <button type="button" @click="showMomo = false; momoLoading = false"
+                            :disabled="momoLoading"
+                            class="flex-1 py-2.5 border border-gray-300 dark:border-slate-600
+                                   text-gray-700 dark:text-slate-300 text-sm font-medium rounded-xl
+                                   hover:bg-gray-50 dark:hover:bg-slate-700
+                                   disabled:opacity-50 transition-colors">
+                        Hủy
+                    </button>
+                    <button type="button" @click="submitMomo()"
+                            :disabled="momoLoading || !!momoError"
+                            style="background: linear-gradient(135deg, #a50064, #d82d8b);"
+                            class="flex-1 py-2.5 text-sm font-semibold rounded-xl text-white transition-all
+                                   focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1
+                                   disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span x-show="!momoLoading" class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                            Tiếp tục thanh toán
+                        </span>
+                        <span x-show="momoLoading" class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                            Đang tạo giao dịch MoMo...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </template>
+    @endif
+
+    {{-- Modal: Thanh toán bằng VNPay --}}
+    @if($isCanTT)
+    <template x-teleport="body">
+    <div x-show="showVnpay" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         x-transition:enter="transition duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition duration-150" x-transition:leave-end="opacity-0"
+         @click.self="showVnpay = false; vnpayLoading = false">
+        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+             x-transition:enter="transition duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             @click.stop>
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center bg-blue-600">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Thanh toán bằng VNPay</h3>
+                </div>
+                <button @click="showVnpay = false; vnpayLoading = false"
+                        class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Invoice summary --}}
+            <div class="px-6 py-4 bg-gray-50 dark:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700">
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Mã hóa đơn</p>
+                        <p class="font-mono font-semibold text-gray-800 dark:text-slate-200">{{ $hoaDon->ma_thanh_toan }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Căn hộ</p>
+                        <p class="font-semibold text-gray-800 dark:text-slate-200">{{ $hoaDon->canHo?->so_can_ho ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Tổng tiền HĐ</p>
+                        <p class="font-semibold text-gray-900 dark:text-white tabular-nums" x-text="fmtMoney(tongTienHoaDon)"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Kỳ</p>
+                        <p class="font-semibold text-gray-800 dark:text-slate-200">{{ $hoaDon->thang }}/{{ $hoaDon->nam }}</p>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-slate-600 grid grid-cols-2 gap-3">
+                    <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2">
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 mb-0.5">Đã thanh toán</p>
+                        <p class="font-bold text-emerald-700 dark:text-emerald-300 tabular-nums" x-text="fmtMoney(daTTHoaDon)"></p>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2">
+                        <p class="text-xs text-blue-600 dark:text-blue-400 mb-0.5">Còn phải thanh toán</p>
+                        <p class="font-bold text-blue-700 dark:text-blue-300 tabular-nums" x-text="fmtMoney(getConNo())"></p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Form --}}
+            <form x-ref="vnpayForm" method="POST" action="{{ route('admin.thanh-toan.vnpay', $hoaDon) }}" class="px-6 py-5 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Số tiền thanh toán (đ) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="so_tien"
+                           x-model.number="vnpaySoTien"
+                           @input="validateVnpaySoTien()"
+                           :max="getConNo()" min="1" step="1" required
+                           :disabled="vnpayLoading"
+                           class="w-full px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700
+                                  text-gray-900 dark:text-white tabular-nums
+                                  focus:outline-none focus:ring-2 focus:ring-blue-400
+                                  disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                           :class="vnpayError ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'">
+                    <p x-show="vnpayError" x-text="vnpayError"
+                       class="mt-1.5 text-xs text-red-500 dark:text-red-400"></p>
+                    <p x-show="!vnpayError" class="mt-1 text-xs text-gray-400 dark:text-slate-500">
+                        Mặc định là toàn bộ số tiền còn nợ.
+                        Tối đa: <span class="font-medium text-blue-600 dark:text-blue-400" x-text="fmtMoney(getConNo())"></span>
+                    </p>
+                </div>
+
+                {{-- Gợi ý chọn nhanh --}}
+                <div class="flex gap-2">
+                    <button type="button"
+                            @click="vnpaySoTien = getConNo(); validateVnpaySoTien()"
+                            :disabled="vnpayLoading"
+                            class="flex-1 py-1.5 text-xs font-medium rounded-lg border border-blue-200 dark:border-blue-800
+                                   text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20
+                                   disabled:opacity-50 transition-colors">
+                        Toàn bộ nợ (<span x-text="fmtMoney(getConNo())"></span>)
+                    </button>
+                    <button type="button"
+                            @click="vnpaySoTien = Math.floor(getConNo() / 2); validateVnpaySoTien()"
+                            :disabled="vnpayLoading"
+                            class="flex-1 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-slate-600
+                                   text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700
+                                   disabled:opacity-50 transition-colors">
+                        Nửa số nợ
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3 pt-1">
+                    <button type="button" @click="showVnpay = false; vnpayLoading = false"
+                            :disabled="vnpayLoading"
+                            class="flex-1 py-2.5 border border-gray-300 dark:border-slate-600
+                                   text-gray-700 dark:text-slate-300 text-sm font-medium rounded-xl
+                                   hover:bg-gray-50 dark:hover:bg-slate-700
+                                   disabled:opacity-50 transition-colors">
+                        Hủy
+                    </button>
+                    <button type="button" @click="submitVnpay()"
+                            :disabled="vnpayLoading || !!vnpayError"
+                            class="flex-1 py-2.5 text-sm font-semibold rounded-xl text-white transition-all
+                                   bg-blue-600 hover:bg-blue-700
+                                   focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1
+                                   disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span x-show="!vnpayLoading" class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            Thanh toán qua VNPay
+                        </span>
+                        <span x-show="vnpayLoading" class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                            Đang tạo giao dịch VNPay...
+                        </span>
                     </button>
                 </div>
             </form>

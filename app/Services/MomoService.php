@@ -16,19 +16,18 @@ class MomoService
 
     public function __construct()
     {
-        $this->partnerCode = config('services.momo.partner_code', '');
-        $this->accessKey   = config('services.momo.access_key', '');
-        $this->secretKey   = config('services.momo.secret_key', '');
-        $this->endpoint    = config('services.momo.endpoint', '');
-        $this->redirectUrl = config('services.momo.redirect_url', '');
-        $this->ipnUrl      = config('services.momo.ipn_url', '');
+        $this->partnerCode = config('momo.partner_code', '');
+        $this->accessKey   = config('momo.access_key', '');
+        $this->secretKey   = config('momo.secret_key', '');
+        $this->endpoint    = config('momo.endpoint', '');
+        $this->redirectUrl = config('momo.redirect_url', '');
+        $this->ipnUrl      = config('momo.ipn_url', '');
     }
 
-    public function taoYeuCauThanhToan(string $orderId, int $amount, string $orderInfo): array
+    public function taoYeuCauThanhToan(string $orderId, int $amount, string $orderInfo, string $extraData = ''): array
     {
-        $requestId = $orderId . '_' . time();
-        $extraData = '';
-        $requestType = 'payWithATM';
+        $requestId   = $orderId . '_' . time();
+        $requestType = 'captureWallet';
 
         $rawHash = "accessKey={$this->accessKey}&amount={$amount}&extraData={$extraData}&ipnUrl={$this->ipnUrl}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$this->partnerCode}&redirectUrl={$this->redirectUrl}&requestId={$requestId}&requestType={$requestType}";
         $signature = hash_hmac('sha256', $rawHash, $this->secretKey);
@@ -37,7 +36,7 @@ class MomoService
             'partnerCode' => $this->partnerCode,
             'accessKey'   => $this->accessKey,
             'requestId'   => $requestId,
-            'amount'      => (string)$amount,
+            'amount'      => (string) $amount,
             'orderId'     => $orderId,
             'orderInfo'   => $orderInfo,
             'redirectUrl' => $this->redirectUrl,
@@ -48,7 +47,8 @@ class MomoService
             'lang'        => 'vi',
         ];
 
-        $response = Http::post($this->endpoint, $body);
+        $response = Http::withOptions(['verify' => config('momo.verify_ssl', true)])
+            ->post($this->endpoint, $body);
 
         return $response->json();
     }
