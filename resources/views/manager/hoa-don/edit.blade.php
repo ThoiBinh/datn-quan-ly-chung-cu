@@ -63,7 +63,7 @@
                 <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
                     <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 </div>
-                <h2 class="text-sm font-semibold text-gray-800">Trạng thái & hạn thanh toán</h2>
+                <h2 class="text-sm font-semibold text-gray-800">Hạn thanh toán</h2>
             </div>
             <div class="p-5 space-y-4">
                 <div>
@@ -72,18 +72,7 @@
                            value="{{ old('han_thanh_toan', $hoaDon->han_thanh_toan ? $hoaDon->han_thanh_toan->format('Y-m-d') : '') }}"
                            {{ $isDaTT ? 'disabled' : '' }}
                            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ $isDaTT ? 'cursor-not-allowed' : '' }}">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Trạng thái <span class="text-red-500">*</span></label>
-                    <select name="trang_thai"
-                            {{ $isDaTT ? 'disabled' : '' }}
-                            class="w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ $isDaTT ? 'cursor-not-allowed' : '' }} {{ $errors->has('trang_thai') ? 'border-red-400' : 'border-gray-300' }}">
-                        <option value="{{ \App\Models\HoaDon::TRANG_THAI_CHUA_THANH_TOAN }}" {{ old('trang_thai', $hoaDon->trang_thai) == \App\Models\HoaDon::TRANG_THAI_CHUA_THANH_TOAN ? 'selected' : '' }}>Chưa thanh toán</option>
-                        <option value="{{ \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN }}"  {{ old('trang_thai', $hoaDon->trang_thai) == \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN  ? 'selected' : '' }}>Đã thanh toán</option>
-                        <option value="{{ \App\Models\HoaDon::TRANG_THAI_QUA_HAN }}"        {{ old('trang_thai', $hoaDon->trang_thai) == \App\Models\HoaDon::TRANG_THAI_QUA_HAN        ? 'selected' : '' }}>Quá hạn</option>
-                        <option value="{{ \App\Models\HoaDon::TRANG_THAI_DA_HUY }}"         {{ old('trang_thai', $hoaDon->trang_thai) == \App\Models\HoaDon::TRANG_THAI_DA_HUY         ? 'selected' : '' }}>Đã hủy</option>
-                    </select>
-                    @error('trang_thai')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <p class="mt-1.5 text-xs text-gray-400">Trạng thái hóa đơn được tính tự động dựa trên hạn này và số tiền đã thanh toán.</p>
                 </div>
             </div>
         </div>

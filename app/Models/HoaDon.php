@@ -59,8 +59,7 @@ class HoaDon extends Model
         return match($this->trang_thai) {
             1 => 'Chưa thanh toán',
             2 => 'Đã thanh toán',
-            3 => 'Quá hạn',
-            4 => 'Đã hủy',
+            3 => 'Trễ hạn',
             default => 'Không xác định',
         };
     }

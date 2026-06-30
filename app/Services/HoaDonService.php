@@ -101,14 +101,46 @@ class HoaDonService
 
     public function capNhatTrangThaiTreHan(): void
     {
-        HoaDon::whereNotIn('trang_thai', [
-            HoaDon::TRANG_THAI_DA_THANH_TOAN,
-            HoaDon::TRANG_THAI_QUA_HAN,
-            HoaDon::TRANG_THAI_DA_HUY,
-        ])
-        ->whereNotNull('han_thanh_toan')
-        ->where('han_thanh_toan', '<', now())
-        ->update(['trang_thai' => HoaDon::TRANG_THAI_QUA_HAN]);
+        $today = now()->startOfDay();
+
+        HoaDon::whereRaw('so_tien_da_thanh_toan >= tong_tien')
+            ->where('trang_thai', '!=', HoaDon::TRANG_THAI_DA_THANH_TOAN)
+            ->update(['trang_thai' => HoaDon::TRANG_THAI_DA_THANH_TOAN]);
+
+        HoaDon::whereRaw('so_tien_da_thanh_toan < tong_tien')
+            ->whereNotNull('han_thanh_toan')
+            ->where('han_thanh_toan', '<', $today)
+            ->where('trang_thai', '!=', HoaDon::TRANG_THAI_QUA_HAN)
+            ->update(['trang_thai' => HoaDon::TRANG_THAI_QUA_HAN]);
+
+        HoaDon::whereRaw('so_tien_da_thanh_toan < tong_tien')
+            ->where(function ($q) use ($today) {
+                $q->whereNull('han_thanh_toan')
+                  ->orWhere('han_thanh_toan', '>=', $today);
+            })
+            ->where('trang_thai', '!=', HoaDon::TRANG_THAI_CHUA_THANH_TOAN)
+            ->update(['trang_thai' => HoaDon::TRANG_THAI_CHUA_THANH_TOAN]);
+    }
+
+    public function calculateStatus(HoaDon $hoaDon): int
+    {
+        $tongTien = (float) ($hoaDon->tong_tien ?? 0);
+        $daTT     = (float) ($hoaDon->so_tien_da_thanh_toan ?? 0);
+
+        if ($daTT >= $tongTien) {
+            return HoaDon::TRANG_THAI_DA_THANH_TOAN;
+        }
+
+        if ($hoaDon->han_thanh_toan && now()->startOfDay()->gt($hoaDon->han_thanh_toan)) {
+            return HoaDon::TRANG_THAI_QUA_HAN;
+        }
+
+        return HoaDon::TRANG_THAI_CHUA_THANH_TOAN;
+    }
+
+    public function syncStatus(HoaDon $hoaDon): void
+    {
+        $hoaDon->update(['trang_thai' => $this->calculateStatus($hoaDon)]);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -303,7 +335,7 @@ class HoaDonService
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Payment recording
+    //  Payment recording (immutable — no edit/delete after insert)
     // ─────────────────────────────────────────────────────────────
 
     public function ghiNhanThanhToan(
@@ -311,38 +343,37 @@ class HoaDonService
         float $soTien,
         string $phuongThuc,
         ?string $maGiaoDich = null,
-        ?int $nguonTao = null
+        ?int $nguonTao = null,
+        ?string $ngayThanhToan = null,
+        ?string $ghiChu = null,
+        ?int $nguoiThanhToan = null
     ): LichSuThanhToan {
-        $ls = LichSuThanhToan::create([
-            'hoa_don'                => $hoaDon->id,
-            'ngay_thanh_toan'        => now(),
-            'so_tien'                => $soTien,
-            'phuong_thuc_thanh_toan' => $phuongThuc,
-            'ma_giao_dich'           => $maGiaoDich ?? Str::uuid(),
-            'nguoi_thanh_toan'       => auth('cudan')->id(),
-            'nguon_tao'              => $nguonTao ?? NguonTao::ADMIN,
-            'createdAt'              => now(),
-        ]);
+        return DB::transaction(function () use ($hoaDon, $soTien, $phuongThuc, $maGiaoDich, $nguonTao, $ngayThanhToan, $ghiChu, $nguoiThanhToan) {
+            $ls = LichSuThanhToan::create([
+                'hoa_don'                => $hoaDon->id,
+                'ngay_thanh_toan'        => $ngayThanhToan ?? now()->format('Y-m-d'),
+                'so_tien'                => $soTien,
+                'phuong_thuc_thanh_toan' => $phuongThuc,
+                'ma_giao_dich'           => $maGiaoDich,
+                'nguoi_thanh_toan'       => $nguoiThanhToan,
+                'ghi_chu'                => $ghiChu,
+                'nguon_tao'              => $nguonTao ?? NguonTao::ADMIN,
+                'createdAt'              => now(),
+            ]);
 
-        $tongDaThanhToan = $hoaDon->so_tien_da_thanh_toan + $soTien;
-        $trangThai       = $tongDaThanhToan >= $hoaDon->tong_tien
-            ? HoaDon::TRANG_THAI_DA_THANH_TOAN
-            : HoaDon::TRANG_THAI_CHUA_THANH_TOAN;
+            $tongDaTT = (float) LichSuThanhToan::where('hoa_don', $hoaDon->id)->sum('so_tien');
+            $hoaDon->so_tien_da_thanh_toan = $tongDaTT;
 
-        $hoaDon->update([
-            'so_tien_da_thanh_toan' => $tongDaThanhToan,
-            'trang_thai'            => $trangThai,
-        ]);
+            $hoaDon->update([
+                'so_tien_da_thanh_toan' => $tongDaTT,
+                'trang_thai'            => $this->calculateStatus($hoaDon),
+                'nguoi_cap_nhat'        => auth('nhanvien')->id(),
+            ]);
 
-        AuditLogService::log(
-            'UPDATE',
-            'hoa_don',
-            $hoaDon->id,
-            ['trang_thai' => $hoaDon->getOriginal('trang_thai')],
-            ['trang_thai' => $trangThai]
-        );
+            AuditLogService::log('INSERT', 'lich_su_thanh_toan', $ls->id, null, $ls->toArray());
 
-        return $ls;
+            return $ls;
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
