@@ -14,6 +14,7 @@ function initRevenueWidgetChart() {
 
     const labels = JSON.parse(canvas.dataset.labels || '[]');
     const values = JSON.parse(canvas.dataset.values || '[]');
+    const duNoValues = JSON.parse(canvas.dataset.duNoValues || '[]');
 
     const ctx = canvas.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.parentElement.clientHeight || 280);
@@ -37,6 +38,20 @@ function initRevenueWidgetChart() {
                 pointBackgroundColor: '#2563eb',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
+            }, {
+                label: 'Tổng dư nợ',
+                data: duNoValues,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0)',
+                borderWidth: 2.5,
+                borderDash: [5, 4],
+                fill: false,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#ef4444',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
             }],
         },
         options: {
@@ -46,14 +61,21 @@ function initRevenueWidgetChart() {
             animation: { duration: 800, easing: 'easeOutQuart' },
             hover: { animationDuration: 300 },
             plugins: {
-                legend: { display: false },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' },
+                },
                 tooltip: {
                     backgroundColor: '#1e293b',
                     padding: 10,
                     cornerRadius: 8,
-                    displayColors: false,
+                    displayColors: true,
+                    boxWidth: 8,
+                    boxHeight: 8,
                     callbacks: {
-                        label: (context) => formatVND(context.parsed.y),
+                        label: (context) => `${context.dataset.label}: ${formatVND(context.parsed.y)}`,
                     },
                 },
             },

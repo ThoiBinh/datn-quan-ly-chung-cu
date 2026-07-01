@@ -54,6 +54,18 @@ class HoaDon extends Model
         return (float)$this->tong_tien - (float)$this->so_tien_da_thanh_toan;
     }
 
+    public function scopeChuaHuy($query)
+    {
+        return $query->where('trang_thai', '!=', self::TRANG_THAI_DA_HUY);
+    }
+
+    public function scopeSelectSumDuNo($query, string $as = 'du_no')
+    {
+        return $query->selectRaw(
+            "SUM(CASE WHEN tong_tien > so_tien_da_thanh_toan THEN tong_tien - so_tien_da_thanh_toan ELSE 0 END) as {$as}"
+        );
+    }
+
     public function getTrangThaiLabelAttribute(): string
     {
         return match($this->trang_thai) {

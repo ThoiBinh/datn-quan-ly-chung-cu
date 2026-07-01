@@ -60,14 +60,22 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $tongDuNo = HoaDon::query()->chuaHuy()->selectSumDuNo()->value('du_no') ?? 0;
+
         $labels = [];
         $doanhThuNam = [];
+        $duNoTheoThang = [];
         for ($i = 1; $i <= 12; $i++) {
             $labels[] = 'T' . $i;
             $doanhThuNam[] = HoaDon::where('trang_thai', 2)
                 ->whereYear('updatedAt', now()->year)
                 ->whereMonth('updatedAt', $i)
                 ->sum('tong_tien');
+            $duNoTheoThang[] = HoaDon::query()->chuaHuy()
+                ->whereYear('updatedAt', now()->year)
+                ->whereMonth('updatedAt', $i)
+                ->selectSumDuNo()
+                ->value('du_no') ?? 0;
         }
         $tongDoanhThuNam = array_sum($doanhThuNam);
 
@@ -76,7 +84,7 @@ class DashboardController extends Controller
         return view('manager.dashboard', compact(
             'stats', 'doanhThuThang', 'doanhThuThangTruoc', 'tyLeTangTruong',
             'yeuCauGanDay', 'hoaDonQuaHan', 'labels', 'doanhThuNam',
-            'tongDoanhThuNam', 'filterOptions'
+            'tongDoanhThuNam', 'tongDuNo', 'duNoTheoThang', 'filterOptions'
         ));
     }
 

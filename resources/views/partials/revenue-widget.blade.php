@@ -6,6 +6,14 @@
     $growthBg = $growth > 0
         ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/40'
         : ($growth < 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/40' : 'bg-gray-50 dark:bg-slate-700/40 border-gray-100 dark:border-slate-700');
+
+    $duNo = $tongDuNo ?? 0;
+    $duNoColor = $duNo == 0
+        ? 'text-emerald-600 dark:text-emerald-400'
+        : ($duNo < 100000000 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400');
+    $duNoBg = $duNo == 0
+        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/40'
+        : ($duNo < 100000000 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/40' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/40');
 @endphp
 
 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 sm:p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
@@ -30,7 +38,7 @@
     </div>
 
     {{-- KPIs --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-3.5">
             <p class="text-xs text-gray-400 dark:text-slate-400 mb-1">Doanh thu tháng</p>
             <p class="text-lg font-bold text-gray-800 dark:text-white">{{ number_format($doanhThuThang, 0, ',', '.') }}đ</p>
@@ -58,12 +66,24 @@
                 {{ ($growth > 0 ? '+' : '') . number_format($growth, 1) }}%
             </p>
         </div>
+        <div class="rounded-xl border {{ $duNoBg }} p-3.5 hover:shadow-md transition-shadow cursor-default"
+             title="Tổng số tiền còn phải thu từ các hóa đơn chưa được thanh toán hoặc mới thanh toán một phần.">
+            <div class="flex items-center gap-1.5 mb-1">
+                <svg class="w-3.5 h-3.5 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0018.75 4.5H5.25A2.25 2.25 0 003 6.75v10.5A2.25 2.25 0 005.25 19.5z"/>
+                </svg>
+                <p class="text-xs text-gray-400 dark:text-slate-400">Tổng dư nợ</p>
+            </div>
+            <p class="text-lg font-bold {{ $duNoColor }}">{{ $duNo > 0 ? number_format($duNo, 0, ',', '.') . 'đ' : '0 đ' }}</p>
+            <p class="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 leading-tight">Cập nhật theo hóa đơn chưa thanh toán</p>
+        </div>
     </div>
 
     {{-- Chart --}}
     <div class="relative" style="height: 280px;">
         <canvas id="revenueWidgetChart"
             data-labels='{{ json_encode($labels) }}'
-            data-values='{{ json_encode($doanhThuNam) }}'></canvas>
+            data-values='{{ json_encode($doanhThuNam) }}'
+            data-du-no-values='{{ json_encode($duNoTheoThang) }}'></canvas>
     </div>
 </div>
