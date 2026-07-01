@@ -90,15 +90,9 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Chart -->
-    <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">Doanh thu theo tháng {{ now()->year }}</h3>
-            <span class="text-sm text-gray-500">Tổng năm: {{ number_format($doanhThuNam) }}đ</span>
-        </div>
-        <div style="position:relative; height:280px;">
-            <canvas id="revenueChart"></canvas>
-        </div>
+    <!-- Doanh thu -->
+    <div class="lg:col-span-2">
+        @include('partials.revenue-widget')
     </div>
 
     <!-- Recent Requests -->
@@ -132,38 +126,4 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-const ctx = document.getElementById('revenueChart').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
-        datasets: [{
-            label: 'Doanh thu (đ)',
-            data: @json($doanhThuTheoThang),
-            backgroundColor: 'rgba(59, 130, 246, 0.8)',
-            borderColor: 'rgba(59, 130, 246, 1)',
-            borderWidth: 1,
-            borderRadius: 6,
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(v) {
-                        if (v >= 1000000) return (v/1000000).toFixed(0) + 'M';
-                        if (v >= 1000) return (v/1000).toFixed(0) + 'K';
-                        return v;
-                    }
-                }
-            }
-        }
-    }
-});
-</script>
 @endpush

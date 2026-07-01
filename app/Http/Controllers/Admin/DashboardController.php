@@ -39,9 +39,15 @@ class DashboardController extends Controller
             ->whereMonth('updatedAt', now()->month)
             ->sum('tong_tien');
 
-        $doanhThuNam = HoaDon::where('trang_thai', 2)
-            ->whereYear('updatedAt', now()->year)
+        $thangTruoc = now()->copy()->subMonth();
+        $doanhThuThangTruoc = HoaDon::where('trang_thai', 2)
+            ->whereYear('updatedAt', $thangTruoc->year)
+            ->whereMonth('updatedAt', $thangTruoc->month)
             ->sum('tong_tien');
+
+        $tyLeTangTruong = $doanhThuThangTruoc > 0
+            ? round((($doanhThuThang - $doanhThuThangTruoc) / $doanhThuThangTruoc) * 100, 1)
+            : ($doanhThuThang > 0 ? 100 : 0);
 
         $nhatKy = NhatKyHeThong::with('nguoiThucHien')
             ->orderByDesc('createdAt')
@@ -54,19 +60,23 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $doanhThuTheoThang = [];
+        $labels = [];
+        $doanhThuNam = [];
         for ($i = 1; $i <= 12; $i++) {
-            $doanhThuTheoThang[] = HoaDon::where('trang_thai', 2)
+            $labels[] = 'T' . $i;
+            $doanhThuNam[] = HoaDon::where('trang_thai', 2)
                 ->whereYear('updatedAt', now()->year)
                 ->whereMonth('updatedAt', $i)
                 ->sum('tong_tien');
         }
+        $tongDoanhThuNam = array_sum($doanhThuNam);
 
         $filterOptions = $this->reportService->getFilterOptions();
 
         return view('admin.dashboard', compact(
-            'stats', 'doanhThuThang', 'doanhThuNam',
-            'nhatKy', 'yeuCauMoi', 'doanhThuTheoThang', 'filterOptions'
+            'stats', 'doanhThuThang', 'doanhThuThangTruoc', 'tyLeTangTruong',
+            'nhatKy', 'yeuCauMoi', 'labels', 'doanhThuNam',
+            'tongDoanhThuNam', 'filterOptions'
         ));
     }
 

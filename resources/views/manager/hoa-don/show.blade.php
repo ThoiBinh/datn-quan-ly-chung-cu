@@ -7,6 +7,7 @@
 $conNo   = max(0, (float)($hoaDon->tong_tien ?? 0) - (float)($hoaDon->so_tien_da_thanh_toan ?? 0));
 $chuHo   = $hoaDon->canHo?->chuHo?->cuDan;
 $isDaTT  = $hoaDon->trang_thai === \App\Models\HoaDon::TRANG_THAI_DA_THANH_TOAN;
+$daPhatSinhTT = $hoaDon->lichSuThanhToan->isNotEmpty();
 $isCanTT = in_array($hoaDon->trang_thai, [
     \App\Models\HoaDon::TRANG_THAI_CHUA_THANH_TOAN,
     \App\Models\HoaDon::TRANG_THAI_QUA_HAN,
@@ -149,7 +150,7 @@ $statusConfig = match($hoaDon->trang_thai) {
                 <button @click="showThanhToan = true" type="button"
                         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    Thanh toán
+                    Tiền mặt
                 </button>
                 <button @click="showMomo = true" type="button"
                         style="background: linear-gradient(135deg, #a50064, #d82d8b);"
@@ -170,11 +171,21 @@ $statusConfig = match($hoaDon->trang_thai) {
                 @endif
             @endif
 
+            @if($daPhatSinhTT)
+            <span title="Không thể sửa hóa đơn đã phát sinh thanh toán.">
+                <button type="button" disabled
+                        class="inline-flex items-center gap-2 px-3.5 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-400 opacity-60 cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Chỉnh sửa
+                </button>
+            </span>
+            @else
             <a href="{{ route('manager.hoa-don.edit', $hoaDon) }}"
                class="inline-flex items-center gap-2 px-3.5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Chỉnh sửa
             </a>
+            @endif
 
         </div>
     </div>
@@ -200,6 +211,12 @@ $statusConfig = match($hoaDon->trang_thai) {
                     <span class="w-1.5 h-1.5 rounded-full {{ $statusConfig['dot'] }}"></span>
                     {{ $statusConfig['label'] }}
                 </span>
+                @if($daPhatSinhTT)
+                <span class="ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Đã phát sinh thanh toán
+                </span>
+                @endif
             </div>
         </div>
     </div>
@@ -552,7 +569,7 @@ $statusConfig = match($hoaDon->trang_thai) {
                     <select name="phuong_thuc_thanh_toan" required x-model="phuongThucSelected"
                             class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400">
                         @foreach($phuongThuc as $pt)
-                        <option value="{{ $pt->loai_phuong_thuc }}">{{ $pt->loai_phuong_thuc }}</option>
+                        <option value="Tiền mặt">Tiền mặt</option>
                         @endforeach
                     </select>
                     @else

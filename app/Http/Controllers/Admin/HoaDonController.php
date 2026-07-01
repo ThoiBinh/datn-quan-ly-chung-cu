@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreHoaDonRequest;
-use App\Http\Requests\Admin\UpdateHoaDonRequest;
 use App\Models\CanHo;
 use App\Models\CauHinhThanhToan;
 use App\Models\ChiTietHoaDon;
@@ -28,7 +27,7 @@ class HoaDonController extends Controller
         $sort      = in_array($request->sort, self::SORTABLE) ? $request->sort : 'createdAt';
         $direction = $request->direction === 'asc' ? 'asc' : 'desc';
 
-        $query = HoaDon::with(['canHo.toaNha', 'canHo.chuHo.cuDan']);
+        $query = HoaDon::with(['canHo.toaNha', 'canHo.chuHo.cuDan'])->withCount('lichSuThanhToan');
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -159,6 +158,11 @@ class HoaDonController extends Controller
 
     public function edit(HoaDon $hoaDon)
     {
+        if ($hoaDon->lichSuThanhToan()->exists()) {
+            return redirect()->route('admin.hoa-don.show', $hoaDon)
+                ->with('error', 'Hóa đơn đã phát sinh lịch sử thanh toán nên không thể chỉnh sửa.');
+        }
+
         $this->hoaDonService->capNhatTrangThaiTreHan();
         $hoaDon->refresh();
         $hoaDon->load('chiTiet', 'canHo.toaNha');
@@ -166,8 +170,17 @@ class HoaDonController extends Controller
         return view('admin.hoa-don.edit', compact('hoaDon', 'isDaTT'));
     }
 
-    public function update(UpdateHoaDonRequest $request, HoaDon $hoaDon)
+    public function update(Request $request, HoaDon $hoaDon)
     {
+        if ($hoaDon->lichSuThanhToan()->exists()) {
+            return back()->with('error', 'Hóa đơn đã phát sinh lịch sử thanh toán nên không thể chỉnh sửa.');
+        }
+
+        $request->validate(
+            ['han_thanh_toan' => 'nullable|date'],
+            ['han_thanh_toan.date' => 'Hạn thanh toán không đúng định dạng ngày.']
+        );
+
         // chi_so edit only when CHUA_THANH_TOAN
         $isCurrentlyChuaTT = $hoaDon->trang_thai == HoaDon::TRANG_THAI_CHUA_THANH_TOAN;
 
