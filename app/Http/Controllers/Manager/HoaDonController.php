@@ -69,7 +69,24 @@ class HoaDonController extends Controller
     {
         $request->validate(['can_ho' => 'required|integer|exists:can_ho,id']);
         try {
-            $services = $this->hoaDonService->layDichVuCanHo($request->can_ho);
+            $services = $this->hoaDonService->layDichVuModal($request->can_ho);
+            return response()->json(['services' => $services]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    public function syncCanHoServices(Request $request)
+    {
+        $request->validate([
+            'can_ho'              => 'required|integer|exists:can_ho,id',
+            'phi_dich_vu_ids'     => 'array',
+            'phi_dich_vu_ids.*'   => 'integer|exists:phi_dich_vu,id',
+        ]);
+
+        try {
+            $this->hoaDonService->syncDichVuCanHo($request->can_ho, $request->input('phi_dich_vu_ids', []));
+            $services = $this->hoaDonService->layDichVuModal($request->can_ho);
             return response()->json(['services' => $services]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);

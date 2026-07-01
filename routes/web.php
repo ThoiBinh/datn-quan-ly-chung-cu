@@ -62,6 +62,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     // Quản lý hóa đơn
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Admin\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
     Route::get('hoa-don/can-ho-services', [\App\Http\Controllers\Admin\HoaDonController::class, 'canHoServices'])->name('hoa-don.can-ho-services');
+    Route::post('hoa-don/can-ho-services', [\App\Http\Controllers\Admin\HoaDonController::class, 'syncCanHoServices'])->name('hoa-don.can-ho-services.sync');
     Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Admin\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::delete('hoa-don/{hoaDon}/chi-tiet/{chiTiet}', [\App\Http\Controllers\Admin\HoaDonController::class, 'destroyChiTiet'])->name('hoa-don.chi-tiet.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Admin\HoaDonController::class)
@@ -176,6 +177,7 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('phi-dich-vu', \App\Http\Controllers\Manager\PhiDichVuController::class);
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Manager\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
     Route::get('hoa-don/can-ho-services', [\App\Http\Controllers\Manager\HoaDonController::class, 'canHoServices'])->name('hoa-don.can-ho-services');
+    Route::post('hoa-don/can-ho-services', [\App\Http\Controllers\Manager\HoaDonController::class, 'syncCanHoServices'])->name('hoa-don.can-ho-services.sync');
     Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::delete('hoa-don/{hoaDon}/chi-tiet/{chiTiet}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroyChiTiet'])->name('hoa-don.chi-tiet.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class)->except(['destroy'])->parameters(['hoa-don' => 'hoaDon']);
