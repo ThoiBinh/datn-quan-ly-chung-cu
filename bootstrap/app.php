@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'manager'  => \App\Http\Middleware\ManagerMiddleware::class,
             'resident' => \App\Http\Middleware\ResidentMiddleware::class,
         ]);
+
+        // IPN từ MoMo/VNPay là server-to-server, không có CSRF token
+        $middleware->validateCsrfTokens(except: [
+            'payment/momo/ipn',
+            'payment/vnpay/ipn',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

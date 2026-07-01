@@ -85,6 +85,11 @@ class CuDan extends Authenticatable
         return $this->hasMany(ThongBaoDaDoc::class, 'cu_dan_id');
     }
 
+    public function lichSuThanhToan()
+    {
+        return $this->hasMany(LichSuThanhToan::class, 'nguoi_thanh_toan');
+    }
+
     public function getAvatarUrlAttribute(): ?string
     {
         foreach (['jpg', 'jpeg', 'png', 'webp'] as $ext) {

@@ -91,6 +91,7 @@
                             <a href="{{ $sortUrl('gia') }}" class="hover:text-emerald-600 flex items-center justify-end gap-1">Giá {!! $sortIcon('gia') !!}</a>
                         </th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Chủ hộ</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Thuộc tính</th>
                         <th class="px-4 py-3 w-24"></th>
                     </tr>
                 </thead>
@@ -129,6 +130,21 @@
                         <td class="px-4 py-3.5 text-gray-600 dark:text-slate-300 text-xs whitespace-nowrap">
                             {{ $ch->chuHo?->cuDan?->ho_ten ?? '—' }}
                         </td>
+                        <td class="px-4 py-3.5 max-w-[200px]">
+                            @if($ch->thuocTinh->isEmpty())
+                            <span class="text-gray-400 dark:text-slate-600">—</span>
+                            @else
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($ch->thuocTinh as $tt)
+                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-100 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800 whitespace-nowrap"
+                                      title="{{ $tt->ten_thuoc_tinh }}: {{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}">
+                                    <span class="font-medium">{{ $tt->ten_thuoc_tinh }}:</span>
+                                    <span>{{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}</span>
+                                </span>
+                                @endforeach
+                            </div>
+                            @endif
+                        </td>
                         <td class="px-4 py-3.5">
                             <div class="flex items-center gap-1 justify-end">
                                 <a href="{{ route('admin.can-ho.show', $ch) }}" title="Xem chi tiết"
@@ -144,7 +160,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-14 text-center">
+                        <td colspan="9" class="px-5 py-14 text-center">
                             <svg class="w-14 h-14 mx-auto mb-3 text-gray-200 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                             </svg>

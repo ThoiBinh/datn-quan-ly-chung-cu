@@ -64,6 +64,11 @@ class CanHo extends Model
             ->withPivot('gia_tri_thuoc_tinh', 'kieu_du_lieu')->withTimestamps('createdAt', 'updatedAt');
     }
 
+    public function thuocTinhCanHo()
+    {
+        return $this->hasMany(ThuocTinhCanHo::class, 'can_ho');
+    }
+
     public function chuHo()
     {
         return $this->hasOne(CuDanCanHo::class, 'can_ho')
