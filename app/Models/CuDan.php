@@ -75,6 +75,33 @@ class CuDan extends Authenticatable
         return $this->hasOne(CuDanCanHo::class, 'cu_dan')->where('trang_thai', 1);
     }
 
+    // Phương tiện của cư dân = phương tiện thuộc các căn hộ mà cư dân có mặt trong cu_dan_can_ho.
+    // Không có FK trực tiếp cu_dan -> phuong_tien nên phải qua bảng trung gian cu_dan_can_ho.
+    public function phuongTien()
+    {
+        return $this->hasManyThrough(
+            PhuongTien::class,
+            CuDanCanHo::class,
+            'cu_dan',   // FK trên cu_dan_can_ho trỏ về cu_dan.id
+            'can_ho',   // FK trên phuong_tien trỏ về can_ho.id
+            'id',       // local key trên cu_dan
+            'can_ho'    // cột trên cu_dan_can_ho khớp với phuong_tien.can_ho
+        )->distinct();
+    }
+
+    // Hóa đơn của cư dân = hóa đơn thuộc các căn hộ mà cư dân có mặt trong cu_dan_can_ho.
+    public function hoaDon()
+    {
+        return $this->hasManyThrough(
+            HoaDon::class,
+            CuDanCanHo::class,
+            'cu_dan',
+            'can_ho',
+            'id',
+            'can_ho'
+        )->distinct();
+    }
+
     public function yeuCau()
     {
         return $this->hasMany(YeuCauCuDan::class, 'cu_dan');

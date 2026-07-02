@@ -5,11 +5,17 @@
 <div class="space-y-5">
 
     {{-- Header --}}
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-3">
         <div>
             <h1 class="text-xl font-bold text-gray-800">Yêu cầu cư dân</h1>
             <p class="text-sm text-gray-500 mt-0.5">Tổng: {{ $dsYeuCau->total() }} yêu cầu</p>
         </div>
+        <a href="{{ route('admin.loai-yeu-cau.index') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">Loại yêu cầu</span>
+            </a>
     </div>
 
     {{-- Filter --}}

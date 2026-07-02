@@ -27,11 +27,18 @@ $sortIcon = function($col) use ($sort, $direction) {
         <div>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Tổng: <span class="font-semibold text-gray-700 dark:text-slate-200">{{ $phuongTien->total() }}</span> phương tiện</p>
         </div>
-        <a href="{{ route('admin.phuong-tien.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Thêm phương tiện
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.loai-phuong-tien.index') }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.83H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 0h-12"/></svg>
+                <span>Loại phương tiện</span>
+            </a>
+            <a href="{{ route('admin.phuong-tien.create') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Thêm phương tiện
+            </a>
+        </div>
     </div>
 
     <!-- Filter bar -->
@@ -40,7 +47,7 @@ $sortIcon = function($col) use ($sort, $direction) {
             <div class="relative flex-1 min-w-48">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Tìm biển số, tên phương tiện..."
+                       placeholder="Tìm biển số, tên xe, cư dân, CCCD, căn hộ, tòa nhà, loại xe..."
                        class="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400">
             </div>
             <select name="loai" class="px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400">
@@ -55,15 +62,27 @@ $sortIcon = function($col) use ($sort, $direction) {
                 <option value="{{ $tn->id }}" {{ request('toa_nha') == $tn->id ? 'selected' : '' }}>{{ $tn->ten_toa_nha }}</option>
                 @endforeach
             </select>
+            <select name="can_ho" class="px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <option value="">Tất cả căn hộ</option>
+                @foreach($dsCanHo as $ch)
+                <option value="{{ $ch->id }}" {{ request('can_ho') == $ch->id ? 'selected' : '' }}>{{ $ch->so_can_ho }} — {{ $ch->toaNha?->ten_toa_nha }}</option>
+                @endforeach
+            </select>
             <select name="trang_thai" class="px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400">
                 <option value="">Tất cả trạng thái</option>
                 <option value="1" {{ request('trang_thai') === '1' ? 'selected' : '' }}>Hoạt động</option>
-                <option value="0" {{ request('trang_thai') === '0' ? 'selected' : '' }}>Đã khóa</option>
+                <option value="0" {{ request('trang_thai') === '0' ? 'selected' : '' }}>Đã hủy</option>
+            </select>
+            <select name="sort" onchange="this.form.submit()" class="px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <option value="bien_so" {{ $sort === 'bien_so' ? 'selected' : '' }}>Sắp xếp: Biển số</option>
+                <option value="ho_ten" {{ $sort === 'ho_ten' ? 'selected' : '' }}>Sắp xếp: Họ tên chủ hộ</option>
+                <option value="ngay_dang_ky" {{ $sort === 'ngay_dang_ky' ? 'selected' : '' }}>Sắp xếp: Ngày đăng ký</option>
+                <option value="ngay_huy" {{ $sort === 'ngay_huy' ? 'selected' : '' }}>Sắp xếp: Ngày hủy</option>
             </select>
             <button type="submit" class="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
                 Lọc
             </button>
-            @if(request()->hasAny(['search','loai','toa_nha','trang_thai']))
+            @if(request()->hasAny(['search','loai','toa_nha','can_ho','trang_thai']))
             <a href="{{ route('admin.phuong-tien.index') }}" class="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                 Xóa lọc
             </a>
@@ -137,7 +156,7 @@ $sortIcon = function($col) use ($sort, $direction) {
                             </span>
                             @else
                             <span class="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 dark:text-red-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Đã khóa
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Đã hủy
                             </span>
                             @endif
                         </td>
@@ -152,8 +171,8 @@ $sortIcon = function($col) use ($sort, $direction) {
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
                                 <button type="button"
-                                        title="{{ $pt->trang_thai == 1 ? 'Khóa phương tiện' : 'Mở khóa phương tiện' }}"
-                                        @click="openToggle({{ $pt->id }}, '{{ addslashes($pt->bien_so) }}', '{{ route('admin.phuong-tien.toggle-status', $pt) }}', {{ $pt->trang_thai == 1 ? 'true' : 'false' }})"
+                                        title="{{ $pt->trang_thai == 1 ? 'Hủy phương tiện' : 'Khôi phục phương tiện' }}"
+                                        @click="openToggle({{ $pt->id }}, '{{ addslashes($pt->bien_so) }}', '{{ $pt->trang_thai == 1 ? route('admin.phuong-tien.toggle-status', $pt) : route('admin.phuong-tien.restore', $pt) }}', {{ $pt->trang_thai == 1 ? 'true' : 'false' }})"
                                         class="p-1.5 rounded-md transition-colors {{ $pt->trang_thai == 1 ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30' }}">
                                     @if($pt->trang_thai == 1)
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -201,15 +220,15 @@ $sortIcon = function($col) use ($sort, $direction) {
                 <div class="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h3 class="text-base font-bold text-gray-900 dark:text-white">Khóa phương tiện</h3>
-                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ bị vô hiệu hóa trong hệ thống.</p>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Hủy phương tiện</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ chuyển sang trạng thái "Đã hủy", ngày hủy được ghi nhận là hôm nay. Dữ liệu vẫn được giữ lại.</p>
             </div>
             <div x-show="confirmToggle && !confirmToggle.isLock" class="px-6 pt-2 pb-5 text-center">
                 <div class="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
                 </div>
-                <h3 class="text-base font-bold text-gray-900 dark:text-white">Mở khóa phương tiện</h3>
-                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ được kích hoạt trở lại.</p>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Khôi phục phương tiện</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ chuyển về trạng thái "Hoạt động", ngày hủy sẽ được xóa.</p>
             </div>
             <div class="mx-6 mb-5 flex items-center gap-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl px-4 py-3 border border-gray-100 dark:border-slate-600">
                 <div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
@@ -229,11 +248,11 @@ $sortIcon = function($col) use ($sort, $direction) {
                     @csrf @method('PATCH')
                     <button x-show="confirmToggle?.isLock" type="submit"
                             class="block w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-sm font-semibold rounded-xl transition-colors">
-                        Khóa
+                        Hủy phương tiện
                     </button>
                     <button x-show="confirmToggle && !confirmToggle.isLock" type="submit"
                             class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
-                        Mở khóa
+                        Khôi phục
                     </button>
                 </form>
             </div>

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class PhuongTienController extends Controller
 {
-    private const SORTABLE = ['bien_so', 'so_can_ho', 'ho_ten', 'ngay_dang_ky'];
+    private const SORTABLE = ['bien_so', 'so_can_ho', 'ho_ten', 'ngay_dang_ky', 'ngay_huy'];
 
     public function index(Request $request)
     {
@@ -178,20 +178,22 @@ class PhuongTienController extends Controller
     public function destroy(PhuongTien $phuongTien)
     {
         if ($phuongTien->trang_thai == 0) {
-            return back()->with('error', 'Phương tiện này đã ở trạng thái hủy.');
+            return back()->with('error', 'Phương tiện đã được hủy trước đó.');
         }
 
-        $old = $phuongTien->toArray();
+        DB::transaction(function () use ($phuongTien) {
+            $old = $phuongTien->toArray();
 
-        $phuongTien->update([
-            'trang_thai'     => 0,
-            'ngay_huy'       => now(),
-            'nguoi_cap_nhat' => auth('nhanvien')->id(),
-        ]);
+            $phuongTien->update([
+                'trang_thai'     => 0,
+                'ngay_huy'       => now(),
+                'nguoi_cap_nhat' => auth('nhanvien')->id(),
+            ]);
 
-        AuditLogService::log('UPDATE', 'phuong_tien', $phuongTien->id, $old, $phuongTien->fresh()->toArray());
+            AuditLogService::log('UPDATE', 'phuong_tien', $phuongTien->id, $old, $phuongTien->fresh()->toArray());
+        });
 
         return redirect()->route('manager.phuong-tien.index')
-            ->with('success', "Đã hủy đăng ký phương tiện «{$phuongTien->bien_so}» (dữ liệu được giữ lại).");
+            ->with('success', "Đã hủy phương tiện «{$phuongTien->bien_so}» (dữ liệu được giữ lại).");
     }
 }

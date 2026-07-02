@@ -36,18 +36,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class)->except(['destroy']);
 
     // Quản lý căn hộ
-    Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class)->except(['destroy']);
+    Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class);
 
     // Quản lý nhân viên
     Route::resource('nhan-vien', \App\Http\Controllers\Admin\NhanVienController::class)
-        ->except(['destroy'])
         ->parameters(['nhan-vien' => 'nhanVien']);
     Route::patch('nhan-vien/{nhanVien}/toggle-status', [\App\Http\Controllers\Admin\NhanVienController::class, 'toggleStatus'])
         ->name('nhan-vien.toggle-status');
 
     // Quản lý cư dân
     Route::resource('cu-dan', \App\Http\Controllers\Admin\CuDanController::class)
-        ->except(['destroy'])
         ->parameters(['cu-dan' => 'cuDan']);
     Route::patch('cu-dan/{cuDan}/toggle-status', [\App\Http\Controllers\Admin\CuDanController::class, 'toggleStatus'])
         ->name('cu-dan.toggle-status');
@@ -58,6 +56,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['phuong-tien' => 'phuongTien']);
     Route::patch('phuong-tien/{phuongTien}/toggle-status', [\App\Http\Controllers\Admin\PhuongTienController::class, 'toggleStatus'])
         ->name('phuong-tien.toggle-status');
+    Route::patch('phuong-tien/{phuongTien}/restore', [\App\Http\Controllers\Admin\PhuongTienController::class, 'restore'])
+        ->name('phuong-tien.restore');
 
     // Quản lý hóa đơn
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Admin\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');

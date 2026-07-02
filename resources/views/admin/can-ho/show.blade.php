@@ -66,6 +66,15 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Quay lại
             </a>
+            <form method="POST" action="{{ route('admin.can-ho.destroy', $canHo) }}" class="ml-auto"
+                  onsubmit="return confirm('Căn hộ «{{ addslashes($canHo->so_can_ho) }}» sẽ được chuyển sang trạng thái Trống nếu chưa phát sinh dữ liệu. Tiếp tục?')">
+                @csrf @method('DELETE')
+                <button type="submit"
+                        class="flex items-center gap-2 px-4 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Xóa
+                </button>
+            </form>
         </div>
     </div>
 
@@ -93,14 +102,58 @@
         </div>
     </div>
 
-    <!-- Cư dân đang ở -->
+    <!-- Thông tin tòa nhà -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h3 class="font-semibold text-gray-700 dark:text-slate-200 text-sm uppercase tracking-wide">Thông tin tòa nhà</h3>
+        </div>
+        @if($canHo->toaNha)
+        <div class="p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-100 dark:border-slate-600">
+                <dt class="text-xs font-medium text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-1.5">Tên tòa nhà</dt>
+                <dd class="text-sm font-semibold text-gray-700 dark:text-slate-200">
+                    <a href="{{ route('admin.toa-nha.show', $canHo->toaNha) }}" class="hover:text-emerald-600 transition-colors">{{ $canHo->toaNha->ten_toa_nha }}</a>
+                </dd>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-100 dark:border-slate-600">
+                <dt class="text-xs font-medium text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-1.5">Địa chỉ</dt>
+                <dd class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ $canHo->toaNha->dia_chi ?: '—' }}</dd>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-100 dark:border-slate-600">
+                <dt class="text-xs font-medium text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-1.5">Số tầng</dt>
+                <dd class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ $canHo->toaNha->so_tang }}</dd>
+            </div>
+        </div>
+        @else
+        <div class="py-8 text-center text-sm text-gray-400 dark:text-slate-500">Không có thông tin tòa nhà</div>
+        @endif
+    </div>
+
+    <!-- Loại căn hộ -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h3 class="font-semibold text-gray-700 dark:text-slate-200 text-sm uppercase tracking-wide">Loại căn hộ</h3>
+        </div>
+        @if($canHo->loaiCanHo)
+        <div class="p-6">
+            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-100 dark:border-slate-600 max-w-xs">
+                <dt class="text-xs font-medium text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-1.5">Tên loại căn hộ</dt>
+                <dd class="text-sm font-semibold text-gray-700 dark:text-slate-200">{{ $canHo->loaiCanHo->ten_loai_can_ho }}</dd>
+            </div>
+        </div>
+        @else
+        <div class="py-8 text-center text-sm text-gray-400 dark:text-slate-500">Không có thông tin loại căn hộ</div>
+        @endif
+    </div>
+
+    <!-- Cư dân -->
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
             <h3 class="font-semibold text-gray-700 dark:text-slate-200 text-sm uppercase tracking-wide">
-                Cư dân đang ở ({{ $canHo->cuDanHienTai->count() }})
+                Danh sách cư dân ({{ $canHo->cuDanCanHo->count() }})
             </h3>
         </div>
-        @if($canHo->cuDanHienTai->isEmpty())
+        @if($canHo->cuDanCanHo->isEmpty())
         <div class="py-8 text-center text-sm text-gray-400 dark:text-slate-500">Chưa có cư dân</div>
         @else
         <div class="overflow-x-auto">
@@ -108,15 +161,23 @@
                 <thead class="bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-600">
                     <tr>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Họ tên</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">CCCD</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Điện thoại</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Vai trò</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Ngày chuyển đến</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Ngày bắt đầu ở</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Ngày kết thúc</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
                         <th class="px-4 py-3 w-16"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
-                    @foreach($canHo->cuDanHienTai as $pivot)
+                    @foreach($canHo->cuDanCanHo->sortByDesc('ngay_chuyen_den') as $pivot)
                     <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-700/40 transition-colors">
                         <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ $pivot->cuDan?->ho_ten ?? '—' }}</td>
+                        <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-slate-300">{{ $pivot->cuDan?->cccd ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-600 dark:text-slate-300 text-xs">{{ $pivot->cuDan?->email ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-600 dark:text-slate-300 text-xs whitespace-nowrap">{{ $pivot->cuDan?->sdt ?? '—' }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                 {{ $pivot->vaiTro?->vai_tro === 'Chủ hộ' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300' }}">
@@ -125,6 +186,15 @@
                         </td>
                         <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
                             {{ $pivot->ngay_chuyen_den?->format('d/m/Y') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
+                            {{ $pivot->ngay_chuyen_di?->format('d/m/Y') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {{ $pivot->trang_thai == 1 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400' }}">
+                                {{ $pivot->trang_thai == 1 ? 'Đang cư trú' : 'Đã chuyển đi' }}
+                            </span>
                         </td>
                         <td class="px-4 py-3">
                             @if($pivot->cuDan)
@@ -207,6 +277,7 @@
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Biển số</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Loại</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Ngày ĐK</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
@@ -217,6 +288,50 @@
                         <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{{ $pt->loaiPhuongTien?->ten_loai_phuong_tien ?? '—' }}</td>
                         <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
                             {{ $pt->ngay_dang_ky?->format('d/m/Y') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pt->trang_thai_label['class'] }}">
+                                {{ $pt->trang_thai_label['text'] }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+    </div>
+
+    <!-- Dịch vụ -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h3 class="font-semibold text-gray-700 dark:text-slate-200 text-sm uppercase tracking-wide">
+                Dịch vụ đăng ký ({{ $canHo->canHoPhiDichVu->count() }})
+            </h3>
+        </div>
+        @if($canHo->canHoPhiDichVu->isEmpty())
+        <div class="py-8 text-center text-sm text-gray-400 dark:text-slate-500">Chưa đăng ký dịch vụ nào</div>
+        @else
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-600">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tên dịch vụ</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Loại phí</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Đơn vị tính</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Loại tính phí</th>
+                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Đơn giá áp dụng</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                    @foreach($canHo->canHoPhiDichVu as $chpdv)
+                    <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-700/40 transition-colors">
+                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ $chpdv->phiDichVu?->ten_phi_dich_vu ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{{ $chpdv->phiDichVu?->loaiPhiDichVu?->ten_loai_phi_dich_vu ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{{ $chpdv->phiDichVu?->donViTinh?->don_vi ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{{ $chpdv->phiDichVu?->loaiTinhPhi?->ten_loai ?? '—' }}</td>
+                        <td class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-200">
+                            {{ number_format($chpdv->don_gia, 0, ',', '.') }}&nbsp;₫
                         </td>
                     </tr>
                     @endforeach
@@ -243,6 +358,8 @@
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Mã</th>
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Kỳ</th>
                         <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tổng tiền</th>
+                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Đã thanh toán</th>
+                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Còn nợ</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Hạn TT</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold">THAO TÁC</th>
@@ -260,6 +377,12 @@
                         <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-slate-200 whitespace-nowrap">
                             {{ number_format($hd->tong_tien, 0, ',', '.') }}&nbsp;₫
                         </td>
+                        <td class="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                            {{ number_format($hd->so_tien_da_thanh_toan, 0, ',', '.') }}&nbsp;₫
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold whitespace-nowrap {{ $hd->conNo() > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-slate-500' }}">
+                            {{ number_format($hd->conNo(), 0, ',', '.') }}&nbsp;₫
+                        </td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                 bg-{{ $color }}-100 text-{{ $color }}-700 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-300">
@@ -269,7 +392,7 @@
                         <td class="px-4 py-3 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
                             {{ $hd->han_thanh_toan?->format('d/m/Y') ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
                             <a href="{{ route('admin.hoa-don.show', $hd) }}"
                                class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -277,7 +400,50 @@
                             <a href="{{ route('admin.hoa-don.edit', $hd) }}"
                                class="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
                         </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+    </div>
+
+    <!-- Lịch sử thanh toán -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+        @php $dsLichSuThanhToan = $canHo->hoaDon->flatMap->lichSuThanhToan->sortByDesc('ngay_thanh_toan'); @endphp
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h3 class="font-semibold text-gray-700 dark:text-slate-200 text-sm uppercase tracking-wide">
+                Lịch sử thanh toán ({{ $dsLichSuThanhToan->count() }})
+            </h3>
+        </div>
+        @if($dsLichSuThanhToan->isEmpty())
+        <div class="py-8 text-center text-sm text-gray-400 dark:text-slate-500">Chưa có lịch sử thanh toán</div>
+        @else
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-600">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Mã giao dịch</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Ngày thanh toán</th>
+                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Số tiền</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Phương thức</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Người thanh toán</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                    @foreach($dsLichSuThanhToan as $ls)
+                    <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-700/40 transition-colors">
+                        <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-slate-300">{{ $ls->ma_giao_dich ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
+                            {{ $ls->ngay_thanh_toan?->format('d/m/Y H:i') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                            {{ number_format($ls->so_tien, 0, ',', '.') }}&nbsp;₫
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{{ $ls->phuong_thuc_thanh_toan ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{{ $ls->nguoiThanhToan?->ho_ten ?? '—' }}</td>
                     </tr>
                     @endforeach
                 </tbody>

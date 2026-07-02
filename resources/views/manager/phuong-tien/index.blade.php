@@ -105,6 +105,7 @@
                     <select name="sort_by" onchange="this.form.submit()"
                             class="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
                         <option value="ngay_dang_ky" @selected($sort === 'ngay_dang_ky')>Ngày đăng ký</option>
+                        <option value="ngay_huy"     @selected($sort === 'ngay_huy')>Ngày hủy</option>
                         <option value="bien_so"      @selected($sort === 'bien_so')>Biển số</option>
                         <option value="so_can_ho"    @selected($sort === 'so_can_ho')>Số căn hộ</option>
                         <option value="ho_ten"       @selected($sort === 'ho_ten')>Họ tên cư dân</option>
