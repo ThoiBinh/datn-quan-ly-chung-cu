@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ThongBao;
 use App\Models\ThongBaoDaDoc;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ThongBaoController extends Controller
 {
@@ -50,22 +51,22 @@ class ThongBaoController extends Controller
 
         $cuDanId = auth('cudan')->id();
 
-        // Ghi nhận đọc — tránh dùng model->save() vì primaryKey = null
-        $baiDoc = ThongBaoDaDoc::where('thong_bao_id', $thongBao->id)
-            ->where('cu_dan_id', $cuDanId)
-            ->first();
-
-        if (!$baiDoc) {
-            ThongBaoDaDoc::create([
-                'thong_bao_id' => $thongBao->id,
-                'cu_dan_id'    => $cuDanId,
-                'read_at'      => now(),
-            ]);
-        } else {
-            ThongBaoDaDoc::where('thong_bao_id', $thongBao->id)
+        // Ghi nhận đọc — chỉ INSERT lần đầu tiên, các lần mở lại sau đó
+        // không được UPDATE / touch bản ghi đã tồn tại (giữ nguyên read_at).
+        DB::transaction(function () use ($thongBao, $cuDanId) {
+            $daDoc = ThongBaoDaDoc::where('thong_bao_id', $thongBao->id)
                 ->where('cu_dan_id', $cuDanId)
-                ->update(['read_at' => now()]);
-        }
+                ->lockForUpdate()
+                ->first();
+
+            if (!$daDoc) {
+                ThongBaoDaDoc::create([
+                    'thong_bao_id' => $thongBao->id,
+                    'cu_dan_id'    => $cuDanId,
+                    'read_at'      => now(),
+                ]);
+            }
+        });
 
         $thongBao->load('nguoiTao');
 
