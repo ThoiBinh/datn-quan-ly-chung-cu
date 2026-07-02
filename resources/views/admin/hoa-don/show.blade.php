@@ -560,7 +560,7 @@ $statusConfig = match($hoaDon->trang_thai) {
                             class="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400">
                         
                         <option value="Tiền mặt">Tiền mặt</option>
-                       
+                    
                     </select>
                     @else
                     <input type="text" name="phuong_thuc_thanh_toan" required maxlength="100"
