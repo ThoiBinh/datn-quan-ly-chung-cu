@@ -16,11 +16,11 @@
         : ($duNo < 100000000 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/40' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/40');
 @endphp
 
-<div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 sm:p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+<div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
     {{-- Header --}}
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-            <h3 class="text-base font-semibold text-gray-800 dark:text-white">Doanh thu {{ now()->year }}</h3>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">Doanh thu {{ now()->year }}</h3>
             <p class="text-xs text-gray-400 dark:text-slate-400 mt-0.5">Tổng hợp doanh thu theo tháng</p>
         </div>
 
@@ -41,15 +41,15 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-3.5">
             <p class="text-xs text-gray-400 dark:text-slate-400 mb-1">Doanh thu tháng</p>
-            <p class="text-lg font-bold text-gray-800 dark:text-white">{{ number_format($doanhThuThang, 0, ',', '.') }}đ</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($doanhThuThang, 0, ',', '.') }}đ</p>
         </div>
         <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-3.5">
             <p class="text-xs text-gray-400 dark:text-slate-400 mb-1">Tháng trước</p>
-            <p class="text-lg font-bold text-gray-800 dark:text-white">{{ number_format($doanhThuThangTruoc, 0, ',', '.') }}đ</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($doanhThuThangTruoc, 0, ',', '.') }}đ</p>
         </div>
         <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-3.5">
             <p class="text-xs text-gray-400 dark:text-slate-400 mb-1">Tổng năm</p>
-            <p class="text-lg font-bold text-gray-800 dark:text-white">{{ number_format($tongDoanhThuNam, 0, ',', '.') }}đ</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($tongDoanhThuNam, 0, ',', '.') }}đ</p>
         </div>
         <div class="rounded-xl border {{ $growthBg }} p-3.5">
             <p class="text-xs text-gray-400 dark:text-slate-400 mb-1">So với tháng trước</p>
@@ -66,7 +66,7 @@
                 {{ ($growth > 0 ? '+' : '') . number_format($growth, 1) }}%
             </p>
         </div>
-        <div class="rounded-xl border {{ $duNoBg }} p-3.5 hover:shadow-md transition-shadow cursor-default"
+        <div class="rounded-xl border {{ $duNoBg }} p-3.5 hover:shadow-sm transition-shadow duration-200 cursor-default"
              title="Tổng số tiền còn phải thu từ các hóa đơn chưa được thanh toán hoặc mới thanh toán một phần.">
             <div class="flex items-center gap-1.5 mb-1">
                 <svg class="w-3.5 h-3.5 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@
     </div>
 
     {{-- Chart --}}
-    <div class="relative" style="height: 280px;">
+    <div class="relative rounded-xl border border-gray-100 dark:border-slate-700 p-4" style="height: 300px;">
         <canvas id="revenueWidgetChart"
             data-labels='{{ json_encode($labels) }}'
             data-values='{{ json_encode($doanhThuNam) }}'

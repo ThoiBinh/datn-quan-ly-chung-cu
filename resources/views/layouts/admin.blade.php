@@ -74,7 +74,7 @@
               d="M3 7h18M5 7v12a2 2 0 002 2h10a2 2 0 002-2V7M9 11h6M9 15h4"/>
     </svg>
     <span x-show="sidebarOpen" class="truncate">Cư dân - Căn hộ</span>
-</a>
+            </a>
             <a href="{{ route('admin.phuong-tien.index') }}" class="sidebar-link {{ request()->routeIs('admin.phuong-tien.*') ? 'active' : 'text-slate-300' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                 <span x-show="sidebarOpen" class="truncate">Phương tiện</span>
