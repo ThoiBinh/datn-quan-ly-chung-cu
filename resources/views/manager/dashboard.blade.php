@@ -3,7 +3,6 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {{-- Export buttons --}}
 <div class="flex items-center justify-between mb-5">
@@ -44,13 +43,9 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Chart -->
-    <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">Doanh thu {{ now()->year }}</h3>
-            <span class="text-sm text-gray-500">Tháng này: {{ number_format($doanhThuThang) }}đ</span>
-        </div>
-        <canvas id="chart" height="260"></canvas>
+    <!-- Doanh thu -->
+    <div class="lg:col-span-2">
+        @include('partials.revenue-widget')
     </div>
 
     <!-- Yêu cầu -->
@@ -79,29 +74,4 @@
         </div>
     </div>
 </div>
-
-<script>
-new Chart(document.getElementById('chart').getContext('2d'), {
-    type: 'line',
-    data: {
-        labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
-        datasets: [{
-            label: 'Doanh thu',
-            data: @json($doanhThuTheoThang),
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99,102,241,0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4,
-            pointBackgroundColor: '#6366f1',
-            pointRadius: 4,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000000).toFixed(0) + 'M' } } }
-    }
-});
-</script>
 @endsection

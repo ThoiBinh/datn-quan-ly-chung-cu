@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\Models\HoaDon;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class NhanVien extends Authenticatable
@@ -84,5 +85,40 @@ class NhanVien extends Authenticatable
     public function chucVu()
     {
         return $this->belongsTo(ChucVu::class, 'chuc_vu');
+    }
+
+    public function hoaDon()
+    {
+        return $this->hasMany(HoaDon::class, 'nguoi_cap_nhat');
+    }
+
+    public function lichSuThanhToan()
+    {
+        return $this->hasManyThrough(
+            \App\Models\LichSuThanhToan::class,
+            HoaDon::class,
+            'nguoi_cap_nhat',
+            'hoa_don'
+        );
+    }
+
+    public function yeuCauXuLy()
+    {
+        return $this->hasMany(\App\Models\YeuCauCuDan::class, 'nhan_vien_xu_ly');
+    }
+
+    public function thongBao()
+    {
+        return $this->hasMany(\App\Models\ThongBao::class, 'nguoi_tao');
+    }
+
+    public function bangTin()
+    {
+        return $this->hasMany(\App\Models\BangTin::class, 'nguoi_tao');
+    }
+
+    public function nguoiCapNhat()
+    {
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
     }
 }

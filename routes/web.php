@@ -36,18 +36,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class)->except(['destroy']);
 
     // Quản lý căn hộ
-    Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class)->except(['destroy']);
+    Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class);
 
     // Quản lý nhân viên
     Route::resource('nhan-vien', \App\Http\Controllers\Admin\NhanVienController::class)
-        ->except(['destroy'])
         ->parameters(['nhan-vien' => 'nhanVien']);
     Route::patch('nhan-vien/{nhanVien}/toggle-status', [\App\Http\Controllers\Admin\NhanVienController::class, 'toggleStatus'])
         ->name('nhan-vien.toggle-status');
 
     // Quản lý cư dân
     Route::resource('cu-dan', \App\Http\Controllers\Admin\CuDanController::class)
-        ->except(['destroy'])
         ->parameters(['cu-dan' => 'cuDan']);
     Route::patch('cu-dan/{cuDan}/toggle-status', [\App\Http\Controllers\Admin\CuDanController::class, 'toggleStatus'])
         ->name('cu-dan.toggle-status');
@@ -58,10 +56,13 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['phuong-tien' => 'phuongTien']);
     Route::patch('phuong-tien/{phuongTien}/toggle-status', [\App\Http\Controllers\Admin\PhuongTienController::class, 'toggleStatus'])
         ->name('phuong-tien.toggle-status');
+    Route::patch('phuong-tien/{phuongTien}/restore', [\App\Http\Controllers\Admin\PhuongTienController::class, 'restore'])
+        ->name('phuong-tien.restore');
 
     // Quản lý hóa đơn
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Admin\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
     Route::get('hoa-don/can-ho-services', [\App\Http\Controllers\Admin\HoaDonController::class, 'canHoServices'])->name('hoa-don.can-ho-services');
+    Route::post('hoa-don/can-ho-services', [\App\Http\Controllers\Admin\HoaDonController::class, 'syncCanHoServices'])->name('hoa-don.can-ho-services.sync');
     Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Admin\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::delete('hoa-don/{hoaDon}/chi-tiet/{chiTiet}', [\App\Http\Controllers\Admin\HoaDonController::class, 'destroyChiTiet'])->name('hoa-don.chi-tiet.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Admin\HoaDonController::class)
@@ -171,10 +172,12 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class);
     Route::resource('can-ho', \App\Http\Controllers\Manager\CanHoController::class);
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);
-    Route::resource('phuong-tien', \App\Http\Controllers\Manager\PhuongTienController::class);
+    Route::resource('phuong-tien', \App\Http\Controllers\Manager\PhuongTienController::class)
+        ->parameters(['phuong-tien' => 'phuongTien']);
     Route::resource('phi-dich-vu', \App\Http\Controllers\Manager\PhiDichVuController::class);
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Manager\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
     Route::get('hoa-don/can-ho-services', [\App\Http\Controllers\Manager\HoaDonController::class, 'canHoServices'])->name('hoa-don.can-ho-services');
+    Route::post('hoa-don/can-ho-services', [\App\Http\Controllers\Manager\HoaDonController::class, 'syncCanHoServices'])->name('hoa-don.can-ho-services.sync');
     Route::delete('hoa-don/{hoaDon}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroy'])->name('hoa-don.destroy');
     Route::delete('hoa-don/{hoaDon}/chi-tiet/{chiTiet}', [\App\Http\Controllers\Manager\HoaDonController::class, 'destroyChiTiet'])->name('hoa-don.chi-tiet.destroy');
     Route::resource('hoa-don', \App\Http\Controllers\Manager\HoaDonController::class)->except(['destroy'])->parameters(['hoa-don' => 'hoaDon']);
@@ -251,6 +254,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('don-vi-tinh-phi-dich-vu', \App\Http\Controllers\Manager\DonViTinhPhiDichVuController::class)
         ->parameters(['don-vi-tinh-phi-dich-vu' => 'donViTinhPhiDichVu']);
 
+    // Quản lý nhân viên
+    Route::resource('nhan-vien', \App\Http\Controllers\Manager\NhanVienController::class)
+        ->parameters(['nhan-vien' => 'nhanVien']);
+
     Route::resource('users', \App\Http\Controllers\Manager\UserController::class);
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
@@ -260,6 +267,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
     Route::patch('cu-dan-can-ho/{cuDanCanHo}/toggle-status', [\App\Http\Controllers\Manager\CuDanCanHoController::class, 'toggleStatus'])
         ->name('cu-dan-can-ho.toggle-status');
+
+    // Quản lý phí dịch vụ căn hộ
+    Route::resource('can-ho-phi-dich-vu', \App\Http\Controllers\Manager\CanHoPhiDichVuController::class)
+        ->parameters(['can-ho-phi-dich-vu' => 'canHoPhiDichVu']);
 });
 
 // ==================== RESIDENT ====================

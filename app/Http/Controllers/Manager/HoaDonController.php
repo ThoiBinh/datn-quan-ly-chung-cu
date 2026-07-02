@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Manager\StoreHoaDonRequest;
-use App\Http\Requests\Manager\UpdateHoaDonRequest;
 use App\Models\CanHo;
 use App\Models\CauHinhThanhToan;
 use App\Models\ChiTietHoaDon;
@@ -28,7 +27,7 @@ class HoaDonController extends Controller
         $sort      = in_array($request->sort, self::SORTABLE) ? $request->sort : 'createdAt';
         $direction = $request->direction === 'asc' ? 'asc' : 'desc';
 
-        $query = HoaDon::with(['canHo.toaNha', 'canHo.chuHo.cuDan']);
+        $query = HoaDon::with(['canHo.toaNha', 'canHo.chuHo.cuDan'])->withCount('lichSuThanhToan');
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -69,7 +68,24 @@ class HoaDonController extends Controller
     {
         $request->validate(['can_ho' => 'required|integer|exists:can_ho,id']);
         try {
-            $services = $this->hoaDonService->layDichVuCanHo($request->can_ho);
+            $services = $this->hoaDonService->layDichVuModal($request->can_ho);
+            return response()->json(['services' => $services]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    public function syncCanHoServices(Request $request)
+    {
+        $request->validate([
+            'can_ho'              => 'required|integer|exists:can_ho,id',
+            'phi_dich_vu_ids'     => 'array',
+            'phi_dich_vu_ids.*'   => 'integer|exists:phi_dich_vu,id',
+        ]);
+
+        try {
+            $this->hoaDonService->syncDichVuCanHo($request->can_ho, $request->input('phi_dich_vu_ids', []));
+            $services = $this->hoaDonService->layDichVuModal($request->can_ho);
             return response()->json(['services' => $services]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -141,6 +157,11 @@ class HoaDonController extends Controller
 
     public function edit(HoaDon $hoaDon)
     {
+        if ($hoaDon->lichSuThanhToan()->exists()) {
+            return redirect()->route('manager.hoa-don.show', $hoaDon)
+                ->with('error', 'Hóa đơn đã phát sinh lịch sử thanh toán nên không thể chỉnh sửa.');
+        }
+
         $this->hoaDonService->capNhatTrangThaiTreHan();
         $hoaDon->refresh();
         $hoaDon->load('chiTiet', 'canHo.toaNha');
@@ -148,8 +169,17 @@ class HoaDonController extends Controller
         return view('manager.hoa-don.edit', compact('hoaDon', 'isDaTT'));
     }
 
-    public function update(UpdateHoaDonRequest $request, HoaDon $hoaDon)
+    public function update(Request $request, HoaDon $hoaDon)
     {
+        if ($hoaDon->lichSuThanhToan()->exists()) {
+            return back()->with('error', 'Hóa đơn đã phát sinh lịch sử thanh toán nên không thể chỉnh sửa.');
+        }
+
+        $request->validate(
+            ['han_thanh_toan' => 'nullable|date'],
+            ['han_thanh_toan.date' => 'Hạn thanh toán không đúng định dạng ngày.']
+        );
+
         $isCurrentlyChuaTT = $hoaDon->trang_thai == HoaDon::TRANG_THAI_CHUA_THANH_TOAN;
 
         if ($isCurrentlyChuaTT && $request->has('chi_tiet')) {

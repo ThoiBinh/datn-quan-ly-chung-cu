@@ -26,13 +26,13 @@ $isActive = $phuongTien->trang_thai == 1;
             <button @click="confirmToggle = true" type="button"
                     class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                Khóa phương tiện
+                Hủy phương tiện
             </button>
             @else
             <button @click="confirmToggle = true" type="button"
                     class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
-                Mở khóa
+                Khôi phục phương tiện
             </button>
             @endif
         </div>
@@ -93,8 +93,32 @@ $isActive = $phuongTien->trang_thai == 1;
                         <dd class="text-sm text-red-600 dark:text-red-400">{{ $phuongTien->ngay_huy->format('d/m/Y') }}</dd>
                     </div>
                     @endif
+                    <div class="flex items-baseline px-5 py-3.5">
+                        <dt class="w-40 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Người cập nhật</dt>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $phuongTien->nguoiCapNhat?->ho_ten ?? '—' }}</dd>
+                    </div>
                 </dl>
             </div>
+
+            <!-- Thuộc tính căn hộ -->
+            @if($phuongTien->canHo && $phuongTien->canHo->thuocTinh->count() > 0)
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
+                    <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <svg class="w-4.5 h-4.5 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                    </div>
+                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Thuộc tính căn hộ</h2>
+                </div>
+                <dl class="divide-y divide-gray-50 dark:divide-slate-700/50">
+                    @foreach($phuongTien->canHo->thuocTinh as $tt)
+                    <div class="flex items-baseline px-5 py-3.5">
+                        <dt class="w-40 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">{{ $tt->ten_thuoc_tinh }}</dt>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}</dd>
+                    </div>
+                    @endforeach
+                </dl>
+            </div>
+            @endif
 
             <!-- Thông tin căn hộ -->
             @if($phuongTien->canHo)
@@ -124,6 +148,10 @@ $isActive = $phuongTien->trang_thai == 1;
                     <div class="flex items-baseline px-5 py-3.5">
                         <dt class="w-40 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Tòa nhà</dt>
                         <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $phuongTien->canHo->toaNha?->ten_toa_nha ?? '—' }}</dd>
+                    </div>
+                    <div class="flex items-baseline px-5 py-3.5">
+                        <dt class="w-40 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Loại căn hộ</dt>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $phuongTien->canHo->loaiCanHo?->ten_loai_can_ho ?? '—' }}</dd>
                     </div>
                     @if($phuongTien->canHo->toaNha?->dia_chi)
                     <div class="flex items-baseline px-5 py-3.5">
@@ -214,14 +242,14 @@ $isActive = $phuongTien->trang_thai == 1;
                 <div class="bg-amber-100 dark:bg-amber-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h3 class="text-base font-bold text-gray-900 dark:text-white">Khóa phương tiện</h3>
-                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ bị vô hiệu hóa trong hệ thống.</p>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Hủy phương tiện</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ chuyển sang trạng thái "Đã hủy", ngày hủy được ghi nhận là hôm nay. Dữ liệu vẫn được giữ lại.</p>
                 @else
                 <div class="bg-emerald-100 dark:bg-emerald-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
                 </div>
-                <h3 class="text-base font-bold text-gray-900 dark:text-white">Mở khóa phương tiện</h3>
-                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ được kích hoạt trở lại.</p>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white">Khôi phục phương tiện</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Phương tiện sẽ chuyển về trạng thái "Hoạt động", ngày hủy sẽ được xóa.</p>
                 @endif
             </div>
 
@@ -242,15 +270,15 @@ $isActive = $phuongTien->trang_thai == 1;
                         class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                     Hủy bỏ
                 </button>
-                <form action="{{ route('admin.phuong-tien.toggle-status', $phuongTien) }}" method="POST" class="flex-1">
+                <form action="{{ $isActive ? route('admin.phuong-tien.toggle-status', $phuongTien) : route('admin.phuong-tien.restore', $phuongTien) }}" method="POST" class="flex-1">
                     @csrf @method('PATCH')
                     @if($isActive)
                     <button type="submit" class="block w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-sm font-semibold rounded-xl transition-colors">
-                        Khóa phương tiện
+                        Hủy phương tiện
                     </button>
                     @else
                     <button type="submit" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
-                        Mở khóa
+                        Khôi phục
                     </button>
                     @endif
                 </form>

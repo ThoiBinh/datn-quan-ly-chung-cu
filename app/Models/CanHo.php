@@ -58,6 +58,11 @@ class CanHo extends Model
         return $this->hasMany(HoaDon::class, 'can_ho');
     }
 
+    public function canHoPhiDichVu()
+    {
+        return $this->hasMany(CanHoPhiDichVu::class, 'can_ho');
+    }
+
     public function thuocTinh()
     {
         return $this->belongsToMany(ThuocTinh::class, 'thuoc_tinh_can_ho', 'can_ho', 'thuoc_tinh')

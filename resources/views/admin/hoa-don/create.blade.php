@@ -19,6 +19,7 @@
 
          serviceModal: false,
          modalLoading: false,
+         modalSaving: false,
          modalServices: [],
          selectedInModal: [],
 
@@ -75,28 +76,42 @@
                  const r = await fetch(url, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
                  const data = await r.json();
                  this.modalServices = data.services || [];
+                 this.selectedInModal = this.modalServices
+                     .filter(svc => svc.selected)
+                     .map(svc => String(svc.phi_dich_vu_id));
              } catch(e) { this.modalServices = []; }
              this.modalLoading = false;
          },
 
-         isInFees(phiId) {
-             return this.fees ? this.fees.some(f => f.phi_dich_vu_id === phiId) : false;
-         },
-
-         addSelectedToFees() {
-             if (!this.cachedFees) return;
-             this.selectedInModal.forEach(idStr => {
-                 const phiId = parseInt(idStr);
-                 if (!this.fees.find(f => f.phi_dich_vu_id === phiId)) {
-                     const fee = this.cachedFees.find(f => f.phi_dich_vu_id === phiId);
-                     if (fee) {
-                         this.fees = [...this.fees, {...fee}];
-                         this.removedFeeIds = this.removedFeeIds.filter(id => id !== phiId);
-                     }
+         async addSelectedToFees() {
+             if (!this.canHo || this.modalSaving) return;
+             this.modalSaving = true;
+             try {
+                 const url = '{{ route('admin.hoa-don.can-ho-services.sync') }}';
+                 const r = await fetch(url, {
+                     method: 'POST',
+                     headers: {
+                         'Accept': 'application/json',
+                         'Content-Type': 'application/json',
+                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                     },
+                     body: JSON.stringify({
+                         can_ho: this.canHo,
+                         phi_dich_vu_ids: this.selectedInModal.map(id => parseInt(id)),
+                     }),
+                 });
+                 const data = await r.json();
+                 if (data.error) {
+                     this.fetchError = data.error;
+                 } else {
+                     this.removedFeeIds = [];
+                     await this.fetchPreview();
+                     this.serviceModal = false;
                  }
-             });
-             this.selectedInModal = [];
-             this.serviceModal = false;
+             } catch (e) {
+                 this.fetchError = 'Không thể lưu dịch vụ căn hộ.';
+             }
+             this.modalSaving = false;
          },
 
          fmtMoney(n) {
@@ -389,8 +404,8 @@
                             <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         </div>
                         <div>
-                            <h3 class="text-sm font-semibold text-gray-800 dark:text-white">Thêm dịch vụ vào hóa đơn</h3>
-                            <p class="text-xs text-gray-400 dark:text-slate-500">Chọn dịch vụ muốn thêm</p>
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-white">Thêm dịch vụ căn hộ</h3>
+                            <p class="text-xs text-gray-400 dark:text-slate-500">Chọn dịch vụ áp dụng cho căn hộ</p>
                         </div>
                     </div>
                     <button type="button" @click="serviceModal = false"
@@ -410,25 +425,19 @@
                     <!-- Empty -->
                     <template x-if="!modalLoading && modalServices.length === 0">
                         <div class="text-center py-10 text-sm text-gray-400 dark:text-slate-500">
-                            Căn hộ này chưa được gán dịch vụ nào.
+                            Chưa có dịch vụ nào trong hệ thống.
                         </div>
                     </template>
                     <!-- Services list -->
                     <template x-if="!modalLoading && modalServices.length > 0">
                         <div class="space-y-2">
                             <template x-for="svc in modalServices" :key="svc.phi_dich_vu_id">
-                                <label :class="isInFees(svc.phi_dich_vu_id) ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-slate-700/30' : 'cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/20 bg-white dark:bg-slate-700/50'"
-                                       class="flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-600 rounded-xl transition-colors">
+                                <label class="flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-600 rounded-xl transition-colors cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/20 bg-white dark:bg-slate-700/50">
                                     <div class="flex-shrink-0">
-                                        <template x-if="!isInFees(svc.phi_dich_vu_id)">
-                                            <input type="checkbox"
-                                                   :value="String(svc.phi_dich_vu_id)"
-                                                   x-model="selectedInModal"
-                                                   class="w-4 h-4 rounded border-gray-300 dark:border-slate-500 text-violet-600 focus:ring-violet-400">
-                                        </template>
-                                        <template x-if="isInFees(svc.phi_dich_vu_id)">
-                                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        </template>
+                                        <input type="checkbox"
+                                               :value="String(svc.phi_dich_vu_id)"
+                                               x-model="selectedInModal"
+                                               class="w-4 h-4 rounded border-gray-300 dark:border-slate-500 text-violet-600 focus:ring-violet-400">
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-gray-800 dark:text-white" x-text="svc.ten_phi_dich_vu"></p>
@@ -456,10 +465,10 @@
                             Hủy
                         </button>
                         <button type="button" @click="addSelectedToFees()"
-                                :disabled="selectedInModal.length === 0"
-                                :class="selectedInModal.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-violet-700'"
+                                :disabled="modalSaving"
+                                :class="modalSaving ? 'opacity-50 cursor-not-allowed' : 'hover:bg-violet-700'"
                                 class="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg transition-colors">
-                            Thêm vào hóa đơn
+                            <span x-text="modalSaving ? 'Đang lưu...' : 'Lưu'"></span>
                         </button>
                     </div>
                 </div>

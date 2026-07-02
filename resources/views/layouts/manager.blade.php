@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" x-data="{ sidebarOpen: true }">
+<html lang="vi" x-data="{ sidebarOpen: true, mobileSidebarOpen: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,177 +10,218 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>[x-cloak]{display:none!important}</style>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="bg-slate-100 font-sans antialiased">
 
 <div class="flex h-screen overflow-hidden">
+
+    <!-- Mobile overlay -->
+    <div x-show="mobileSidebarOpen"
+         x-cloak
+         x-transition:enter="transition-opacity ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="mobileSidebarOpen = false"
+         class="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden"></div>
+
     <!-- Sidebar -->
-    <aside :class="sidebarOpen ? 'w-64' : 'w-16'"
-           class="hidden lg:flex flex-col bg-gradient-to-b from-indigo-800 to-indigo-900 text-white transition-all duration-300 ease-in-out flex-shrink-0">
-        <div class="flex items-center h-16 px-4 border-b border-white/10">
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+    <aside
+        :class="[
+            sidebarOpen ? 'lg:w-[280px]' : 'lg:w-[88px]',
+            mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        ]"
+        class="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden rounded-r-3xl border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl transition-all duration-300 ease-in-out lg:static">
+
+        <!-- Logo -->
+        <div class="flex-shrink-0 p-4">
+            <div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 p-4 ring-1 ring-white/5">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-950/50">
+                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M13.5 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21"/>
                     </svg>
                 </div>
-                <div x-show="sidebarOpen" x-transition class="overflow-hidden">
-                    <p class="text-sm font-bold leading-tight">Urbano</p>
-                    <p class="text-xs text-indigo-300">Ban quản lý</p>
+                <div x-show="sidebarOpen"
+                     x-transition:enter="transition ease-out duration-200 delay-100"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     class="min-w-0 overflow-hidden">
+                    <p class="truncate text-sm font-bold leading-tight text-white">Smart Apartment</p>
+                    <p class="truncate text-[11px] text-slate-400">Apartment Management System</p>
                 </div>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-1">
-            @php
-                $navItems = [
-                    ['route' => 'manager.dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
-                    ['route' => 'manager.toa-nha.index', 'label' => 'Tòa nhà', 'icon' => 'building'],
-                    ['route' => 'manager.can-ho.index', 'label' => 'Căn hộ', 'icon' => 'home'],
-                    ['route' => 'manager.cu-dan.index', 'label' => 'Cư dân', 'icon' => 'users'],
-                    ['route' => 'manager.phuong-tien.index', 'label' => 'Phương tiện', 'icon' => 'vehicle'],
-                    ['route' => 'manager.hoa-don.index', 'label' => 'Hóa đơn', 'icon' => 'invoice'],
-                    ['route' => 'manager.yeu-cau.index', 'label' => 'Phản ánh', 'icon' => 'chat'],
-                    ['route' => 'manager.thong-bao.index', 'label' => 'Thông báo', 'icon' => 'bell'],
-                    ['route' => 'manager.bang-tin.index', 'label' => 'Bảng tin', 'icon' => 'news'],
-                    ['route' => 'manager.users.index', 'label' => 'Tài khoản', 'icon' => 'user-manage'],
-                ];
-                $icons = [
-                    'dashboard'   => 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
-                    'building'    => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
-                    'home'        => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
-                    'users'       => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-                    'vehicle'     => 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
-                    'invoice'     => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-                    'chat'        => 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
-                    'bell'        => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
-                    'news'        => 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
-                    'user-manage' => 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                ];
-            @endphp
-
-            @foreach($navItems as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="sidebar-link {{ request()->routeIs($item['route']) ? 'active' : 'text-indigo-200' }}">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icons[$item['icon']] }}"/>
-                    </svg>
-                    <span x-show="sidebarOpen" class="truncate">{{ $item['label'] }}</span>
-                </a>
-            @endforeach
-
-            {{-- Cấu hình --}}
-            <div x-show="sidebarOpen" class="pt-3 pb-1">
-                <p class="text-xs font-semibold text-indigo-400/70 uppercase tracking-wider px-2">Cấu hình</p>
-            </div>
-            <a href="{{ route('manager.cau-hinh-thanh-toan.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.cau-hinh-thanh-toan.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Cấu hình thanh toán</span>
-            </a>
-            <a href="{{ route('manager.phi-dich-vu.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.phi-dich-vu.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Phí dịch vụ</span>
-            </a>
-            <a href="{{ route('manager.thuoc-tinh.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.thuoc-tinh.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Thuộc tính</span>
-            </a>
-            <a href="{{ route('manager.vai-tro.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.vai-tro.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Vai trò</span>
-            </a>
-            <a href="{{ route('manager.chuc-vu.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.chuc-vu.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Chức vụ</span>
-            </a>
-            <a href="{{ route('manager.loai-phuong-tien.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.loai-phuong-tien.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Loại phương tiện</span>
-            </a>
-            <a href="{{ route('manager.loai-yeu-cau.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.loai-yeu-cau.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Loại yêu cầu</span>
-            </a>
-            <a href="{{ route('manager.loai-can-ho.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.loai-can-ho.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Loại căn hộ</span>
-            </a>
-            <a href="{{ route('manager.loai-phi-dich-vu.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.loai-phi-dich-vu.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Loại phí dịch vụ</span>
-            </a>
-            <a href="{{ route('manager.don-vi-tinh-phi-dich-vu.index') }}"
-               class="sidebar-link {{ request()->routeIs('manager.don-vi-tinh-phi-dich-vu.*') ? 'active' : 'text-indigo-200' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Đơn vị tính phí</span>
-            </a>
-        </nav>
-
-        <div class="p-3 border-t border-white/10">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+        <!-- User Profile -->
+        <div class="flex-shrink-0 px-4 pb-2">
+            <div class="flex items-center gap-3 rounded-2xl bg-slate-800/40 p-3 ring-1 ring-white/5">
+                <div class="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 text-sm font-bold text-white ring-2 ring-white/20">
                     {{ strtoupper(substr(auth('nhanvien')->user()->name, 0, 1)) }}
                 </div>
-                <div x-show="sidebarOpen" class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-white truncate">{{ auth('nhanvien')->user()->name }}</p>
-                    <p class="text-xs text-indigo-300">Ban quản lý</p>
+                <div x-show="sidebarOpen"
+                     x-transition:enter="transition ease-out duration-200 delay-100"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     class="min-w-0 flex-1 overflow-hidden">
+                    <p class="truncate text-sm font-semibold text-white">{{ auth('nhanvien')->user()->name }}</p>
+                    <span class="mt-0.5 inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-300 ring-1 ring-inset ring-blue-500/30">
+                        Manager
+                    </span>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" x-show="sidebarOpen">
                     @csrf
-                    <button type="submit" class="text-indigo-300 hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <button type="submit" title="Đăng xuất" class="rounded-lg p-1.5 text-slate-400 transition-colors duration-200 hover:bg-white/10 hover:text-white">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
                     </button>
                 </form>
             </div>
         </div>
+
+        <!-- Menu -->
+        <nav class="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-3">
+            @php
+                $navGroups = [
+                    'TỔNG QUAN' => [
+                        ['route' => 'manager.dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
+                    ],
+                    'QUẢN LÝ CHUNG CƯ' => [
+                        ['route' => 'manager.toa-nha.index', 'label' => 'Tòa nhà', 'icon' => 'building'],
+                        ['route' => 'manager.can-ho.index', 'label' => 'Căn hộ', 'icon' => 'home'],
+                        ['route' => 'manager.cu-dan.index', 'label' => 'Cư dân', 'icon' => 'users'],
+                        ['route' => 'manager.phuong-tien.index', 'label' => 'Phương tiện', 'icon' => 'vehicle'],
+                    ],
+                    'QUẢN LÝ TÀI CHÍNH' => [
+                        ['route' => 'manager.hoa-don.index', 'label' => 'Hóa đơn', 'icon' => 'invoice'],
+                    ],
+                    'QUẢN LÝ DỊCH VỤ' => [
+                        ['route' => 'manager.phi-dich-vu.index', 'label' => 'Phí dịch vụ', 'icon' => 'wallet', 'active' => 'manager.phi-dich-vu.*'],
+                        ['route' => 'manager.can-ho-phi-dich-vu.index', 'label' => 'Phí DV căn hộ', 'icon' => 'creditcard', 'active' => 'manager.can-ho-phi-dich-vu.*'],
+                    ],
+                    'QUẢN LÝ VẬN HÀNH' => [
+                        ['route' => 'manager.yeu-cau.index', 'label' => 'Phản ánh', 'icon' => 'chat'],
+                        ['route' => 'manager.thong-bao.index', 'label' => 'Thông báo', 'icon' => 'bell'],
+                        ['route' => 'manager.bang-tin.index', 'label' => 'Bảng tin', 'icon' => 'news'],
+                    ],
+                    'QUẢN LÝ NHÂN SỰ' => [
+                        ['route' => 'manager.nhan-vien.index', 'label' => 'Nhân viên', 'icon' => 'staff'],
+                    ],
+                    'HỆ THỐNG' => [
+                        ['route' => 'manager.cau-hinh-thanh-toan.index', 'label' => 'Cấu hình thanh toán', 'icon' => 'settings', 'active' => 'manager.cau-hinh-thanh-toan.*'],
+                    ],
+                ];
+                $icons = [
+                    'dashboard'  => 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
+                    'building'   => 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M13.5 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21',
+                    'home'       => 'M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21M3 9l9-6 9 6m-1.5-.75V21a.75.75 0 01-.75.75H4.5A.75.75 0 013.75 21V8.25',
+                    'users'      => 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z',
+                    'vehicle'    => 'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v11.177m0-11.177L12.62 4.16a1.125 1.125 0 00-1.24 0L8.5 7.573m8-.001V16.5m-8-8.927V16.5m0 0h8',
+                    'invoice'    => 'M9 12h3.75M9 15h3.75M9 18h3.75M6.75 4.5h6.879a1.5 1.5 0 011.06.44l4.622 4.62a1.5 1.5 0 01.439 1.061V19.5a2.25 2.25 0 01-2.25 2.25H6.75a2.25 2.25 0 01-2.25-2.25V6.75a2.25 2.25 0 012.25-2.25z',
+                    'chat'       => 'M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z',
+                    'bell'       => 'M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0',
+                    'news'       => 'M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z',
+                    'staff'      => 'M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0',
+                    'settings'   => 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.49l1.216.455c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28zM15 12a3 3 0 11-6 0 3 3 0 016 0z',
+                    'wallet'     => 'M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9A2.25 2.25 0 0018.75 6.75H5.25A2.25 2.25 0 003 9v3',
+                    'creditcard' => 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a1.5 1.5 0 001.5-1.5V6.75a1.5 1.5 0 00-1.5-1.5h-15a1.5 1.5 0 00-1.5 1.5v10.5a1.5 1.5 0 001.5 1.5z',
+                ];
+            @endphp
+
+            @foreach($navGroups as $groupLabel => $items)
+                <div>
+                    <p x-show="sidebarOpen"
+                       x-transition:enter="transition ease-out duration-200 delay-100"
+                       x-transition:enter-start="opacity-0"
+                       x-transition:enter-end="opacity-100"
+                       class="mb-2 truncate px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        {{ $groupLabel }}
+                    </p>
+                    <div class="space-y-1">
+                        @foreach($items as $item)
+                            @php $isActive = request()->routeIs($item['active'] ?? $item['route']); @endphp
+                            <div class="group relative">
+                                <a href="{{ route($item['route']) }}"
+                                   class="relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200
+                                          {{ $isActive
+                                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-950/40'
+                                                : 'text-slate-300 hover:bg-slate-800 hover:text-white hover:shadow-sm' }}">
+                                    @if($isActive)
+                                        <span class="absolute left-0 top-0 h-full w-1 rounded-r bg-blue-300"></span>
+                                    @endif
+                                    <svg class="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 {{ $isActive ? 'text-white' : 'text-slate-400 group-hover:text-white' }}"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$item['icon']] }}"/>
+                                    </svg>
+                                    <span x-show="sidebarOpen"
+                                          x-transition:enter="transition ease-out duration-200 delay-100"
+                                          x-transition:enter-start="opacity-0"
+                                          x-transition:enter-end="opacity-100"
+                                          class="truncate">{{ $item['label'] }}</span>
+                                </a>
+                                <span x-show="!sidebarOpen"
+                                      x-cloak
+                                      class="pointer-events-none absolute left-full top-1/2 z-50 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-200 group-hover:opacity-100 lg:block">
+                                    {{ $item['label'] }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </nav>
+
+        <!-- Footer -->
+        <div class="flex-shrink-0 p-3">
+            <div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 p-3 ring-1 ring-white/5">
+                <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-slate-700/60 text-blue-300">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
+                    </svg>
+                </div>
+                <div x-show="sidebarOpen"
+                     x-transition:enter="transition ease-out duration-200 delay-100"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     class="min-w-0 overflow-hidden">
+                    <p class="truncate text-xs font-semibold text-white">Smart Apartment</p>
+                    <p class="truncate text-[11px] text-slate-400">v1.0.0 &middot; Build 2026</p>
+                </div>
+            </div>
+        </div>
     </aside>
 
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
-            <div class="flex items-center gap-4">
-                <button @click="sidebarOpen = !sidebarOpen" class="hidden lg:block text-gray-500 hover:text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <nav class="text-sm text-gray-500">
-                    <span class="font-semibold text-gray-800">@yield('page-title', 'Dashboard')</span>
-                </nav>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('manager.yeu-cau.index') }}" class="relative text-gray-500 hover:text-indigo-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                </a>
-                <span class="text-sm text-gray-500 hidden sm:block">{{ now()->format('d/m/Y') }}</span>
-            </div>
-        </header>
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div class="flex-shrink-0 px-4 pt-4 lg:px-6">
+            <header class="flex h-16 items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 shadow-sm lg:px-6">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileSidebarOpen = !mobileSidebarOpen" class="rounded-xl p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-800 lg:hidden">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+                    </button>
+                    <button @click="sidebarOpen = !sidebarOpen" class="hidden rounded-xl p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-800 lg:block">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+                    </button>
+                    <div class="hidden items-center rounded-xl bg-slate-100 px-3 py-2 sm:flex">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                        <input type="text" placeholder="Tìm kiếm..." class="ml-2 w-40 bg-transparent text-sm text-slate-600 placeholder-slate-400 focus:outline-none lg:w-56">
+                    </div>
+                    <nav class="text-sm text-gray-500">
+                        <span class="font-semibold text-gray-800">@yield('page-title', 'Dashboard')</span>
+                    </nav>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <span class="hidden text-sm text-slate-500 sm:block">{{ now()->format('d/m/Y') }}</span>
+                    <a href="{{ route('manager.yeu-cau.index') }}" class="relative rounded-xl p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-blue-600">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+                        <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white"></span>
+                    </a>
+                    <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 text-xs font-bold text-white ring-2 ring-slate-100">
+                        {{ strtoupper(substr(auth('nhanvien')->user()->name, 0, 1)) }}
+                    </div>
+                </div>
+            </header>
+        </div>
 
         <main class="flex-1 overflow-y-auto p-4 lg:p-6">
             @if(session('success'))

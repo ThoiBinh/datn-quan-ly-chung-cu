@@ -110,6 +110,14 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">
             Tổng <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $cuDanList->total() }}</span> cư dân
         </p>
+        <div class="flex gap-2 justify-between items-center">
+        <a href="{{ route('manager.vai-tro.index') }}"
+           class="flex items-right gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Quản lý vai trò
+        </a>
         <a href="{{ route('manager.cu-dan.create') }}"
            class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,6 +125,7 @@
             </svg>
             Thêm cư dân
         </a>
+        </div>
     </div>
 
     <div class="overflow-x-auto">

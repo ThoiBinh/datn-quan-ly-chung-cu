@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CanHo;
+use App\Models\CanHoPhiDichVu;
 use App\Models\ChiTietHoaDon;
 use App\Models\HoaDon;
 use App\Models\LichSuThanhToan;
@@ -144,29 +145,63 @@ class HoaDonService
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Services for apartment (modal in create form)
+    //  Full service catalog for apartment (modal in create form)
     // ─────────────────────────────────────────────────────────────
 
-    public function layDichVuCanHo(int $canHoId): array
+    public function layDichVuModal(int $canHoId): array
     {
-        $canHo = CanHo::with([
-            'phiDichVu.loaiPhiDichVu',
-            'phiDichVu.donViTinh',
-            'phiDichVu.loaiTinhPhi',
-        ])->findOrFail($canHoId);
+        CanHo::findOrFail($canHoId);
 
-        return $canHo->phiDichVu->map(function ($phi) {
-            $donGia = (float) ($phi->pivot->don_gia ?? $phi->don_gia);
-            return [
-                'phi_dich_vu_id'   => $phi->id,
-                'ten_phi_dich_vu'  => $phi->ten_phi_dich_vu,
-                'loai_phi_dich_vu' => $phi->loaiPhiDichVu?->ten_loai_phi_dich_vu ?? '—',
-                'don_vi_tinh'      => $phi->donViTinh?->don_vi ?? '—',
-                'loai_tinh_phi'    => $phi->loaiTinhPhi?->ten_loai ?? '—',
-                'don_gia'          => $donGia,
-                'don_gia_fmt'      => number_format($donGia, 0, ',', '.') . 'đ',
-            ];
-        })->values()->toArray();
+        $selectedIds = CanHoPhiDichVu::where('can_ho', $canHoId)->pluck('phi_dich_vu')->all();
+
+        return PhiDichVu::with(['loaiPhiDichVu', 'donViTinh', 'loaiTinhPhi'])
+            ->orderBy('ten_phi_dich_vu')
+            ->get()
+            ->map(function ($phi) use ($selectedIds) {
+                $donGia = (float) $phi->don_gia;
+                return [
+                    'phi_dich_vu_id'   => $phi->id,
+                    'ten_phi_dich_vu'  => $phi->ten_phi_dich_vu,
+                    'loai_phi_dich_vu' => $phi->loaiPhiDichVu?->ten_loai_phi_dich_vu ?? '—',
+                    'don_vi_tinh'      => $phi->donViTinh?->don_vi ?? '—',
+                    'loai_tinh_phi'    => $phi->loaiTinhPhi?->ten_loai ?? '—',
+                    'don_gia'          => $donGia,
+                    'don_gia_fmt'      => number_format($donGia, 0, ',', '.') . 'đ',
+                    'selected'         => in_array($phi->id, $selectedIds),
+                ];
+            })->values()->toArray();
+    }
+
+    /**
+     * Đồng bộ can_ho_phi_dich_vu theo danh sách phi_dich_vu_id được chọn:
+     * thêm mới các dịch vụ chưa gán, gỡ các dịch vụ bị bỏ chọn, giữ nguyên phần còn lại.
+     */
+    public function syncDichVuCanHo(int $canHoId, array $phiDichVuIds): void
+    {
+        $canHo = CanHo::findOrFail($canHoId);
+
+        $selectedIds = collect($phiDichVuIds)->map(fn ($id) => (int) $id)->unique()->values();
+        $existingIds = CanHoPhiDichVu::where('can_ho', $canHoId)->pluck('phi_dich_vu');
+
+        $toAttach = $selectedIds->diff($existingIds);
+        $toDetach = $existingIds->diff($selectedIds);
+
+        DB::transaction(function () use ($canHo, $toAttach, $toDetach) {
+            if ($toDetach->isNotEmpty()) {
+                $canHo->phiDichVu()->detach($toDetach->all());
+            }
+
+            if ($toAttach->isNotEmpty()) {
+                $prices       = PhiDichVu::whereIn('id', $toAttach)->pluck('don_gia', 'id');
+                $nguoiCapNhat = auth('nhanvien')->id();
+
+                $canHo->phiDichVu()->attach(
+                    $toAttach->mapWithKeys(fn ($id) => [
+                        $id => ['don_gia' => $prices[$id] ?? 0, 'nguoi_cap_nhat' => $nguoiCapNhat],
+                    ])->all()
+                );
+            }
+        });
     }
 
     // ─────────────────────────────────────────────────────────────

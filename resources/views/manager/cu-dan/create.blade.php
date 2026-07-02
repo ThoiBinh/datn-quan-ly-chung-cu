@@ -29,9 +29,11 @@
             <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {{-- Họ tên đệm --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Họ tên đệm</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Họ tên đệm <span class="text-red-500">*</span></label>
+                    
                     <input type="text" name="ho_ten_dem" value="{{ old('ho_ten_dem') }}"
                            placeholder="VD: Nguyễn Văn"
+                           required
                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
                                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
                                   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
@@ -53,8 +55,10 @@
                 </div>
                 {{-- CCCD --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">CCCD/CMND</label>
-                    <input type="text" name="cccd" value="{{ old('cccd') }}"
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        CCCD/CMND <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="cccd" value="{{ old('cccd') }}" required
                            placeholder="Số CCCD hoặc CMND"
                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono
                                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
