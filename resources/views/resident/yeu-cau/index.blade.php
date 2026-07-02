@@ -62,7 +62,7 @@
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tiêu đề</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Loại</th>
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Mức độ</th>
+                        
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ngày gửi</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Trạng thái</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">NV xử lý</th>
@@ -77,11 +77,7 @@
                             <p class="truncate max-w-[200px]">{{ $yc->tieu_de }}</p>
                         </td>
                         <td class="px-5 py-4 text-xs text-gray-500">{{ $yc->loaiYeuCau?->name ?? '—' }}</td>
-                        <td class="px-5 py-4">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $yc->muc_do_label['class'] }}">
-                                {{ $yc->muc_do_label['text'] }}
-                            </span>
-                        </td>
+                        
                         <td class="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">
                             {{ $yc->ngay_gui?->format('d/m/Y H:i') ?? '—' }}
                         </td>
