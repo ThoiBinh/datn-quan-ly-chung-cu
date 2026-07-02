@@ -88,10 +88,10 @@
                 </select>
 
                 {{-- Filter: Ngày tạo --}}
-                <input type="date" name="tu_ngay" value="{{ request('tu_ngay') }}"
+                <input hidden type="date" name="tu_ngay" value="{{ request('tu_ngay') }}"
                        title="Từ ngày"
                        class="px-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white dark:bg-slate-700 text-gray-800 dark:text-white"/>
-                <input type="date" name="den_ngay" value="{{ request('den_ngay') }}"
+                <input hidden type="date" name="den_ngay" value="{{ request('den_ngay') }}"
                        title="Đến ngày"
                        class="px-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white dark:bg-slate-700 text-gray-800 dark:text-white"/>
 
