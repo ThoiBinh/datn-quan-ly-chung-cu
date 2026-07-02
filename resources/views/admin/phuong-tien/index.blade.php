@@ -23,10 +23,16 @@ $sortIcon = function($col) use ($sort, $direction) {
 }">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Tổng: <span class="font-semibold text-gray-700 dark:text-slate-200">{{ $phuongTien->total() }}</span> phương tiện</p>
-        </div>
+<div class="mb-6 flex flex-col justify-between gap-5 rounded-2xl bg-white p-5 shadow-sm lg:flex-row lg:items-center dark:bg-slate-800">        <div>
+<p class="mt-1 flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+    <span class="font-medium text-gray-700 dark:text-slate-200">Tổng:</span>
+
+    <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+        {{ $phuongTien->total() }}
+    </span>
+
+    <span>phương tiện</span>
+</p>        </div>
         <div class="flex items-center gap-2">
             <a href="{{ route('admin.loai-phuong-tien.index') }}"
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition">
@@ -34,7 +40,7 @@ $sortIcon = function($col) use ($sort, $direction) {
                 <span>Loại phương tiện</span>
             </a>
             <a href="{{ route('admin.phuong-tien.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Thêm phương tiện
             </a>
@@ -79,7 +85,7 @@ $sortIcon = function($col) use ($sort, $direction) {
                 <option value="ngay_dang_ky" {{ $sort === 'ngay_dang_ky' ? 'selected' : '' }}>Sắp xếp: Ngày đăng ký</option>
                 <option value="ngay_huy" {{ $sort === 'ngay_huy' ? 'selected' : '' }}>Sắp xếp: Ngày hủy</option>
             </select>
-            <button type="submit" class="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
+            <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
                 Lọc
             </button>
             @if(request()->hasAny(['search','loai','toa_nha','can_ho','trang_thai']))

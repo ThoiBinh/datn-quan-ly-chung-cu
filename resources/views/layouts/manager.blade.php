@@ -202,10 +202,7 @@
                     <button @click="sidebarOpen = !sidebarOpen" class="hidden rounded-xl p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-800 lg:block">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
                     </button>
-                    <div class="hidden items-center rounded-xl bg-slate-100 px-3 py-2 sm:flex">
-                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-                        <input type="text" placeholder="Tìm kiếm..." class="ml-2 w-40 bg-transparent text-sm text-slate-600 placeholder-slate-400 focus:outline-none lg:w-56">
-                    </div>
+                    
                     <nav class="text-sm text-gray-500">
                         <span class="font-semibold text-gray-800">@yield('page-title', 'Dashboard')</span>
                     </nav>

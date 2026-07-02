@@ -5,18 +5,43 @@
 <div class="space-y-5">
 
     {{-- Header --}}
-    <div class="flex items-center justify-between gap-3">
-        <div>
-            <h1 class="text-xl font-bold text-gray-800">Yêu cầu cư dân</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Tổng: {{ $dsYeuCau->total() }} yêu cầu</p>
-        </div>
-        <a href="{{ route('admin.loai-yeu-cau.index') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-                <span x-show="sidebarOpen" class="truncate">Loại yêu cầu</span>
-            </a>
+  <div class="mb-6 flex flex-col gap-5 justify-between lg:flex-row lg:items-center lg:justify-between">
+
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Yêu cầu cư dân
+        </h1>
+
+        <p class="mt-1 flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+            <span class="font-medium">Tổng:</span>
+
+            <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                {{ $dsYeuCau->total() }}
+            </span>
+
+            <span>yêu cầu</span>
+        </p>
     </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{{ route('admin.loai-yeu-cau.index') }}"
+           class="group inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg">
+
+            <svg class="h-5 w-5 transition-transform duration-300 group-hover:scale-110"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+
+            <span>Loại yêu cầu</span>
+        </a>
+    </div>
+
+</div>
 
     {{-- Filter --}}
     <form method="GET" action="{{ route('admin.yeu-cau.index') }}"

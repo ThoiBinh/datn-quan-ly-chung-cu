@@ -53,14 +53,14 @@
 
     {{-- Table Card --}}
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="p-4 border-b border-gray-100 dark:border-slate-700 flex flex-col gap-3">
-            <form method="GET" action="{{ route('admin.phi-dich-vu.index') }}" class="flex flex-wrap items-center gap-2">
+        <div class="p-4 border-b border-gray-100 dark:border-slate-700 flex flex-col gap-3 flex">
+            <form method="GET" action="{{ route('admin.phi-dich-vu.index') }}" class="flex flex-wrap items-center gap-2 ">
                 {{-- Search --}}
-                <div class="relative">
+                <div class="relative flex-1 items-center">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Tìm tên, loại, đơn vị..."
-                           class="pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white dark:bg-slate-700 text-gray-800 dark:text-white w-52"/>
+                           class=" pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white dark:bg-slate-700 text-gray-800 dark:text-white w-full"/>
                 </div>
 
                 {{-- Filter: Loại phí --}}
@@ -116,14 +116,28 @@
             <div class="flex justify-end gap-2">
                 <a href="{{ route('admin.loai-phi-dich-vu.index') }}"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Loại phí dịch vụ
-            </a>
-            <a href="{{ route('admin.don-vi-tinh-phi-dich-vu.index') }}" 
+                    <svg class="w-4 h-4"
+         fill="none"
+         stroke="currentColor"
+         viewBox="0 0 24 24">
+        <path stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>Loại phí dịch vụ
+                </a>
+                <a href="{{ route('admin.don-vi-tinh-phi-dich-vu.index') }}" 
                 class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Đơn vị tính
-            </a>
+                    <svg class="h-5 w-5"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 7h10M7 12h6m-6 5h10M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+        </svg>Đơn vị tính
+                </a>
                 <a href="{{ route('admin.phi-dich-vu.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

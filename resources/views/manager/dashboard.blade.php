@@ -5,9 +5,9 @@
 @section('content')
 
 {{-- Export buttons --}}
-<div class="flex items-center justify-between mb-5">
+<div class="flex items-center justify-between mb-6">
     <div>
-        <h2 class="text-lg font-bold text-gray-800">Tổng quan hệ thống</h2>
+        <h2 class="text-lg font-bold text-gray-900">Tổng quan hệ thống</h2>
         <p class="text-xs text-gray-400 mt-0.5">Dữ liệu thống kê toàn bộ hệ thống</p>
     </div>
     @include('reports.export-modal', [
@@ -27,14 +27,14 @@
             ['label' => 'Chưa thanh toán', 'value' => $stats['hoa_don_chua_tt'], 'color' => 'amber', 'sub' => $stats['hoa_don_qua_han'] . ' quá hạn'],
             ['label' => 'Yêu cầu mới', 'value' => $stats['yeu_cau_moi'], 'color' => 'blue', 'sub' => 'Chờ xử lý'],
         ];
-        $cm = ['indigo' => ['bg' => 'bg-indigo-50', 'text' => 'text-indigo-600', 'val' => 'text-indigo-700'],
-               'emerald' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'val' => 'text-emerald-700'],
-               'amber' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-600', 'val' => 'text-amber-700'],
-               'blue' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'val' => 'text-blue-700']];
+        $cm = ['indigo' => ['val' => 'text-indigo-700'],
+               'emerald' => ['val' => 'text-emerald-700'],
+               'amber' => ['val' => 'text-amber-700'],
+               'blue' => ['val' => 'text-blue-700']];
     @endphp
     @foreach($cards as $card)
     @php $c = $cm[$card['color']]; @endphp
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
         <p class="text-sm text-gray-500 mb-1">{{ $card['label'] }}</p>
         <p class="text-2xl font-bold {{ $c['val'] }}">{{ number_format($card['value']) }}</p>
         <p class="text-xs text-gray-400 mt-1">{{ $card['sub'] }}</p>
@@ -49,15 +49,15 @@
     </div>
 
     <!-- Yêu cầu -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">Phản ánh gần đây</h3>
-            <a href="{{ route('manager.yeu-cau.index') }}" class="text-xs text-indigo-600 hover:text-indigo-700">Xem tất cả</a>
+            <h3 class="font-semibold text-gray-900">Phản ánh gần đây</h3>
+            <a href="{{ route('manager.yeu-cau.index') }}" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Xem tất cả</a>
         </div>
-        <div class="space-y-2">
+        <div class="space-y-1.5">
             @forelse($yeuCauGanDay as $yc)
             <a href="{{ route('manager.yeu-cau.show', $yc) }}"
-               class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+               class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors duration-200">
                 <div class="w-2 h-2 rounded-full flex-shrink-0
                     {{ $yc->trang_thai == 1 ? 'bg-blue-400' : 'bg-amber-400' }}"></div>
                 <div class="min-w-0">
