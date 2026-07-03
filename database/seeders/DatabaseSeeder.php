@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             VaiTroSeeder::class,
             NguonTaoSeeder::class,
             ThuocTinhSeeder::class,
+            CauHinhWebsiteSeeder::class,
 
             // Bảng chính (theo thứ tự phụ thuộc)
             ToaNhaSeeder::class,
