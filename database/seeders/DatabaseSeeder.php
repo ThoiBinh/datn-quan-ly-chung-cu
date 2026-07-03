@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
         $this->seedAdminChucVu();
 
         $this->call(UserSeeder::class);
+        $this->call(CauHinhWebsiteSeeder::class);
     }
 
     private function seedAdminChucVu(): void

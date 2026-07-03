@@ -3,125 +3,129 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use App\Models\CauHinhThanhToan;
+use App\Http\Requests\Manager\StoreCauHinhThanhToanRequest;
+use App\Http\Requests\Manager\UpdateCauHinhThanhToanRequest;
+use App\Models\CauHinhWebsite;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CauHinhThanhToanController extends Controller
 {
-    private const SORTABLE = ['createdAt', 'loai_phuong_thuc', 'trang_thai'];
+    private const SEARCHABLE = ['ten_thuoc_tinh', 'gia_tri', 'ma_thuoc_tinh'];
 
     public function index(Request $request)
     {
-        $sort      = in_array($request->sort, self::SORTABLE) ? $request->sort : 'createdAt';
-        $direction = $request->direction === 'asc' ? 'asc' : 'desc';
-
-        $query = CauHinhThanhToan::with('nguoiCapNhat');
+        $query = CauHinhWebsite::payment()->orderBy('thu_tu');
 
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where(fn($q) => $q
-                ->where('ten_nha_cung_cap', 'like', "%$s%")
-                ->orWhere('ten_chu_tai_khoan', 'like', "%$s%")
-                ->orWhere('loai_phuong_thuc', 'like', "%$s%")
-            );
+            $query->where(function ($q) use ($s) {
+                foreach (self::SEARCHABLE as $col) {
+                    $q->orWhere($col, 'like', "%$s%");
+                }
+            });
         }
 
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
-        $dsCauHinh    = $query->orderBy($sort, $direction)->paginate(15)->withQueryString();
-        $dsLoai       = CauHinhThanhToan::select('loai_phuong_thuc')->distinct()->pluck('loai_phuong_thuc');
-        $tongHoatDong = CauHinhThanhToan::where('trang_thai', 1)->count();
-        $tongVoHieu   = CauHinhThanhToan::where('trang_thai', 0)->count();
+        $dsCauHinh = $query->get();
 
-        return view('manager.cau-hinh-thanh-toan.index', compact('dsCauHinh', 'dsLoai', 'sort', 'direction', 'tongHoatDong', 'tongVoHieu'));
+        $nhomMomo  = $dsCauHinh->filter(fn ($c) => str_starts_with($c->ma_thuoc_tinh, 'momo_'))->values();
+        $nhomVnpay = $dsCauHinh->filter(fn ($c) => str_starts_with($c->ma_thuoc_tinh, 'vnp_'))->values();
+        $nhomQr    = $dsCauHinh->filter(fn ($c) => str_starts_with($c->ma_thuoc_tinh, 'qr_'))->values();
+        $nhomKhac  = $dsCauHinh->reject(fn ($c) => str_starts_with($c->ma_thuoc_tinh, 'momo_')
+            || str_starts_with($c->ma_thuoc_tinh, 'vnp_')
+            || str_starts_with($c->ma_thuoc_tinh, 'qr_'))->values();
+
+        $tongHoatDong  = CauHinhWebsite::payment()->where('trang_thai', 1)->count();
+        $tongVoHieu    = CauHinhWebsite::payment()->where('trang_thai', 0)->count();
+
+        return view('manager.cau-hinh-thanh-toan.index', compact(
+            'nhomMomo', 'nhomVnpay', 'nhomQr', 'nhomKhac', 'tongHoatDong', 'tongVoHieu'
+        ));
     }
 
     public function create()
     {
-        $dsLoai = CauHinhThanhToan::select('loai_phuong_thuc')->distinct()->pluck('loai_phuong_thuc');
-        return view('manager.cau-hinh-thanh-toan.create', compact('dsLoai'));
+        return view('manager.cau-hinh-thanh-toan.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreCauHinhThanhToanRequest $request)
     {
-        $request->validate([
-            'loai_phuong_thuc'    => 'required|string|max:100',
-            'ten_nha_cung_cap'    => 'nullable|string|max:150',
-            'dinh_danh_thu_huong' => 'nullable|string|max:150',
-            'ma_nhan_dien'        => 'nullable|string|max:150',
-            'ten_chu_tai_khoan'   => 'nullable|string|max:150',
-        ], [
-            'loai_phuong_thuc.required' => 'Vui lòng nhập loại phương thức.',
-        ]);
+        $data                   = $request->validated();
+        $data['ma_nhom']        = 'payment';
+        $data['ten_nhom']       = CauHinhWebsite::NHOM_OPTIONS['payment'];
+        $data['trang_thai']     = $request->boolean('trang_thai', true);
+        $data['la_bao_mat']     = $request->boolean('la_bao_mat');
+        $data['duoc_chinh_sua'] = true;
 
-        $ch = CauHinhThanhToan::create([
-            'loai_phuong_thuc'    => $request->loai_phuong_thuc,
-            'ten_nha_cung_cap'    => $request->ten_nha_cung_cap ?: null,
-            'dinh_danh_thu_huong' => $request->dinh_danh_thu_huong ?: null,
-            'ma_nhan_dien'        => $request->ma_nhan_dien ?: null,
-            'ten_chu_tai_khoan'   => $request->ten_chu_tai_khoan ?: null,
-            'trang_thai'          => 1,
-            'nguoi_cap_nhat'      => auth('nhanvien')->id(),
-        ]);
+        $cauHinh = DB::transaction(function () use ($data) {
+            $ch = CauHinhWebsite::create($data);
+            AuditLogService::log('INSERT', 'cau_hinh_website', $ch->id, null, $ch->toArray());
+            return $ch;
+        });
 
-        AuditLogService::log('INSERT', 'cau_hinh_thanh_toan', $ch->id, null, $ch->toArray());
-
-        return redirect()->route('manager.cau-hinh-thanh-toan.show', $ch)
-            ->with('success', "Thêm cấu hình «{$ch->ten_nha_cung_cap}» thành công.");
+        return redirect()->route('manager.cau-hinh-thanh-toan.show', $cauHinh)
+            ->with('success', "Thêm cấu hình «{$cauHinh->ten_thuoc_tinh}» thành công.");
     }
 
-    public function show(CauHinhThanhToan $cauHinhThanhToan)
+    public function show(CauHinhWebsite $cauHinhThanhToan)
     {
-        $cauHinhThanhToan->load('nguoiCapNhat');
+        $this->ensurePayment($cauHinhThanhToan);
+
         return view('manager.cau-hinh-thanh-toan.show', compact('cauHinhThanhToan'));
     }
 
-    public function edit(CauHinhThanhToan $cauHinhThanhToan)
+    public function edit(CauHinhWebsite $cauHinhThanhToan)
     {
-        $dsLoai = CauHinhThanhToan::select('loai_phuong_thuc')->distinct()->pluck('loai_phuong_thuc');
-        return view('manager.cau-hinh-thanh-toan.edit', compact('cauHinhThanhToan', 'dsLoai'));
+        $this->ensurePayment($cauHinhThanhToan);
+
+        return view('manager.cau-hinh-thanh-toan.edit', compact('cauHinhThanhToan'));
     }
 
-    public function update(Request $request, CauHinhThanhToan $cauHinhThanhToan)
+    public function update(UpdateCauHinhThanhToanRequest $request, CauHinhWebsite $cauHinhThanhToan)
     {
-        $request->validate([
-            'loai_phuong_thuc'    => 'required|string|max:100',
-            'ten_nha_cung_cap'    => 'nullable|string|max:150',
-            'dinh_danh_thu_huong' => 'nullable|string|max:150',
-            'ma_nhan_dien'        => 'nullable|string|max:150',
-            'ten_chu_tai_khoan'   => 'nullable|string|max:150',
-        ], [
-            'loai_phuong_thuc.required' => 'Vui lòng nhập loại phương thức.',
-        ]);
+        $this->ensurePayment($cauHinhThanhToan);
 
-        $old = $cauHinhThanhToan->toArray();
-        $cauHinhThanhToan->update([
-            'loai_phuong_thuc'    => $request->loai_phuong_thuc,
-            'ten_nha_cung_cap'    => $request->ten_nha_cung_cap ?: null,
-            'dinh_danh_thu_huong' => $request->dinh_danh_thu_huong ?: null,
-            'ma_nhan_dien'        => $request->ma_nhan_dien ?: null,
-            'ten_chu_tai_khoan'   => $request->ten_chu_tai_khoan ?: null,
-            'nguoi_cap_nhat'      => auth('nhanvien')->id(),
-        ]);
-        AuditLogService::log('UPDATE', 'cau_hinh_thanh_toan', $cauHinhThanhToan->id, $old, $cauHinhThanhToan->fresh()->toArray());
+        if (! $cauHinhThanhToan->duoc_chinh_sua) {
+            return back()->with('error', 'Cấu hình này được bảo vệ và không thể chỉnh sửa.');
+        }
+
+        $data               = $request->validated();
+        $data['trang_thai'] = $request->boolean('trang_thai');
+
+        DB::transaction(function () use ($data, $cauHinhThanhToan) {
+            $old = $cauHinhThanhToan->toArray();
+            $cauHinhThanhToan->update($data);
+            AuditLogService::log('UPDATE', 'cau_hinh_website', $cauHinhThanhToan->id, $old, $cauHinhThanhToan->fresh()->toArray());
+        });
 
         return redirect()->route('manager.cau-hinh-thanh-toan.show', $cauHinhThanhToan)
-            ->with('success', 'Cập nhật cấu hình thành công.');
+            ->with('success', 'Cập nhật cấu hình thanh toán thành công.');
     }
 
-    public function toggleStatus(CauHinhThanhToan $cauHinhThanhToan)
+    public function toggleStatus(CauHinhWebsite $cauHinhThanhToan)
     {
+        $this->ensurePayment($cauHinhThanhToan);
+
+        if (! $cauHinhThanhToan->duoc_chinh_sua) {
+            return back()->with('error', 'Cấu hình này được bảo vệ và không thể thay đổi trạng thái.');
+        }
+
         $old    = $cauHinhThanhToan->toArray();
-        $newVal = $cauHinhThanhToan->trang_thai == 1 ? 0 : 1;
-        $cauHinhThanhToan->update([
-            'trang_thai'     => $newVal,
-            'nguoi_cap_nhat' => auth('nhanvien')->id(),
-        ]);
-        AuditLogService::log('UPDATE', 'cau_hinh_thanh_toan', $cauHinhThanhToan->id, $old, $cauHinhThanhToan->fresh()->toArray());
-        $msg = $newVal == 1 ? 'Kích hoạt' : 'Vô hiệu hóa';
+        $newVal = ! $cauHinhThanhToan->trang_thai;
+        $cauHinhThanhToan->update(['trang_thai' => $newVal]);
+        AuditLogService::log('UPDATE', 'cau_hinh_website', $cauHinhThanhToan->id, $old, $cauHinhThanhToan->fresh()->toArray());
+
+        $msg = $newVal ? 'Kích hoạt' : 'Vô hiệu hóa';
         return back()->with('success', "$msg cấu hình thành công.");
+    }
+
+    private function ensurePayment(CauHinhWebsite $cauHinhThanhToan): void
+    {
+        abort_unless($cauHinhThanhToan->ma_nhom === 'payment', 404);
     }
 }
