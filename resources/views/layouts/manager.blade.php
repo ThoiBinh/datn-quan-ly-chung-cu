@@ -87,7 +87,7 @@
         </div>
 
         <!-- Menu -->
-        <nav class="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-3">
+        <nav id="sidebarNav" class="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-3">
             @php
                 $navGroups = [
                     'TỔNG QUAN' => [
@@ -178,6 +178,27 @@
                 </div>
             @endforeach
         </nav>
+
+        <script>
+            (function () {
+                var sidebarNav = document.getElementById('sidebarNav');
+                if (!sidebarNav) return;
+                var storageKey = 'manager_sidebar_scroll_top';
+                var saved = sessionStorage.getItem(storageKey);
+                if (saved !== null) {
+                    sidebarNav.scrollTop = parseInt(saved, 10) || 0;
+                }
+                var ticking = false;
+                sidebarNav.addEventListener('scroll', function () {
+                    if (ticking) return;
+                    ticking = true;
+                    window.requestAnimationFrame(function () {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                        ticking = false;
+                    });
+                }, { passive: true });
+            })();
+        </script>
 
         <!-- Footer -->
         <div class="flex-shrink-0 p-3">

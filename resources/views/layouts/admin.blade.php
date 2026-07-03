@@ -30,11 +30,17 @@
 
     <!-- Sidebar -->
     <aside
+        x-init="$el.style.width = ''"
         :class="[sidebarOpen ? 'w-64' : 'w-20', mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']"
+        style="width: 16rem"
         class="fixed inset-y-0 left-0 z-40 my-4 ml-4 flex flex-col rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white shadow-2xl shadow-black/20 ring-1 ring-white/10 backdrop-blur-xl transition-all duration-300 ease-in-out lg:static dark:shadow-black/40 flex-shrink-0"
     >
         <!-- Logo -->
-        <div :class="sidebarOpen ? 'justify-start px-5' : 'justify-center px-0'" class="flex h-16 items-center border-b border-white/5 transition-all duration-300">
+        <div
+            x-init="$el.style.paddingLeft = ''; $el.style.paddingRight = ''"
+            :class="sidebarOpen ? 'justify-start px-5' : 'justify-center px-0'"
+            style="padding-left: 1.25rem; padding-right: 1.25rem"
+            class="flex h-16 items-center border-b border-white/5 transition-all duration-300">
             <div class="flex min-w-0 items-center gap-3">
                 <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-950/50">
                     @if($logoWebsite)
@@ -55,7 +61,7 @@
         </div>
 
         <!-- Nav Links -->
-        <nav class="sidebar-scroll flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-4">
+        <nav id="sidebarNav" class="sidebar-scroll flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-4">
             <a href="{{ route('admin.dashboard') }}" class="sidebar-link group {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" :class="sidebarOpen ? '' : 'justify-center px-0'">
                 <svg class="h-5 w-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                 <span x-show="sidebarOpen" x-transition class="truncate">Dashboard</span>
@@ -184,6 +190,27 @@
                 <span x-show="!sidebarOpen" x-cloak class="sidebar-tooltip">Nhật ký hệ thống</span>
             </a>
         </nav>
+
+        <script>
+            (function () {
+                var sidebarNav = document.getElementById('sidebarNav');
+                if (!sidebarNav) return;
+                var storageKey = 'admin_sidebar_scroll_top';
+                var saved = sessionStorage.getItem(storageKey);
+                if (saved !== null) {
+                    sidebarNav.scrollTop = parseInt(saved, 10) || 0;
+                }
+                var ticking = false;
+                sidebarNav.addEventListener('scroll', function () {
+                    if (ticking) return;
+                    ticking = true;
+                    window.requestAnimationFrame(function () {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                        ticking = false;
+                    });
+                }, { passive: true });
+            })();
+        </script>
 
         <!-- User section -->
         <div class="border-t border-white/5 p-3">

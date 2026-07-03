@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 // Trang chủ
 Route::get('/', fn() => view('home', [
-    'dsBangTin'      => \App\Models\BangTin::latest()->get(),
+    'dsBangTin'      => \App\Models\BangTin::latest()->take(6)->get(),
     'cauHinhWebsite' => \App\Models\CauHinhWebsite::where('trang_thai', 1)->get()->keyBy('ma_thuoc_tinh'),
 ]))->name('home');
 
