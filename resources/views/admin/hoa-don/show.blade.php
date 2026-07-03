@@ -150,7 +150,7 @@ $statusConfig = match($hoaDon->trang_thai) {
                 <button @click="showThanhToan = true" type="button"
                         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    Thanh toán
+                    Tiền Mặt
                 </button>
                 <button @click="showMomo = true" type="button"
                         style="background: linear-gradient(135deg, #a50064, #d82d8b);"
@@ -558,9 +558,9 @@ $statusConfig = match($hoaDon->trang_thai) {
                     @if($phuongThuc->isNotEmpty())
                     <select name="phuong_thuc_thanh_toan" required x-model="phuongThucSelected"
                             class="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        @foreach($phuongThuc as $pt)
-                        <option value="{{ $pt->loai_phuong_thuc }}">{{ $pt->loai_phuong_thuc }}</option>
-                        @endforeach
+                        
+                        <option value="Tiền mặt">Tiền mặt</option>
+                    
                     </select>
                     @else
                     <input type="text" name="phuong_thuc_thanh_toan" required maxlength="100"

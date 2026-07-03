@@ -49,7 +49,7 @@ $sortIcon = function($col) use ($sort, $direction) {
 
     <!-- Filter bar -->
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-4">
-        <form method="GET" action="{{ route('admin.phuong-tien.index') }}" class="flex flex-wrap gap-3">
+        <form method="GET" action="{{ route('admin.phuong-tien.index') }}" class="flex flex-wrap gap-2">
             <div class="relative flex-1 min-w-48">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" name="search" value="{{ request('search') }}"
@@ -88,11 +88,7 @@ $sortIcon = function($col) use ($sort, $direction) {
             <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors">
                 Lọc
             </button>
-            @if(request()->hasAny(['search','loai','toa_nha','can_ho','trang_thai']))
-            <a href="{{ route('admin.phuong-tien.index') }}" class="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                Xóa lọc
-            </a>
-            @endif
+            
         </form>
     </div>
 
