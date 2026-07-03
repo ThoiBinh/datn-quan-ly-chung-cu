@@ -19,9 +19,9 @@ class CauHinhWebsiteComposer
 
     public function compose(View $view): void
     {
-        $isResident = $view->getName() === 'layouts.resident';
+        $needsFullData = in_array($view->getName(), ['layouts.resident', 'auth.login'], true);
 
-        $keys = $isResident ? self::RESIDENT_KEYS : ['ten_chung_cu', 'mo_ta_seo', 'logo'];
+        $keys = $needsFullData ? self::RESIDENT_KEYS : ['ten_chung_cu', 'mo_ta_seo', 'logo'];
 
         $cauHinh = CauHinhWebsite::where('trang_thai', 1)
             ->whereIn('ma_thuoc_tinh', $keys)
@@ -34,7 +34,7 @@ class CauHinhWebsiteComposer
             'logoWebsite' => $cauHinh->get('logo')?->gia_tri_url,
         ];
 
-        if ($isResident) {
+        if ($needsFullData) {
             $data += $this->residentFooterData($cauHinh);
         }
 

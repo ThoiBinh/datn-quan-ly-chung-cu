@@ -34,6 +34,6 @@ class AppServiceProvider extends ServiceProvider
             return new NhanVienUserProvider($app['hash'], $config['model']);
         });
 
-        View::composer(['layouts.admin', 'layouts.manager', 'layouts.resident'], CauHinhWebsiteComposer::class);
+        View::composer(['layouts.admin', 'layouts.manager', 'layouts.resident', 'auth.login'], CauHinhWebsiteComposer::class);
     }
 }
