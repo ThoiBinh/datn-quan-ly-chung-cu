@@ -7,7 +7,10 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class DashboardExport implements WithMultipleSheets
 {
-    public function __construct(private array $data) {}
+    public function __construct(
+        private array $data,
+        private array $cauHinhWebsite = [],
+    ) {}
 
     public function sheets(): array
     {
@@ -20,6 +23,17 @@ class DashboardExport implements WithMultipleSheets
             $this->buildPhuongTienSheet(),
             $this->buildYeuCauSheet(),
             $this->buildPhiDichVuSheet(),
+        ];
+    }
+
+    private function meta(): array
+    {
+        $tt = $this->data['thong_tin'] ?? [];
+
+        return [
+            'thoi_gian_xuat'   => $tt['thoi_gian_xuat'] ?? '',
+            'nguoi_xuat'       => $tt['nguoi_xuat'] ?? '',
+            'khoang_thoi_gian' => $tt['khoang_thoi_gian'] ?? '',
         ];
     }
 
@@ -73,7 +87,7 @@ class DashboardExport implements WithMultipleSheets
             ['Doanh thu năm',      $pay['doanh_thu_nam']     ?? 0],
         ];
 
-        return new GenericSheet('Dashboard', ['Chỉ số', 'Giá trị'], $rows, '1E3A5F');
+        return new GenericSheet('Dashboard', ['Chỉ số', 'Giá trị'], $rows, '1E3A5F', $this->cauHinhWebsite, 'BÁO CÁO TỔNG QUAN DASHBOARD', $this->meta());
     }
 
     // ─── SHEET 2: HÓA ĐƠN ───────────────────────────────────────────────────
@@ -92,7 +106,7 @@ class DashboardExport implements WithMultipleSheets
             ['Tổng tiền còn nợ', '', $this->fmtMoney($hd['tong_tien_con_no'] ?? 0)],
         ];
 
-        return new GenericSheet('Hóa đơn', ['Trạng thái', 'Số lượng', 'Tổng tiền (VNĐ)'], $rows, '064E3B');
+        return new GenericSheet('Hóa đơn', ['Trạng thái', 'Số lượng', 'Tổng tiền (VNĐ)'], $rows, '064E3B', $this->cauHinhWebsite, 'BÁO CÁO HÓA ĐƠN', $this->meta());
     }
 
     // ─── SHEET 3: THANH TOÁN ─────────────────────────────────────────────────
@@ -118,7 +132,7 @@ class DashboardExport implements WithMultipleSheets
             }
         }
 
-        return new GenericSheet('Thanh toán', ['Chỉ số / Cư dân', 'Số giao dịch', 'Tổng tiền (VNĐ)'], $rows, '7C3AED');
+        return new GenericSheet('Thanh toán', ['Chỉ số / Cư dân', 'Số giao dịch', 'Tổng tiền (VNĐ)'], $rows, '7C3AED', $this->cauHinhWebsite, 'BÁO CÁO THANH TOÁN', $this->meta());
     }
 
     // ─── SHEET 4: CƯ DÂN ─────────────────────────────────────────────────────
@@ -141,7 +155,7 @@ class DashboardExport implements WithMultipleSheets
             ];
         }
 
-        return new GenericSheet('Cư dân', ['Thông tin', 'Giá trị'], $rows, '0E7490');
+        return new GenericSheet('Cư dân', ['Thông tin', 'Giá trị'], $rows, '0E7490', $this->cauHinhWebsite, 'BÁO CÁO CƯ DÂN', $this->meta());
     }
 
     // ─── SHEET 5: CĂN HỘ ─────────────────────────────────────────────────────
@@ -175,7 +189,10 @@ class DashboardExport implements WithMultipleSheets
             'Căn hộ',
             ['Tòa nhà', 'Tổng căn hộ', 'Đang sử dụng', 'Trống', 'Bảo trì/Khác'],
             $rows,
-            '92400E'
+            '92400E',
+            $this->cauHinhWebsite,
+            'BÁO CÁO CĂN HỘ',
+            $this->meta()
         );
     }
 
@@ -202,7 +219,10 @@ class DashboardExport implements WithMultipleSheets
             'Phương tiện',
             ['Loại xe', 'Tổng', 'Hoạt động', 'Bị khóa/Hủy'],
             $rows,
-            '065F46'
+            '065F46',
+            $this->cauHinhWebsite,
+            'BÁO CÁO PHƯƠNG TIỆN',
+            $this->meta()
         );
     }
 
@@ -233,7 +253,7 @@ class DashboardExport implements WithMultipleSheets
             }
         }
 
-        return new GenericSheet('Yêu cầu cư dân', ['Trạng thái / Nhân viên', 'Số lượng / Giao dịch'], $rows, 'BE185D');
+        return new GenericSheet('Yêu cầu cư dân', ['Trạng thái / Nhân viên', 'Số lượng / Giao dịch'], $rows, 'BE185D', $this->cauHinhWebsite, 'BÁO CÁO YÊU CẦU CƯ DÂN', $this->meta());
     }
 
     // ─── SHEET 8: PHÍ DỊCH VỤ ───────────────────────────────────────────────
@@ -256,7 +276,10 @@ class DashboardExport implements WithMultipleSheets
             'Phí dịch vụ',
             ['Tên phí', 'Đơn giá (VNĐ)', 'Loại tính phí', 'Đơn vị tính', 'Số căn hộ', 'Doanh thu (VNĐ)'],
             $rows,
-            '3730A3'
+            '3730A3',
+            $this->cauHinhWebsite,
+            'BÁO CÁO PHÍ DỊCH VỤ',
+            $this->meta()
         );
     }
 
