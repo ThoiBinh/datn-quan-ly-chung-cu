@@ -60,37 +60,44 @@
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1.5">Giá trị</label>
 
-        <textarea x-show="kieuDuLieu === 'textarea' || kieuDuLieu === 'json'" name="gia_tri" rows="4"
-                  placeholder="{{ old('placeholder', $cauHinhWebsite->placeholder ?? '') }}"
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('gia_tri', $cauHinhWebsite->gia_tri ?? '') }}</textarea>
+        <template x-if="kieuDuLieu === 'textarea' || kieuDuLieu === 'json'">
+            <textarea name="gia_tri" rows="4"
+                      placeholder="{{ old('placeholder', $cauHinhWebsite->placeholder ?? '') }}"
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('gia_tri', $cauHinhWebsite->gia_tri ?? '') }}</textarea>
+        </template>
 
-        <div x-show="kieuDuLieu === 'boolean'" class="flex items-center gap-3">
-            <input type="hidden" name="gia_tri" :value="giaTriBoolean ? '1' : '0'">
-            <button type="button" @click="giaTriBoolean = !giaTriBoolean"
-                    :class="giaTriBoolean ? 'bg-blue-600' : 'bg-gray-300'"
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors">
-                <span :class="giaTriBoolean ? 'translate-x-6' : 'translate-x-1'" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
-            </button>
-            <span class="text-sm text-gray-500" x-text="giaTriBoolean ? 'Bật (1)' : 'Tắt (0)'"></span>
-        </div>
+        <template x-if="kieuDuLieu === 'boolean'">
+            <div class="flex items-center gap-3">
+                <input type="hidden" name="gia_tri" :value="giaTriBoolean ? '1' : '0'">
+                <button type="button" @click="giaTriBoolean = !giaTriBoolean"
+                        :class="giaTriBoolean ? 'bg-blue-600' : 'bg-gray-300'"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors">
+                    <span :class="giaTriBoolean ? 'translate-x-6' : 'translate-x-1'" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+                </button>
+                <span class="text-sm text-gray-500" x-text="giaTriBoolean ? 'Bật (1)' : 'Tắt (0)'"></span>
+            </div>
+        </template>
 
-        <div x-show="['image','file'].includes(kieuDuLieu)" class="space-y-2">
-            @if($isEdit && $cauHinhWebsite->gia_tri)
-                @if($cauHinhWebsite->gia_tri_url)
-                <img src="{{ $cauHinhWebsite->gia_tri_url }}" alt="" class="h-16 w-16 rounded-lg object-cover border border-gray-200">
+        <template x-if="['image','file'].includes(kieuDuLieu)">
+            <div class="space-y-2">
+                @if($isEdit && $cauHinhWebsite->gia_tri)
+                    @if($cauHinhWebsite->gia_tri_url)
+                    <img src="{{ $cauHinhWebsite->gia_tri_url }}" alt="" class="h-16 w-16 rounded-lg object-cover border border-gray-200">
+                    @endif
+                    <p class="text-xs text-gray-500">File hiện tại: <span class="font-mono">{{ $cauHinhWebsite->gia_tri }}</span></p>
                 @endif
-                <p class="text-xs text-gray-500">File hiện tại: <span class="font-mono">{{ $cauHinhWebsite->gia_tri }}</span></p>
-            @endif
-            <input type="file" name="gia_tri_file"
-                   accept="{{ '' }}"
-                   class="w-full text-sm border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-            <p class="text-xs text-gray-400">Để trống nếu không muốn thay đổi file hiện tại.</p>
-        </div>
+                <input type="file" name="gia_tri_file"
+                       accept="{{ '' }}"
+                       class="w-full text-sm border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <p class="text-xs text-gray-400">Để trống nếu không muốn thay đổi file hiện tại.</p>
+            </div>
+        </template>
 
-        <input x-show="!['textarea','json','boolean','image','file'].includes(kieuDuLieu)"
-               :type="inputType()" name="gia_tri" value="{{ old('gia_tri', $cauHinhWebsite->gia_tri ?? '') }}"
-               placeholder="{{ old('placeholder', $cauHinhWebsite->placeholder ?? '') }}"
-               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <template x-if="!['textarea','json','boolean','image','file'].includes(kieuDuLieu)">
+            <input :type="inputType()" name="gia_tri" value="{{ old('gia_tri', $cauHinhWebsite->gia_tri ?? '') }}"
+                   placeholder="{{ old('placeholder', $cauHinhWebsite->placeholder ?? '') }}"
+                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </template>
     </div>
 
     <div>

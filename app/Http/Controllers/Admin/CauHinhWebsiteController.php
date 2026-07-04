@@ -83,7 +83,7 @@ class CauHinhWebsiteController extends Controller
             $cauHinhWebsite->update($data);
             AuditLogService::log('UPDATE', 'cau_hinh_website', $cauHinhWebsite->id, $old, $cauHinhWebsite->fresh()->toArray());
         });
-
+        
         return redirect()->route('admin.cau-hinh-website.show', $cauHinhWebsite)
             ->with('success', 'Cập nhật cấu hình thành công.');
     }
