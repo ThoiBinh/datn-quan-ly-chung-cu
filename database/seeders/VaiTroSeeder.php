@@ -9,12 +9,13 @@ class VaiTroSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['vai_tro' => 'Chủ hộ'],
-            ['vai_tro' => 'Thành viên'],
-            ['vai_tro' => 'Người thuê'],
-        ];
+        $data = ['Chủ hộ', 'Thành viên', 'Người thuê'];
 
-        DB::table('vai_tro')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            DB::table('vai_tro')->updateOrInsert(
+                ['vai_tro' => $item],
+                ['vai_tro' => $item]
+            );
+        }
     }
 }

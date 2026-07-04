@@ -9,14 +9,13 @@ class DonViTinhPhiDichVuSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['don_vi' => 'kWh'],
-            ['don_vi' => 'm³'],
-            ['don_vi' => 'Tháng'],
-            ['don_vi' => 'Xe'],
-            ['don_vi' => 'm²'],
-        ];
+        $data = ['kWh', 'm³', 'Tháng', 'Xe', 'm²'];
 
-        DB::table('don_vi_tinh_phi_dich_vu')->insertOrIgnore($data);
+        foreach ($data as $donVi) {
+            DB::table('don_vi_tinh_phi_dich_vu')->updateOrInsert(
+                ['don_vi' => $donVi],
+                ['don_vi' => $donVi]
+            );
+        }
     }
 }

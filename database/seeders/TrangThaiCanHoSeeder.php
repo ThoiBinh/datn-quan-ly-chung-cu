@@ -9,13 +9,13 @@ class TrangThaiCanHoSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['ten_trang_thai' => 'Có sẵn'],
-            ['ten_trang_thai' => 'Đang ở'],
-            ['ten_trang_thai' => 'Đang sửa chữa'],
-            ['ten_trang_thai' => 'Đã bàn giao'],
-        ];
+        $data = ['Có sẵn', 'Đang ở', 'Đang sửa chữa', 'Đã bàn giao'];
 
-        DB::table('trang_thai_can_ho')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            DB::table('trang_thai_can_ho')->updateOrInsert(
+                ['ten_trang_thai' => $item],
+                ['ten_trang_thai' => $item]
+            );
+        }
     }
 }
