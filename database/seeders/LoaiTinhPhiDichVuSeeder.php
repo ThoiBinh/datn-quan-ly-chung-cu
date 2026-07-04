@@ -9,13 +9,13 @@ class LoaiTinhPhiDichVuSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['ten_loai' => 'Cố định'],
-            ['ten_loai' => 'Theo chỉ số'],
-            ['ten_loai' => 'Theo diện tích'],
-            ['ten_loai' => 'Theo số lượng'],
-        ];
+        $data = ['Cố định', 'Theo chỉ số', 'Theo diện tích', 'Theo số lượng'];
 
-        DB::table('loai_tinh_phi_dich_vu')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            DB::table('loai_tinh_phi_dich_vu')->updateOrInsert(
+                ['ten_loai' => $item],
+                ['ten_loai' => $item]
+            );
+        }
     }
 }

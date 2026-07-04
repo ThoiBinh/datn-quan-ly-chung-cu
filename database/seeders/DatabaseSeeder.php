@@ -31,9 +31,11 @@ class DatabaseSeeder extends Seeder
             CuDanCanHoSeeder::class,
             PhiDichVuSeeder::class,
             CanHoPhiDichVuSeeder::class,
+            CauHinhThanhToanSeeder::class,
             HoaDonSeeder::class,
             ChiTietHoaDonSeeder::class,
             PhuongTienSeeder::class,
+            ThuocTinhCanHoSeeder::class,
             YeuCauCuDanSeeder::class,
             BangTinSeeder::class,
         ]);

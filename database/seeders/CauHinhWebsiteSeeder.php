@@ -46,13 +46,12 @@ class CauHinhWebsiteSeeder extends Seeder
             ['ma_thuoc_tinh' => 'qr_noi_dung_chuyen_khoan', 'ten_thuoc_tinh' => 'QR - Nội dung chuyển khoản', 'gia_tri' => '', 'kieu_du_lieu' => 'text', 'ma_nhom' => 'payment', 'ten_nhom' => 'Thanh toán', 'thu_tu' => 54, 'la_bao_mat' => false],
             ['ma_thuoc_tinh' => 'qr_enable', 'ten_thuoc_tinh' => 'Bật thanh toán QR', 'gia_tri' => '0', 'kieu_du_lieu' => 'boolean', 'ma_nhom' => 'payment', 'ten_nhom' => 'Thanh toán', 'thu_tu' => 55, 'la_bao_mat' => false],
             [
-                'ma_thuoc_tinh' => 'mo_ta_seo','ten_thuoc_tinh' => 'Mô tả SEO','gia_tri' => 'Hệ thống quản lý chung cư thông minh giúp quản lý căn hộ, cư dân, hóa đơn, phản ánh và thông báo hiệu quả.',
+                'ma_thuoc_tinh' => 'mo_ta_seo', 'ten_thuoc_tinh' => 'Mô tả SEO', 'gia_tri' => 'Hệ thống quản lý chung cư thông minh giúp quản lý căn hộ, cư dân, hóa đơn, phản ánh và thông báo hiệu quả.',
                 'kieu_du_lieu' => 'textarea',
                 'ma_nhom' => 'seo',
                 'ten_nhom' => 'SEO',
-                'mo_ta' => 'Meta description.',
-                'placeholder' => 'Nhập mô tả SEO',
                 'thu_tu' => 2,
+                'la_bao_mat' => false,
             ],
         ];
 
