@@ -5,14 +5,21 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <title>Báo cáo Dashboard</title>
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Loại trừ .page-footer: dompdf không repeat được phần tử position:fixed
+       khi margin bị reset qua universal selector "*" (đã kiểm chứng thực nghiệm). */
+    *:not(.page-footer):not(.page-footer *) { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; color: #1e293b; background: #fff; }
 
     /* HEADER */
-    .page-header { background: #1e3a5f; color: #fff; padding: 18px 24px; margin-bottom: 18px; }
+    .page-header { background: #1e3a5f; color: #fff; padding: 14px 24px; margin-bottom: 18px; display: table; width: 100%; }
+    .page-header .logo-cell { display: table-cell; width: 56px; vertical-align: middle; padding-right: 12px; }
+    .page-header .logo-cell img { max-width: 48px; max-height: 48px; border-radius: 4px; background: #fff; }
+    .page-header .header-info-cell { display: table-cell; vertical-align: middle; }
     .page-header .system-name { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
-    .page-header .report-title { font-size: 13px; margin-top: 4px; opacity: 0.85; }
-    .page-header .meta { font-size: 9px; margin-top: 8px; opacity: 0.7; }
+    .page-header .company-contact { font-size: 8.5px; opacity: 0.8; margin-top: 2px; }
+    .page-header .company-contact span { margin-right: 14px; }
+    .page-header .report-title { font-size: 13px; margin-top: 6px; opacity: 0.9; font-weight: 700; }
+    .page-header .meta { font-size: 9px; margin-top: 4px; opacity: 0.7; }
     .page-header .meta span { margin-right: 16px; }
 
     /* SECTION */
@@ -67,8 +74,9 @@
         padding: 6px 24px; font-size: 8px; color: #94a3b8;
         display: table; width: 100%;
     }
-    .footer-left { display: table-cell; text-align: left; }
-    .footer-right { display: table-cell; text-align: right; }
+    .footer-left { display: table-cell; text-align: left; width: 45%; }
+    .footer-center { display: table-cell; text-align: center; width: 10%; font-weight: 700; }
+    .footer-right { display: table-cell; text-align: right; width: 45%; }
 
     /* PAGE BREAK */
     .page-break { page-break-after: always; }
@@ -89,21 +97,56 @@
 </head>
 <body>
 
+{{--
+    Thông tin công ty/chung cư lấy từ bảng cau_hinh_website (truyền qua biến $cauHinhWebsite
+    từ Controller, không query trong view). Mọi field đều có fallback rỗng và tự ẩn nếu thiếu.
+--}}
+@php
+    $chwTenChungCu = $cauHinhWebsite['ten_chung_cu'] ?? ($thong_tin['ten_he_thong'] ?? 'Quản Lý Chung Cư');
+    $chwLogoPath   = $cauHinhWebsite['logo_path'] ?? null;
+    $chwDiaChi     = $cauHinhWebsite['dia_chi'] ?? null;
+    $chwHotline    = $cauHinhWebsite['hotline'] ?? ($cauHinhWebsite['so_dien_thoai'] ?? null);
+    $chwEmail      = $cauHinhWebsite['email'] ?? null;
+    $chwWebsite    = $cauHinhWebsite['website'] ?? null;
+    $chwCopyright  = $cauHinhWebsite['copyright'] ?? null;
+@endphp
+
 {{-- HEADER --}}
 <div class="page-header">
-    <div class="system-name">{{ $thong_tin['ten_he_thong'] ?? 'Quản Lý Chung Cư' }}</div>
-    <div class="report-title">BÁO CÁO DASHBOARD – {{ strtoupper($thong_tin['khoang_thoi_gian'] ?? '') }}</div>
-    <div class="meta">
-        <span>Xuất lúc: {{ $thong_tin['thoi_gian_xuat'] ?? '' }}</span>
-        <span>Người xuất: {{ $thong_tin['nguoi_xuat'] ?? '' }}</span>
-        <span>Kỳ: {{ $thong_tin['date_from'] ?? '' }} → {{ $thong_tin['date_to'] ?? '' }}</span>
+    @if($chwLogoPath)
+        <div class="logo-cell"><img src="{{ $chwLogoPath }}" alt="Logo"></div>
+    @endif
+    <div class="header-info-cell">
+        <div class="system-name">{{ $chwTenChungCu }}</div>
+        <div class="company-contact">
+            @if($chwDiaChi)<span>{{ $chwDiaChi }}</span>@endif
+            @if($chwHotline)<span>Hotline: {{ $chwHotline }}</span>@endif
+            @if($chwEmail)<span>Email: {{ $chwEmail }}</span>@endif
+            @if($chwWebsite)<span>Website: {{ $chwWebsite }}</span>@endif
+        </div>
+        <div class="report-title">BÁO CÁO DASHBOARD – {{ strtoupper($thong_tin['khoang_thoi_gian'] ?? '') }}</div>
+        <div class="meta">
+            <span>Xuất lúc: {{ $thong_tin['thoi_gian_xuat'] ?? '' }}</span>
+            <span>Người xuất: {{ $thong_tin['nguoi_xuat'] ?? '' }}</span>
+            <span>Kỳ: {{ $thong_tin['date_from'] ?? '' }} → {{ $thong_tin['date_to'] ?? '' }}</span>
+        </div>
     </div>
 </div>
 
 {{-- FOOTER --}}
 <div class="page-footer">
-    <div class="footer-left">{{ $thong_tin['ten_he_thong'] ?? '' }} &mdash; Tài liệu bảo mật nội bộ</div>
-    <div class="footer-right">Xuất ngày {{ $thong_tin['thoi_gian_xuat'] ?? '' }}</div>
+    <div class="footer-left">
+        {{ $chwTenChungCu }}@if($chwCopyright) &mdash; {{ $chwCopyright }}@endif
+    </div>
+    {{-- Số trang "Trang X / Y" được vẽ đè bằng Canvas::page_text() từ Controller (xem exportPdf),
+         vì dompdf không tự thay thế token {PAGE_NUM}/{PAGE_COUNT} trong nội dung HTML thường. --}}
+    <div class="footer-center"></div>
+    <div class="footer-right">
+        @if($chwWebsite){{ $chwWebsite }} &nbsp;|&nbsp; @endif
+        @if($chwEmail){{ $chwEmail }} &nbsp;|&nbsp; @endif
+        @if($chwHotline){{ $chwHotline }} &nbsp;|&nbsp; @endif
+        Xuất ngày {{ $thong_tin['thoi_gian_xuat'] ?? '' }}
+    </div>
 </div>
 
 {{-- ============================================================
@@ -370,7 +413,7 @@
 <div class="page-break"></div>
 
 <div class="page-header">
-    <div class="system-name">{{ $thong_tin['ten_he_thong'] ?? '' }}</div>
+    <div class="system-name">{{ $chwTenChungCu }}</div>
     <div class="report-title">TOP DỮ LIỆU – {{ strtoupper($thong_tin['khoang_thoi_gian'] ?? '') }}</div>
 </div>
 

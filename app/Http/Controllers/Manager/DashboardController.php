@@ -10,6 +10,7 @@ use App\Models\HoaDon;
 use App\Models\PhuongTien;
 use App\Models\ToaNha;
 use App\Models\YeuCauCuDan;
+use App\Services\CauHinhWebsiteExportService;
 use App\Services\DashboardReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -17,7 +18,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
-    public function __construct(private DashboardReportService $reportService) {}
+    public function __construct(
+        private DashboardReportService $reportService,
+        private CauHinhWebsiteExportService $cauHinhWebsiteExportService,
+    ) {}
 
     public function index()
     {
@@ -90,27 +94,57 @@ class DashboardController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $filters = $this->parseFilters($request);
-        $data    = $this->reportService->getData($filters);
+        $filters        = $this->parseFilters($request);
+        $data           = $this->reportService->getData($filters);
+        $cauHinhWebsite = $this->cauHinhWebsiteExportService->getInfo();
 
-        $pdf = Pdf::loadView('reports.dashboard-pdf', $data)
+        $pdf = Pdf::loadView('reports.dashboard-pdf', $data + ['cauHinhWebsite' => $cauHinhWebsite])
             ->setPaper('a4', 'portrait')
             ->setOption('defaultFont', 'DejaVu Sans')
             ->setOption('isRemoteEnabled', false)
             ->setOption('margin-top', '10')
             ->setOption('margin-bottom', '15');
 
+        $this->drawPageNumbers($pdf);
+
         $filename = 'dashboard-' . now()->format('Ymd-His') . '.pdf';
         return $pdf->download($filename);
     }
 
+    /**
+     * Vẽ "Trang X / Y" lên mỗi trang. dompdf không tự thay thế token {PAGE_NUM}/{PAGE_COUNT}
+     * khi đặt trực tiếp trong HTML, phải gọi Canvas::page_text() sau khi render() xong.
+     */
+    private function drawPageNumbers(\Barryvdh\DomPDF\PDF $pdf): void
+    {
+        $pdf->render();
+
+        $dompdf   = $pdf->getDomPDF();
+        $canvas   = $dompdf->getCanvas();
+        $metrics  = $dompdf->getFontMetrics();
+        $font     = $metrics->getFont('DejaVu Sans', 'bold');
+        $text     = 'Trang {PAGE_NUM} / {PAGE_COUNT}';
+        $textSize = 8;
+        $width    = $metrics->getTextWidth($text, $font, $textSize);
+
+        $canvas->page_text(
+            ($canvas->get_width() - $width) / 2,
+            $canvas->get_height() - 30,
+            $text,
+            $font,
+            $textSize,
+            [0.29, 0.33, 0.41]
+        );
+    }
+
     public function exportExcel(Request $request)
     {
-        $filters  = $this->parseFilters($request);
-        $data     = $this->reportService->getData($filters);
-        $filename = 'dashboard-' . now()->format('Ymd-His') . '.xlsx';
+        $filters        = $this->parseFilters($request);
+        $data           = $this->reportService->getData($filters);
+        $cauHinhWebsite = $this->cauHinhWebsiteExportService->getInfo();
+        $filename       = 'dashboard-' . now()->format('Ymd-His') . '.xlsx';
 
-        return Excel::download(new DashboardExport($data), $filename);
+        return Excel::download(new DashboardExport($data, $cauHinhWebsite), $filename);
     }
 
     private function parseFilters(Request $request): array

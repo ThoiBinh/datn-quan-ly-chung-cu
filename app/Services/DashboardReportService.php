@@ -195,8 +195,8 @@ class DashboardReportService
             $result[] = [
                 'ten_phi'       => $phi->ten_phi_dich_vu,
                 'don_gia'       => (float) $phi->don_gia,
-                'loai_tinh_phi' => $phi->loaiTinhPhi?->ten_loai_tinh_phi ?? 'N/A',
-                'don_vi_tinh'   => $phi->donViTinh?->ten_don_vi_tinh ?? 'N/A',
+                'loai_tinh_phi' => $phi->loaiTinhPhi?->ten_loai ?? 'N/A',
+                'don_vi_tinh'   => $phi->donViTinh?->don_vi ?? 'N/A',
                 'so_can_ho'     => $soCanHo,
                 'doanh_thu'     => (float) $dtQuery->sum('ct.thanh_tien'),
             ];
