@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CauHinhWebsite;
 use Illuminate\Http\Request;
 
 class VnpayService
@@ -10,17 +11,31 @@ class VnpayService
     private string $hashSecret;
     private string $vnpayUrl;
     private string $returnUrl;
+    private bool $enabled;
 
     public function __construct()
     {
-        $this->tmnCode    = trim((string) config('vnpay.tmn_code', ''));
-        $this->hashSecret = trim((string) config('vnpay.hash_secret', ''));
-        $this->vnpayUrl   = trim((string) config('vnpay.url', ''));
-        $this->returnUrl  = trim((string) config('vnpay.return_url', ''));
+        $cauHinh = CauHinhWebsite::layNhom('payment');
+        $pick    = fn (string $key, $fallback) => (($cauHinh[$key] ?? '') !== '') ? $cauHinh[$key] : $fallback;
+
+        $this->tmnCode    = trim((string) $pick('vnp_tmn_code', config('vnpay.tmn_code', '')));
+        $this->hashSecret = trim((string) $pick('vnp_hash_secret', config('vnpay.hash_secret', '')));
+        $this->vnpayUrl   = trim((string) $pick('vnp_url', config('vnpay.url', '')));
+        $this->returnUrl  = trim((string) $pick('vnp_return_url', config('vnpay.return_url', '')));
+        $this->enabled     = $pick('vnp_enable', '0') === '1';
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
     }
 
     public function taoUrlThanhToan(string $txnRef, int $amount, string $orderInfo): string
     {
+        if (! $this->enabled) {
+            throw new \RuntimeException('Cổng thanh toán VNPay hiện đang tắt. Vui lòng liên hệ quản trị viên.');
+        }
+
         $vnp_Params = [
             'vnp_Version'    => '2.1.0',
             'vnp_Command'    => 'pay',

@@ -6,9 +6,11 @@ use App\Auth\CuDanUserProvider;
 use App\Auth\NhanVienUserProvider;
 use App\Hashing\Pbkdf2Hasher;
 use App\Models\NhanVien;
+use App\View\Composers\CauHinhWebsiteComposer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,5 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Auth::provider('nhanvien-eloquent', function ($app, array $config) {
             return new NhanVienUserProvider($app['hash'], $config['model']);
         });
+
+        View::composer(['layouts.admin', 'layouts.manager', 'layouts.resident', 'auth.login'], CauHinhWebsiteComposer::class);
     }
 }

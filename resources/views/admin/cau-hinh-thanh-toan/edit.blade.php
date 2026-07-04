@@ -6,8 +6,8 @@
 <div class="max-w-2xl">
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 class="font-semibold text-gray-700">Chỉnh sửa cấu hình</h3>
-            <span class="text-xs text-gray-400 font-mono">ID: {{ $cauHinhThanhToan->id }}</span>
+            <h3 class="font-semibold text-gray-700">{{ $cauHinhThanhToan->ten_thuoc_tinh }}</h3>
+            <span class="text-xs text-gray-400 font-mono">{{ $cauHinhThanhToan->ma_thuoc_tinh }}</span>
         </div>
         <form action="{{ route('admin.cau-hinh-thanh-toan.update', $cauHinhThanhToan) }}" method="POST" class="p-6 space-y-5">
             @csrf @method('PUT')
@@ -17,40 +17,40 @@
             </div>
             @endif
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Loại phương thức <span class="text-red-500">*</span></label>
-                <input type="text" name="loai_phuong_thuc" value="{{ old('loai_phuong_thuc', $cauHinhThanhToan->loai_phuong_thuc) }}"
-                       list="ds-loai" required
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                <datalist id="ds-loai">
-                    @foreach($dsLoai as $loai)
-                    <option value="{{ $loai }}">
-                    @endforeach
-                </datalist>
-            </div>
+            @if($cauHinhThanhToan->mo_ta)
+            <p class="text-sm text-gray-500">{{ $cauHinhThanhToan->mo_ta }}</p>
+            @endif
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Ngân hàng / Nhà cung cấp</label>
-                <input type="text" name="ten_nha_cung_cap" value="{{ old('ten_nha_cung_cap', $cauHinhThanhToan->ten_nha_cung_cap) }}"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Giá trị</label>
+                @if($cauHinhThanhToan->kieu_du_lieu === 'boolean')
+                <label class="inline-flex items-center gap-2 mt-1">
+                    <input type="hidden" name="gia_tri" value="0">
+                    <input type="checkbox" name="gia_tri" value="1" {{ old('gia_tri', $cauHinhThanhToan->gia_tri) == '1' ? 'checked' : '' }}
+                           class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm text-gray-600">Bật</span>
+                </label>
+                @elseif($cauHinhThanhToan->kieu_du_lieu === 'textarea')
+                <textarea name="gia_tri" rows="3"
+                          placeholder="{{ $cauHinhThanhToan->placeholder }}"
+                          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('gia_tri', $cauHinhThanhToan->gia_tri) }}</textarea>
+                @else
+                <input type="text" name="gia_tri" value="{{ old('gia_tri', $cauHinhThanhToan->gia_tri) }}"
+                       placeholder="{{ $cauHinhThanhToan->placeholder }}"
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                @endif
+                @if($cauHinhThanhToan->la_bao_mat)
+                <p class="mt-1 text-xs text-amber-600">Trường bảo mật — giá trị sẽ được ẩn bớt khi hiển thị.</p>
+                @endif
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Số tài khoản / Định danh thu hưởng</label>
-                <input type="text" name="dinh_danh_thu_huong" value="{{ old('dinh_danh_thu_huong', $cauHinhThanhToan->dinh_danh_thu_huong) }}"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"/>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Mã nhận diện (QR Code)</label>
-                <input type="text" name="ma_nhan_dien" value="{{ old('ma_nhan_dien', $cauHinhThanhToan->ma_nhan_dien) }}"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"/>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Chủ tài khoản</label>
-                <input type="text" name="ten_chu_tai_khoan" value="{{ old('ten_chu_tai_khoan', $cauHinhThanhToan->ten_chu_tai_khoan) }}"
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            <div class="flex items-center gap-2">
+                <label class="inline-flex items-center gap-2">
+                    <input type="hidden" name="trang_thai" value="0">
+                    <input type="checkbox" name="trang_thai" value="1" {{ old('trang_thai', $cauHinhThanhToan->trang_thai) ? 'checked' : '' }}
+                           class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm text-gray-700">Kích hoạt cấu hình này</span>
+                </label>
             </div>
 
             <div class="flex gap-3 pt-2">

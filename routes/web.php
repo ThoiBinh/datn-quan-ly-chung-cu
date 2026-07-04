@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Route;
 
 // Trang chủ
 Route::get('/', fn() => view('home', [
-    'dsBangTin' => \App\Models\BangTin::latest()->get(),
+    'dsBangTin'      => \App\Models\BangTin::latest()->take(6)->get(),
+    'cauHinhWebsite' => \App\Models\CauHinhWebsite::where('trang_thai', 1)->get()->keyBy('ma_thuoc_tinh'),
 ]))->name('home');
 
 // Auth
@@ -110,6 +111,13 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['cau-hinh-thanh-toan' => 'cauHinhThanhToan']);
     Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Admin\CauHinhThanhToanController::class, 'toggleStatus'])
         ->name('cau-hinh-thanh-toan.toggle-status');
+
+    // Quản lý cấu hình website
+    Route::resource('cau-hinh-website', \App\Http\Controllers\Admin\CauHinhWebsiteController::class)
+        ->except(['create', 'store', 'destroy'])
+        ->parameters(['cau-hinh-website' => 'cauHinhWebsite']);
+    Route::patch('cau-hinh-website/{cauHinhWebsite}/toggle-status', [\App\Http\Controllers\Admin\CauHinhWebsiteController::class, 'toggleStatus'])
+        ->name('cau-hinh-website.toggle-status');
 
     // Quản lý thuộc tính
     Route::resource('thuoc-tinh', \App\Http\Controllers\Admin\ThuocTinhController::class)
@@ -215,6 +223,13 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
         ->parameters(['cau-hinh-thanh-toan' => 'cauHinhThanhToan']);
     Route::patch('cau-hinh-thanh-toan/{cauHinhThanhToan}/toggle-status', [\App\Http\Controllers\Manager\CauHinhThanhToanController::class, 'toggleStatus'])
         ->name('cau-hinh-thanh-toan.toggle-status');
+
+    // Cấu hình website
+    Route::resource('cau-hinh-website', \App\Http\Controllers\Manager\CauHinhWebsiteController::class)
+        ->except(['create', 'store', 'destroy'])
+        ->parameters(['cau-hinh-website' => 'cauHinhWebsite']);
+    Route::patch('cau-hinh-website/{cauHinhWebsite}/toggle-status', [\App\Http\Controllers\Manager\CauHinhWebsiteController::class, 'toggleStatus'])
+        ->name('cau-hinh-website.toggle-status');
 
     // Quản lý thuộc tính
     Route::resource('thuoc-tinh', \App\Http\Controllers\Manager\ThuocTinhController::class)

@@ -39,18 +39,24 @@
         <!-- Logo -->
         <div class="flex-shrink-0 p-4">
             <div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 p-4 ring-1 ring-white/5">
-                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-950/50">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M13.5 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21"/>
-                    </svg>
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-950/50">
+                    @if($logoWebsite)
+                        <img src="{{ $logoWebsite }}" alt="{{ $tenChungCu }}" class="h-11 w-11 rounded-xl object-cover">
+                    @else
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M13.5 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21"/>
+                        </svg>
+                    @endif
                 </div>
                 <div x-show="sidebarOpen"
                      x-transition:enter="transition ease-out duration-200 delay-100"
                      x-transition:enter-start="opacity-0"
                      x-transition:enter-end="opacity-100"
                      class="min-w-0 overflow-hidden">
-                    <p class="truncate text-sm font-bold leading-tight text-white">Smart Apartment</p>
-                    <p class="truncate text-[11px] text-slate-400">Apartment Management System</p>
+                    <p class="truncate text-sm font-bold leading-tight text-white">{{ $tenChungCu }}</p>
+                    @if($moTaWebsite)
+                        <p class="truncate text-[11px] text-slate-400">{{ $moTaWebsite }}</p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -81,7 +87,7 @@
         </div>
 
         <!-- Menu -->
-        <nav class="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-3">
+        <nav id="sidebarNav" class="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-3">
             @php
                 $navGroups = [
                     'TỔNG QUAN' => [
@@ -110,6 +116,7 @@
                     ],
                     'HỆ THỐNG' => [
                         ['route' => 'manager.cau-hinh-thanh-toan.index', 'label' => 'Cấu hình thanh toán', 'icon' => 'settings', 'active' => 'manager.cau-hinh-thanh-toan.*'],
+                        ['route' => 'manager.cau-hinh-website.index', 'label' => 'Cấu hình website', 'icon' => 'settings', 'active' => 'manager.cau-hinh-website.*'],
                     ],
                 ];
                 $icons = [
@@ -172,6 +179,27 @@
             @endforeach
         </nav>
 
+        <script>
+            (function () {
+                var sidebarNav = document.getElementById('sidebarNav');
+                if (!sidebarNav) return;
+                var storageKey = 'manager_sidebar_scroll_top';
+                var saved = sessionStorage.getItem(storageKey);
+                if (saved !== null) {
+                    sidebarNav.scrollTop = parseInt(saved, 10) || 0;
+                }
+                var ticking = false;
+                sidebarNav.addEventListener('scroll', function () {
+                    if (ticking) return;
+                    ticking = true;
+                    window.requestAnimationFrame(function () {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                        ticking = false;
+                    });
+                }, { passive: true });
+            })();
+        </script>
+
         <!-- Footer -->
         <div class="flex-shrink-0 p-3">
             <div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 p-3 ring-1 ring-white/5">
@@ -185,7 +213,7 @@
                      x-transition:enter-start="opacity-0"
                      x-transition:enter-end="opacity-100"
                      class="min-w-0 overflow-hidden">
-                    <p class="truncate text-xs font-semibold text-white">Smart Apartment</p>
+                    <p class="truncate text-xs font-semibold text-white">{{ $tenChungCu }}</p>
                     <p class="truncate text-[11px] text-slate-400">v1.0.0 &middot; Build 2026</p>
                 </div>
             </div>

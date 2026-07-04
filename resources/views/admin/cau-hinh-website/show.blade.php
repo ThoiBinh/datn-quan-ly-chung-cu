@@ -1,28 +1,29 @@
 @extends('layouts.admin')
-@section('title', 'Chi tiết cấu hình thanh toán')
-@section('page-title', 'Chi tiết cấu hình thanh toán')
+@section('title', 'Chi tiết cấu hình website')
+@section('page-title', 'Chi tiết cấu hình website')
 
 @section('content')
-<div class="max-w-2xl space-y-5" x-data="{ confirmToggle: false }">
+<div class="max-w-3xl space-y-5" x-data="{ confirmToggle: false }">
 
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div class="p-6 flex items-start gap-5">
-            <div class="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center {{ $cauHinhThanhToan->trang_thai ? 'bg-emerald-100' : 'bg-gray-100' }}">
-                <svg class="w-7 h-7 {{ $cauHinhThanhToan->trang_thai ? 'text-emerald-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center {{ $cauHinhWebsite->trang_thai ? 'bg-emerald-100' : 'bg-gray-100' }}">
+                @if(in_array($cauHinhWebsite->kieu_du_lieu, ['image','file']) && $cauHinhWebsite->gia_tri_url)
+                <img src="{{ $cauHinhWebsite->gia_tri_url }}" alt="" class="w-14 h-14 rounded-xl object-cover">
+                @else
+                <svg class="w-7 h-7 {{ $cauHinhWebsite->trang_thai ? 'text-emerald-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                 </svg>
+                @endif
             </div>
             <div class="flex-1">
                 <div class="flex flex-wrap items-center gap-2 mb-1">
-                    <h2 class="text-xl font-bold text-gray-800">{{ $cauHinhThanhToan->ten_thuoc_tinh }}</h2>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 font-mono">
-                        {{ $cauHinhThanhToan->ma_thuoc_tinh }}
-                    </span>
-                    @if($cauHinhThanhToan->la_bao_mat)
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Bảo mật</span>
-                    @endif
+                    <h2 class="text-xl font-bold text-gray-800">{{ $cauHinhWebsite->ten_thuoc_tinh }}</h2>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">{{ $cauHinhWebsite->ten_nhom }}</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ $cauHinhWebsite->kieu_du_lieu }}</span>
                 </div>
-                @if($cauHinhThanhToan->trang_thai)
+                <p class="text-xs text-gray-400 font-mono mb-1">{{ $cauHinhWebsite->ma_thuoc_tinh }}</p>
+                @if($cauHinhWebsite->trang_thai)
                 <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Đang hoạt động
                 </span>
@@ -35,15 +36,14 @@
         </div>
 
         <div class="px-6 py-4 border-t border-gray-100 flex flex-wrap gap-3">
-            <a href="{{ route('admin.cau-hinh-thanh-toan.edit', $cauHinhThanhToan) }}"
+            <a href="{{ route('admin.cau-hinh-website.edit', $cauHinhWebsite) }}"
                class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Chỉnh sửa
             </a>
-            @if($cauHinhThanhToan->duoc_chinh_sua)
             <button type="button" @click="confirmToggle = true"
-                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors {{ $cauHinhThanhToan->trang_thai ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white' }}">
-                @if($cauHinhThanhToan->trang_thai)
+                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors {{ $cauHinhWebsite->trang_thai ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white' }}">
+                @if($cauHinhWebsite->trang_thai)
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636"/></svg>
                 Vô hiệu hóa
                 @else
@@ -51,8 +51,7 @@
                 Kích hoạt
                 @endif
             </button>
-            @endif
-            <a href="{{ route('admin.cau-hinh-thanh-toan.index') }}"
+            <a href="{{ route('admin.cau-hinh-website.index') }}"
                class="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Quay lại
@@ -68,20 +67,37 @@
         <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             @php
             $fields = [
-                ['label' => 'Giá trị', 'value' => $cauHinhThanhToan->gia_tri_hien_thi, 'mono' => true],
-                ['label' => 'Kiểu dữ liệu', 'value' => $cauHinhThanhToan->kieu_du_lieu],
-                ['label' => 'Nhóm', 'value' => $cauHinhThanhToan->ten_nhom],
-                ['label' => 'Mô tả', 'value' => $cauHinhThanhToan->mo_ta],
-                ['label' => 'Ngày tạo', 'value' => $cauHinhThanhToan->created_at?->format('d/m/Y H:i')],
-                ['label' => 'Cập nhật lần cuối', 'value' => $cauHinhThanhToan->updated_at?->format('d/m/Y H:i')],
+                ['label' => 'Mã thuộc tính', 'value' => $cauHinhWebsite->ma_thuoc_tinh, 'mono' => true],
+                ['label' => 'Tên thuộc tính', 'value' => $cauHinhWebsite->ten_thuoc_tinh],
+                ['label' => 'Nhóm', 'value' => $cauHinhWebsite->ten_nhom],
+                ['label' => 'Kiểu dữ liệu', 'value' => $cauHinhWebsite->kieu_du_lieu],
+                ['label' => 'Giá trị', 'value' => $cauHinhWebsite->gia_tri_hien_thi, 'mono' => true, 'full' => true],
+                ['label' => 'Mô tả', 'value' => $cauHinhWebsite->mo_ta, 'full' => true],
+                ['label' => 'Placeholder', 'value' => $cauHinhWebsite->placeholder],
+                ['label' => 'Thứ tự hiển thị', 'value' => $cauHinhWebsite->thu_tu],
+                ['label' => 'Bảo mật', 'value' => $cauHinhWebsite->la_bao_mat ? 'Có' : 'Không'],
+                ['label' => 'Được chỉnh sửa', 'value' => $cauHinhWebsite->duoc_chinh_sua ? 'Có' : 'Không'],
+                ['label' => 'Ngày tạo', 'value' => $cauHinhWebsite->created_at?->format('d/m/Y H:i')],
+                ['label' => 'Cập nhật lần cuối', 'value' => $cauHinhWebsite->updated_at?->format('d/m/Y H:i')],
             ];
             @endphp
             @foreach($fields as $f)
-            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 {{ ($f['full'] ?? false) ? 'sm:col-span-2' : '' }}">
                 <dt class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">{{ $f['label'] }}</dt>
                 <dd class="text-sm font-semibold text-gray-700 break-all {{ ($f['mono'] ?? false) ? 'font-mono' : '' }}">{{ $f['value'] ?? '—' }}</dd>
             </div>
             @endforeach
+
+            @if(in_array($cauHinhWebsite->kieu_du_lieu, ['image','file']) && $cauHinhWebsite->gia_tri_url)
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 sm:col-span-2">
+                <dt class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Xem trước</dt>
+                @if($cauHinhWebsite->kieu_du_lieu === 'image')
+                <img src="{{ $cauHinhWebsite->gia_tri_url }}" alt="" class="max-h-40 rounded-lg border border-gray-200">
+                @else
+                <a href="{{ $cauHinhWebsite->gia_tri_url }}" target="_blank" class="text-sm text-blue-600 hover:underline">Tải file</a>
+                @endif
+            </div>
+            @endif
         </div>
     </div>
 
@@ -94,7 +110,7 @@
          @click.self="confirmToggle = false">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6" @click.stop>
             <div class="text-center mb-5">
-                @if($cauHinhThanhToan->trang_thai)
+                @if($cauHinhWebsite->trang_thai)
                 <div class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636"/></svg>
                 </div>
@@ -110,9 +126,9 @@
             </div>
             <div class="flex gap-3">
                 <button @click="confirmToggle = false" class="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-xl hover:bg-gray-50">Hủy</button>
-                <form action="{{ route('admin.cau-hinh-thanh-toan.toggle-status', $cauHinhThanhToan) }}" method="POST" class="flex-1">
+                <form action="{{ route('admin.cau-hinh-website.toggle-status', $cauHinhWebsite) }}" method="POST" class="flex-1">
                     @csrf @method('PATCH')
-                    @if($cauHinhThanhToan->trang_thai)
+                    @if($cauHinhWebsite->trang_thai)
                     <button type="submit" class="block w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-colors">Vô hiệu hóa</button>
                     @else
                     <button type="submit" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">Kích hoạt</button>

@@ -7,6 +7,7 @@
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="font-semibold text-gray-700">Thông tin cấu hình</h3>
+            <p class="text-xs text-gray-400 mt-1">Thêm một thuộc tính thanh toán mới (nhóm: Thanh toán).</p>
         </div>
         <form action="{{ route('admin.cau-hinh-thanh-toan.store') }}" method="POST" class="p-6 space-y-5">
             @csrf
@@ -17,45 +18,61 @@
             @endif
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Loại phương thức <span class="text-red-500">*</span></label>
-                <input type="text" name="loai_phuong_thuc" value="{{ old('loai_phuong_thuc') }}"
-                       list="ds-loai" required
-                       placeholder="VD: Chuyển khoản, Ví điện tử, QR Banking..."
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Mã thuộc tính <span class="text-red-500">*</span></label>
+                <input type="text" name="ma_thuoc_tinh" value="{{ old('ma_thuoc_tinh') }}" required
+                       placeholder="VD: momo_partner_code, vnp_tmn_code, qr_ngan_hang..."
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <p class="mt-1 text-xs text-gray-400">Chỉ gồm chữ thường, số, dấu gạch dưới. Không thể đổi sau khi tạo.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tên thuộc tính <span class="text-red-500">*</span></label>
+                <input type="text" name="ten_thuoc_tinh" value="{{ old('ten_thuoc_tinh') }}" required
+                       placeholder="VD: MoMo Partner Code"
                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                <datalist id="ds-loai">
-                    @foreach($dsLoai as $loai)
-                    <option value="{{ $loai }}">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Kiểu dữ liệu <span class="text-red-500">*</span></label>
+                <select name="kieu_du_lieu" required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    @foreach(\App\Models\CauHinhWebsite::KIEU_DU_LIEU_OPTIONS as $kieu)
+                    <option value="{{ $kieu }}" {{ old('kieu_du_lieu') === $kieu ? 'selected' : '' }}>{{ $kieu }}</option>
                     @endforeach
-                </datalist>
-                <p class="mt-1 text-xs text-gray-400">Gõ mới hoặc chọn từ danh sách có sẵn</p>
+                </select>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Ngân hàng / Nhà cung cấp</label>
-                <input type="text" name="ten_nha_cung_cap" value="{{ old('ten_nha_cung_cap') }}"
-                       placeholder="VD: Vietcombank, MoMo, ZaloPay..."
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Giá trị</label>
+                <input type="text" name="gia_tri" value="{{ old('gia_tri') }}"
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Mô tả</label>
+                <input type="text" name="mo_ta" value="{{ old('mo_ta') }}"
                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Số tài khoản / Định danh thu hưởng</label>
-                <input type="text" name="dinh_danh_thu_huong" value="{{ old('dinh_danh_thu_huong') }}"
-                       placeholder="Số tài khoản, số điện thoại, email..."
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"/>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Mã nhận diện (QR Code / Mã tham chiếu)</label>
-                <input type="text" name="ma_nhan_dien" value="{{ old('ma_nhan_dien') }}"
-                       placeholder="Mã QR, mã tham chiếu..."
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"/>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Chủ tài khoản</label>
-                <input type="text" name="ten_chu_tai_khoan" value="{{ old('ten_chu_tai_khoan') }}"
-                       placeholder="Tên chủ tài khoản..."
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Thứ tự</label>
+                    <input type="number" name="thu_tu" value="{{ old('thu_tu', 0) }}" min="0"
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                </div>
+                <div class="flex items-end gap-4 pb-1">
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" name="la_bao_mat" value="1" {{ old('la_bao_mat') ? 'checked' : '' }}
+                               class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">Bảo mật</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2">
+                        <input type="hidden" name="trang_thai" value="0">
+                        <input type="checkbox" name="trang_thai" value="1" {{ old('trang_thai', true) ? 'checked' : '' }}
+                               class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">Kích hoạt</span>
+                    </label>
+                </div>
             </div>
 
             <div class="flex gap-3 pt-2">
