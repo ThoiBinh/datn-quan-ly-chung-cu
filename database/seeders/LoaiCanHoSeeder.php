@@ -17,6 +17,10 @@ class LoaiCanHoSeeder extends Seeder
             ['ten_loai_can_ho' => 'Penthouse'],
         ];
 
-        DB::table('loai_can_ho')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            if (!DB::table('loai_can_ho')->where('ten_loai_can_ho', $item['ten_loai_can_ho'])->exists()) {
+                DB::table('loai_can_ho')->insert($item);
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@ use App\Models\LichSuThanhToan;
 use App\Models\NhanVien;
 use App\Models\YeuCauCuDan;
 use App\Services\AuditLogService;
+use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -20,6 +21,8 @@ class NhanVienController extends Controller
 
     public function index(Request $request)
     {
+        NhanVienTrangThaiService::syncExpired();
+
         $query = NhanVien::with('chucVu')
             ->withCount(['hoaDon', 'yeuCauXuLy', 'thongBao', 'bangTin']);
 
@@ -90,6 +93,8 @@ class NhanVienController extends Controller
 
     public function show(NhanVien $nhanVien)
     {
+        NhanVienTrangThaiService::syncOne($nhanVien);
+
         $nhanVien->load([
             'chucVu',
             'hoaDon'        => fn($q) => $q->with('canHo.toaNha')->latest('createdAt')->limit(50),
@@ -109,6 +114,8 @@ class NhanVienController extends Controller
 
     public function edit(NhanVien $nhanVien)
     {
+        NhanVienTrangThaiService::syncOne($nhanVien);
+
         $nhanVien->load('chucVu');
         $dsChucVu = ChucVu::orderBy('chuc_vu')->get();
         return view('manager.nhan-vien.edit', compact('nhanVien', 'dsChucVu'));
@@ -152,11 +159,11 @@ class NhanVienController extends Controller
         }
 
         $old = $nhanVien->toArray();
-        $nhanVien->update(['trang_thai' => 0, 'nguoi_cap_nhat' => auth('nhanvien')->id()]);
-        AuditLogService::log('UPDATE', 'nhan_vien', $nhanVien->id, $old, ['trang_thai' => 0]);
+        $nhanVien->delete();
+        AuditLogService::log('DELETE', 'nhan_vien', $nhanVien->id, $old, null);
 
         return redirect()->route('manager.nhan-vien.index')
-            ->with('success', "Đã vô hiệu hóa tài khoản «{$nhanVien->ho_ten}».");
+            ->with('success', "Đã xóa nhân viên «{$nhanVien->ho_ten}».");
     }
 
     /**

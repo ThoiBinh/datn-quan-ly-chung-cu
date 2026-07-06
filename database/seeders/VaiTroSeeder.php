@@ -15,6 +15,10 @@ class VaiTroSeeder extends Seeder
             ['vai_tro' => 'Người thuê'],
         ];
 
-        DB::table('vai_tro')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            if (!DB::table('vai_tro')->where('vai_tro', $item['vai_tro'])->exists()) {
+                DB::table('vai_tro')->insert($item);
+            }
+        }
     }
 }

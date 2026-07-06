@@ -4,13 +4,17 @@ namespace App\Models;
 
 use App\Models\NhanVien;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HoaDon extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'hoa_don';
 
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
+    const DELETED_AT = 'deletedAt';
 
     protected $fillable = [
         'ma_thanh_toan', 'can_ho', 'thang', 'nam', 'tong_tien',
@@ -31,7 +35,7 @@ class HoaDon extends Model
 
     public function canHo()
     {
-        return $this->belongsTo(CanHo::class, 'can_ho');
+        return $this->belongsTo(CanHo::class, 'can_ho')->withTrashed();
     }
 
     public function chiTiet()
@@ -46,7 +50,7 @@ class HoaDon extends Model
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 
     public function conNo(): float

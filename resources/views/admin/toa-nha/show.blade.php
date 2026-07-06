@@ -51,6 +51,19 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Quay lại
             </a>
+            @if($toaNha->canHo->count() === 0)
+            <button type="button" x-data @click="$dispatch('open-delete', { url: '{{ route('admin.toa-nha.destroy', $toaNha) }}', name: '{{ addslashes($toaNha->ten_toa_nha) }}' })"
+                    class="flex items-center gap-2 px-4 py-2 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-auto">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Xóa
+            </button>
+            @else
+            <span title="Không thể xóa — đang có căn hộ"
+                  class="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-slate-700 text-gray-300 dark:text-slate-600 text-sm font-medium rounded-lg cursor-not-allowed ml-auto">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Xóa
+            </span>
+            @endif
         </div>
     </div>
 
@@ -143,6 +156,36 @@
         </div>
         @endif
     </div>
+
+    {{-- Modal xóa --}}
+    <template x-teleport="body">
+    <div x-data="{ open: false, url: '', name: '' }"
+         @open-delete.window="open = true; url = $event.detail.url; name = $event.detail.name"
+         x-show="open"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+         @click.self="open = false">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6" @click.stop>
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <p class="font-semibold text-gray-800 dark:text-white">Xóa tòa nhà?</p>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Tòa nhà <span class="font-medium text-gray-700 dark:text-slate-200" x-text="`«${name}»`"></span> sẽ được chuyển vào thùng rác.</p>
+            </div>
+            <div class="flex gap-3">
+                <button @click="open = false" class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700">Hủy</button>
+                <form :action="url" method="POST" class="flex-1">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="block w-full py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-colors">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    </template>
 
 </div>
 @endsection

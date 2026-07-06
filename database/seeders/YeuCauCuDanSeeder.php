@@ -9,6 +9,12 @@ class YeuCauCuDanSeeder extends Seeder
 {
     public function run(): void
     {
+        // Dữ liệu demo được sinh ngẫu nhiên (ngay_gui không xác định), không có khóa tự
+        // nhiên để đối chiếu idempotent -> bỏ qua nếu bảng đã có dữ liệu.
+        if (DB::table('yeu_cau_cu_dan')->exists()) {
+            return;
+        }
+
         // loai_yeu_cau: 1=Sửa chữa, 2=Khiếu nại, 3=Hỏi đáp, 4=Đăng ký phương tiện
         // muc_do_uu_tien: 1=Thấp, 2=Trung bình, 3=Cao
         // trang_thai: 1=Chờ xử lý, 2=Đang xử lý, 3=Hoàn thành, 4=Từ chối

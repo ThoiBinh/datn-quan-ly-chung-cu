@@ -10,11 +10,18 @@ class ToaNhaSeeder extends Seeder
     public function run(): void
     {
         $data = [
-            ['ten_toa_nha' => 'Tòa A', 'dia_chi' => '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', 'so_tang' => 20, 'createdAt' => now(), 'updatedAt' => now()],
-            ['ten_toa_nha' => 'Tòa B', 'dia_chi' => '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', 'so_tang' => 25, 'createdAt' => now(), 'updatedAt' => now()],
-            ['ten_toa_nha' => 'Tòa C', 'dia_chi' => '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', 'so_tang' => 18, 'createdAt' => now(), 'updatedAt' => now()],
+            ['ten_toa_nha' => 'Tòa A', 'dia_chi' => '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', 'so_tang' => 20],
+            ['ten_toa_nha' => 'Tòa B', 'dia_chi' => '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', 'so_tang' => 25],
+            ['ten_toa_nha' => 'Tòa C', 'dia_chi' => '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', 'so_tang' => 18],
         ];
 
-        DB::table('toa_nha')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            if (!DB::table('toa_nha')->where('ten_toa_nha', $item['ten_toa_nha'])->exists()) {
+                DB::table('toa_nha')->insert(array_merge($item, [
+                    'createdAt' => now(),
+                    'updatedAt' => now(),
+                ]));
+            }
+        }
     }
 }

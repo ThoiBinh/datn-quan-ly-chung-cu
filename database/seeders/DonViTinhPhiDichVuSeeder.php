@@ -17,6 +17,10 @@ class DonViTinhPhiDichVuSeeder extends Seeder
             ['don_vi' => 'm²'],
         ];
 
-        DB::table('don_vi_tinh_phi_dich_vu')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            if (!DB::table('don_vi_tinh_phi_dich_vu')->where('don_vi', $item['don_vi'])->exists()) {
+                DB::table('don_vi_tinh_phi_dich_vu')->insert($item);
+            }
+        }
     }
 }

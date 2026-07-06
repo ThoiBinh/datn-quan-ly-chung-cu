@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LoaiCanHo;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LoaiCanHoController extends Controller
 {
@@ -48,7 +49,10 @@ class LoaiCanHoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ten_loai_can_ho' => 'required|string|max:100|unique:loai_can_ho,ten_loai_can_ho',
+            'ten_loai_can_ho' => [
+                'required', 'string', 'max:100',
+                Rule::unique('loai_can_ho', 'ten_loai_can_ho')->whereNull('deletedAt'),
+            ],
         ], [
             'ten_loai_can_ho.required' => 'Vui lòng nhập tên loại căn hộ.',
             'ten_loai_can_ho.unique'   => 'Tên loại căn hộ đã tồn tại.',
@@ -76,7 +80,10 @@ class LoaiCanHoController extends Controller
     public function update(Request $request, LoaiCanHo $loaiCanHo)
     {
         $request->validate([
-            'ten_loai_can_ho' => "required|string|max:100|unique:loai_can_ho,ten_loai_can_ho,{$loaiCanHo->id}",
+            'ten_loai_can_ho' => [
+                'required', 'string', 'max:100',
+                Rule::unique('loai_can_ho', 'ten_loai_can_ho')->whereNull('deletedAt')->ignore($loaiCanHo->id),
+            ],
         ], [
             'ten_loai_can_ho.required' => 'Vui lòng nhập tên loại căn hộ.',
             'ten_loai_can_ho.unique'   => 'Tên loại căn hộ đã tồn tại.',

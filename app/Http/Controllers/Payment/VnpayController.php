@@ -81,7 +81,7 @@ class VnpayController extends Controller
     }
 
     /**
-     * POST /payment/vnpay/ipn
+     * GET /payment/vnpay/ipn
      *
      * VNPay gọi server-to-server để thông báo kết quả.
      * Đây là nơi DUY NHẤT ghi nhận thanh toán vào DB.
@@ -135,17 +135,28 @@ class VnpayController extends Controller
 
         // 5. Kiểm tra amount hợp lệ (VNPay gửi amount * 100)
         $amount = (float) ($data['vnp_Amount'] ?? 0) / 100;
-        if ($amount <= 0) {
-            Log::error('[VNPay IPN] Invalid amount', ['amount' => $amount]);
-            return response()->json(['RspCode' => '04', 'Message' => 'Invalid Amount'], 200);
-        }
-
         $transactionNo = (string) ($data['vnp_TransactionNo'] ?? '');
 
-        // 6. Idempotency — tránh ghi trùng nếu VNPay gửi lại IPN
-        if (LichSuThanhToan::where('ma_giao_dich', $transactionNo)->exists()) {
+        // 6. Idempotency — nếu giao dịch đã từng ghi nhận, đối chiếu amount để
+        // phân biệt "VNPay gửi lại IPN y hệt" (khớp amount) với "amount bị thay đổi" (giả mạo)
+        $existing = LichSuThanhToan::where('ma_giao_dich', $transactionNo)->first();
+        if ($existing) {
+            if (abs((float) $existing->so_tien - $amount) > 0.01) {
+                Log::warning('[VNPay IPN] Amount mismatch for already-processed transaction', [
+                    'transactionNo' => $transactionNo,
+                    'recorded'      => $existing->so_tien,
+                    'received'      => $amount,
+                ]);
+                return response()->json(['RspCode' => '04', 'Message' => 'Invalid Amount'], 200);
+            }
             Log::info('[VNPay IPN] Already processed, skip', ['transactionNo' => $transactionNo]);
             return response()->json(['RspCode' => '02', 'Message' => 'Order Already Confirmed'], 200);
+        }
+
+        $conNo = max(0, (float) $hoaDon->tong_tien - (float) $hoaDon->so_tien_da_thanh_toan);
+        if ($amount <= 0 || $amount > $conNo + 0.01) {
+            Log::error('[VNPay IPN] Invalid amount', ['amount' => $amount, 'conNo' => $conNo]);
+            return response()->json(['RspCode' => '04', 'Message' => 'Invalid Amount'], 200);
         }
 
         // 7. Ghi nhận thanh toán

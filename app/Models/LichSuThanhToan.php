@@ -22,7 +22,7 @@ class LichSuThanhToan extends Model
 
     public function hoaDon()
     {
-        return $this->belongsTo(HoaDon::class, 'hoa_don');
+        return $this->belongsTo(HoaDon::class, 'hoa_don')->withTrashed();
     }
 
     public function nguoiThanhToan()
@@ -32,6 +32,6 @@ class LichSuThanhToan extends Model
 
     public function nguonTao()
     {
-        return $this->belongsTo(NguonTao::class, 'nguon_tao');
+        return $this->belongsTo(NguonTao::class, 'nguon_tao')->withTrashed();
     }
 }

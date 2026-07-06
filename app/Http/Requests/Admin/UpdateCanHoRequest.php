@@ -22,6 +22,7 @@ class UpdateCanHoRequest extends FormRequest
                 'required', 'string', 'max:50',
                 Rule::unique('can_ho', 'so_can_ho')
                     ->where(fn ($q) => $q->where('toa_nha', $this->input('toa_nha')))
+                    ->whereNull('deletedAt')
                     ->ignore($canHoId),
             ],
             'tang'                 => 'required|integer|min:1',

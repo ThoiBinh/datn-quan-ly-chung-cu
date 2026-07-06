@@ -23,6 +23,6 @@ class ChiTietHoaDon extends Model
 
     public function hoaDon()
     {
-        return $this->belongsTo(HoaDon::class, 'hoa_don');
+        return $this->belongsTo(HoaDon::class, 'hoa_don')->withTrashed();
     }
 }

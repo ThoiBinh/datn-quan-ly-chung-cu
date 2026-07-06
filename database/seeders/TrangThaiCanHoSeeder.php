@@ -16,6 +16,10 @@ class TrangThaiCanHoSeeder extends Seeder
             ['ten_trang_thai' => 'Đã bàn giao'],
         ];
 
-        DB::table('trang_thai_can_ho')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            if (!DB::table('trang_thai_can_ho')->where('ten_trang_thai', $item['ten_trang_thai'])->exists()) {
+                DB::table('trang_thai_can_ho')->insert($item);
+            }
+        }
     }
 }

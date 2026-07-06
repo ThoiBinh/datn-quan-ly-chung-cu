@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LoaiPhuongTien;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LoaiPhuongTienController extends Controller
 {
@@ -48,7 +49,10 @@ class LoaiPhuongTienController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ten_loai_phuong_tien' => 'required|string|max:100|unique:loai_phuong_tien,ten_loai_phuong_tien',
+            'ten_loai_phuong_tien' => [
+                'required', 'string', 'max:100',
+                Rule::unique('loai_phuong_tien', 'ten_loai_phuong_tien')->whereNull('deletedAt'),
+            ],
         ], [
             'ten_loai_phuong_tien.required' => 'Vui lòng nhập tên loại phương tiện.',
             'ten_loai_phuong_tien.unique'   => 'Tên loại phương tiện đã tồn tại.',
@@ -76,7 +80,10 @@ class LoaiPhuongTienController extends Controller
     public function update(Request $request, LoaiPhuongTien $loaiPhuongTien)
     {
         $request->validate([
-            'ten_loai_phuong_tien' => "required|string|max:100|unique:loai_phuong_tien,ten_loai_phuong_tien,{$loaiPhuongTien->id}",
+            'ten_loai_phuong_tien' => [
+                'required', 'string', 'max:100',
+                Rule::unique('loai_phuong_tien', 'ten_loai_phuong_tien')->whereNull('deletedAt')->ignore($loaiPhuongTien->id),
+            ],
         ], [
             'ten_loai_phuong_tien.required' => 'Vui lòng nhập tên loại phương tiện.',
             'ten_loai_phuong_tien.unique'   => 'Tên loại phương tiện đã tồn tại.',

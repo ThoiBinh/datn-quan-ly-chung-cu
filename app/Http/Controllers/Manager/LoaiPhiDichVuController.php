@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LoaiPhiDichVu;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LoaiPhiDichVuController extends Controller
 {
@@ -48,7 +49,10 @@ class LoaiPhiDichVuController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ten_loai_phi_dich_vu' => 'required|string|max:150|unique:loai_phi_dich_vu,ten_loai_phi_dich_vu',
+            'ten_loai_phi_dich_vu' => [
+                'required', 'string', 'max:150',
+                Rule::unique('loai_phi_dich_vu', 'ten_loai_phi_dich_vu')->whereNull('deletedAt'),
+            ],
         ], [
             'ten_loai_phi_dich_vu.required' => 'Vui lòng nhập tên loại phí dịch vụ.',
             'ten_loai_phi_dich_vu.unique'   => 'Tên loại phí dịch vụ đã tồn tại.',
@@ -81,7 +85,10 @@ class LoaiPhiDichVuController extends Controller
     public function update(Request $request, LoaiPhiDichVu $loaiPhiDichVu)
     {
         $request->validate([
-            'ten_loai_phi_dich_vu' => "required|string|max:150|unique:loai_phi_dich_vu,ten_loai_phi_dich_vu,{$loaiPhiDichVu->id}",
+            'ten_loai_phi_dich_vu' => [
+                'required', 'string', 'max:150',
+                Rule::unique('loai_phi_dich_vu', 'ten_loai_phi_dich_vu')->whereNull('deletedAt')->ignore($loaiPhiDichVu->id),
+            ],
         ], [
             'ten_loai_phi_dich_vu.required' => 'Vui lòng nhập tên loại phí dịch vụ.',
             'ten_loai_phi_dich_vu.unique'   => 'Tên loại phí dịch vụ đã tồn tại.',

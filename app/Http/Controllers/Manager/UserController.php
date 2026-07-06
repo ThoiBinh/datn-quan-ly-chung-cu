@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\ChucVu;
 use App\Models\NhanVien;
 use App\Services\AuditLogService;
+use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -18,6 +20,8 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        NhanVienTrangThaiService::syncExpired();
+
         $adminId = $this->adminChucVuId();
         $query = NhanVien::with('chucVu');
 
@@ -53,7 +57,10 @@ class UserController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:nhan_vien,email',
+            'email'    => [
+                'required', 'email',
+                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt'),
+            ],
             'phone'    => 'nullable|string|max:20',
             'password' => 'required|min:8|confirmed',
             'status'   => 'required|in:active,inactive',
@@ -91,6 +98,7 @@ class UserController extends Controller
         if ($user->isAdmin()) {
             return back()->with('error', 'Không có quyền xem tài khoản Admin.');
         }
+        NhanVienTrangThaiService::syncOne($user);
         $user->load('chucVu');
         return view('manager.users.show', compact('user'));
     }
@@ -100,6 +108,7 @@ class UserController extends Controller
         if ($user->isAdmin()) {
             return back()->with('error', 'Không có quyền chỉnh sửa tài khoản Admin.');
         }
+        NhanVienTrangThaiService::syncOne($user);
         $adminId = $this->adminChucVuId();
         $chucVu  = ChucVu::when($adminId, fn($q) => $q->where('id', '!=', $adminId))->get();
         return view('manager.users.edit', compact('user', 'chucVu'));
@@ -113,7 +122,10 @@ class UserController extends Controller
 
         $request->validate([
             'name'   => 'required|string|max:255',
-            'email'  => 'required|email|unique:nhan_vien,email,' . $user->id,
+            'email'  => [
+                'required', 'email',
+                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt')->ignore($user->id),
+            ],
             'phone'  => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive',
         ]);

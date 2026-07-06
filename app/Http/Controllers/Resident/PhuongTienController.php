@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LoaiPhuongTien;
 use App\Models\PhuongTien;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PhuongTienController extends Controller
 {
@@ -48,7 +49,10 @@ class PhuongTienController extends Controller
 
         $request->validate([
             'ten_phuong_tien'  => 'nullable|string|max:255',
-            'bien_so'          => 'required|string|max:50|unique:phuong_tien,bien_so',
+            'bien_so'          => [
+                'required', 'string', 'max:50',
+                Rule::unique('phuong_tien', 'bien_so')->whereNull('deletedAt'),
+            ],
             'loai_phuong_tien' => 'required|exists:loai_phuong_tien,id',
         ], [
             'bien_so.required' => 'Vui lòng nhập biển số xe.',

@@ -32,12 +32,16 @@ class ToaNhaController extends Controller
         $request->validate([
             'ten_toa_nha' => 'required|string|max:255',
             'dia_chi'     => 'nullable|string|max:255',
-            'so_tang'     => 'nullable|integer|min:1|max:100',
+            'so_tang'     => 'nullable|integer|min:1|max:200',
         ], [
             'ten_toa_nha.required' => 'Vui lòng nhập tên tòa nhà.',
         ]);
 
-        $toaNha = ToaNha::create($request->only('ten_toa_nha', 'dia_chi', 'so_tang'));
+        $toaNha = ToaNha::create([
+            'ten_toa_nha' => $request->ten_toa_nha,
+            'dia_chi'     => $request->dia_chi ?? '',
+            'so_tang'     => $request->so_tang ?? 1,
+        ]);
         AuditLogService::log('INSERT', 'toa_nha', $toaNha->id, null, $toaNha->toArray());
 
         return redirect()->route('manager.toa-nha.index')->with('success', 'Thêm tòa nhà thành công.');
@@ -53,11 +57,15 @@ class ToaNhaController extends Controller
         $request->validate([
             'ten_toa_nha' => 'required|string|max:255',
             'dia_chi'     => 'nullable|string|max:255',
-            'so_tang'     => 'nullable|integer|min:1|max:100',
+            'so_tang'     => 'nullable|integer|min:1|max:200',
         ]);
 
         $old = $toaNha->toArray();
-        $toaNha->update($request->only('ten_toa_nha', 'dia_chi', 'so_tang'));
+        $toaNha->update([
+            'ten_toa_nha' => $request->ten_toa_nha,
+            'dia_chi'     => $request->dia_chi ?? '',
+            'so_tang'     => $request->so_tang ?? 1,
+        ]);
         AuditLogService::log('UPDATE', 'toa_nha', $toaNha->id, $old, $toaNha->fresh()->toArray());
 
         return redirect()->route('manager.toa-nha.index')->with('success', 'Cập nhật tòa nhà thành công.');

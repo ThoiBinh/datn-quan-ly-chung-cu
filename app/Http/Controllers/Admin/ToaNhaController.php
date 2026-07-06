@@ -106,4 +106,17 @@ class ToaNhaController extends Controller
         return redirect()->route('admin.toa-nha.show', $toaNha)
             ->with('success', "Cập nhật tòa nhà «{$toaNha->ten_toa_nha}» thành công.");
     }
+
+    public function destroy(ToaNha $toaNha)
+    {
+        if ($toaNha->canHo()->exists()) {
+            return back()->with('error', 'Không thể xóa tòa nhà đang có căn hộ.');
+        }
+
+        AuditLogService::log('DELETE', 'toa_nha', $toaNha->id, $toaNha->toArray(), null);
+        $toaNha->delete();
+
+        return redirect()->route('admin.toa-nha.index')
+            ->with('success', "Đã xóa tòa nhà «{$toaNha->ten_toa_nha}».");
+    }
 }

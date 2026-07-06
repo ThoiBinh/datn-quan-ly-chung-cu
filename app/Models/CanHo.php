@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CanHo extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'can_ho';
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
+    const DELETED_AT = 'deletedAt';
     protected $fillable = [
         'toa_nha', 'so_can_ho', 'tang', 'trang_thai', 'gia', 'loai_can_ho', 'nguoi_cap_nhat',
     ];
@@ -19,17 +23,17 @@ class CanHo extends Model
 
     public function toaNha()
     {
-        return $this->belongsTo(ToaNha::class, 'toa_nha');
+        return $this->belongsTo(ToaNha::class, 'toa_nha')->withTrashed();
     }
 
     public function loaiCanHo()
     {
-        return $this->belongsTo(LoaiCanHo::class, 'loai_can_ho');
+        return $this->belongsTo(LoaiCanHo::class, 'loai_can_ho')->withTrashed();
     }
 
     public function trangThai()
     {
-        return $this->belongsTo(TrangThaiCanHo::class, 'trang_thai');
+        return $this->belongsTo(TrangThaiCanHo::class, 'trang_thai')->withTrashed();
     }
 
     public function cuDanCanHo()
@@ -61,6 +65,11 @@ class CanHo extends Model
     public function canHoPhiDichVu()
     {
         return $this->hasMany(CanHoPhiDichVu::class, 'can_ho');
+    }
+
+    public function datLichTienIch()
+    {
+        return $this->hasMany(DatLichTienIch::class, 'can_ho');
     }
 
     public function thuocTinh()

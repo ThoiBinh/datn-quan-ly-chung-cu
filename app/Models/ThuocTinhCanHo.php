@@ -26,7 +26,7 @@ class ThuocTinhCanHo extends Model
 
     public function canHo()
     {
-        return $this->belongsTo(CanHo::class, 'can_ho');
+        return $this->belongsTo(CanHo::class, 'can_ho')->withTrashed();
     }
 
     public function thuocTinh()

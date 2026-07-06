@@ -34,7 +34,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
     // Quản lý tòa nhà
-    Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class)->except(['destroy']);
+    Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class);
 
     // Quản lý căn hộ
     Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class);
@@ -53,7 +53,6 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 
     // Quản lý phương tiện
     Route::resource('phuong-tien', \App\Http\Controllers\Admin\PhuongTienController::class)
-        ->except(['destroy'])
         ->parameters(['phuong-tien' => 'phuongTien']);
     Route::patch('phuong-tien/{phuongTien}/toggle-status', [\App\Http\Controllers\Admin\PhuongTienController::class, 'toggleStatus'])
         ->name('phuong-tien.toggle-status');
@@ -149,6 +148,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('loai-can-ho', \App\Http\Controllers\Admin\LoaiCanHoController::class)
         ->parameters(['loai-can-ho' => 'loaiCanHo']);
 
+    // Quản lý trạng thái căn hộ
+    Route::resource('trang-thai-can-ho', \App\Http\Controllers\Admin\TrangThaiCanHoController::class)
+        ->parameters(['trang-thai-can-ho' => 'trangThaiCanHo']);
+
     // Quản lý loại phí dịch vụ
     Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Admin\LoaiPhiDichVuController::class)
         ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
@@ -159,7 +162,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 
     // Quản lý yêu cầu cư dân
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
-        ->only(['index', 'show', 'update'])
+        ->only(['index', 'show', 'update', 'destroy'])
         ->parameters(['yeu-cau' => 'yeuCau']);
     Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'approve'])->name('yeu-cau.approve');
     Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'reject'])->name('yeu-cau.reject');
@@ -170,6 +173,12 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
     Route::patch('cu-dan-can-ho/{cuDanCanHo}/toggle-status', [\App\Http\Controllers\Admin\CuDanCanHoController::class, 'toggleStatus'])
         ->name('cu-dan-can-ho.toggle-status');
+
+    // Quản lý đặt lịch tiện ích
+    Route::resource('dat-lich-tien-ich', \App\Http\Controllers\Admin\DatLichTienIchController::class)
+        ->parameters(['dat-lich-tien-ich' => 'datLichTienIch']);
+    Route::patch('dat-lich-tien-ich/{id}/restore', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'restore'])
+        ->name('dat-lich-tien-ich.restore');
 });
 
 // ==================== MANAGER ====================
@@ -182,6 +191,8 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);
     Route::resource('phuong-tien', \App\Http\Controllers\Manager\PhuongTienController::class)
         ->parameters(['phuong-tien' => 'phuongTien']);
+    Route::delete('phuong-tien/{phuongTien}/xoa-mem', [\App\Http\Controllers\Manager\PhuongTienController::class, 'xoaMem'])
+        ->name('phuong-tien.xoa-mem');
     Route::resource('phi-dich-vu', \App\Http\Controllers\Manager\PhiDichVuController::class);
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Manager\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
     Route::get('hoa-don/can-ho-services', [\App\Http\Controllers\Manager\HoaDonController::class, 'canHoServices'])->name('hoa-don.can-ho-services');
@@ -261,6 +272,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('loai-can-ho', \App\Http\Controllers\Manager\LoaiCanHoController::class)
         ->parameters(['loai-can-ho' => 'loaiCanHo']);
 
+    // Quản lý trạng thái căn hộ
+    Route::resource('trang-thai-can-ho', \App\Http\Controllers\Manager\TrangThaiCanHoController::class)
+        ->parameters(['trang-thai-can-ho' => 'trangThaiCanHo']);
+
     // Quản lý loại phí dịch vụ
     Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Manager\LoaiPhiDichVuController::class)
         ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
@@ -286,6 +301,12 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     // Quản lý phí dịch vụ căn hộ
     Route::resource('can-ho-phi-dich-vu', \App\Http\Controllers\Manager\CanHoPhiDichVuController::class)
         ->parameters(['can-ho-phi-dich-vu' => 'canHoPhiDichVu']);
+
+    // Quản lý đặt lịch tiện ích
+    Route::resource('dat-lich-tien-ich', \App\Http\Controllers\Manager\DatLichTienIchController::class)
+        ->parameters(['dat-lich-tien-ich' => 'datLichTienIch']);
+    Route::patch('dat-lich-tien-ich/{id}/restore', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'restore'])
+        ->name('dat-lich-tien-ich.restore');
 });
 
 // ==================== RESIDENT ====================
@@ -329,4 +350,4 @@ Route::post('/payment/momo/ipn', [\App\Http\Controllers\Payment\MomoController::
 
 // VNPay Payment — nằm ngoài mọi auth middleware
 Route::get('/payment/vnpay/return', [\App\Http\Controllers\Payment\VnpayController::class, 'return'])->name('payment.vnpay.return');
-Route::post('/payment/vnpay/ipn', [\App\Http\Controllers\Payment\VnpayController::class, 'ipn'])->name('payment.vnpay.ipn');
+Route::get('/payment/vnpay/ipn', [\App\Http\Controllers\Payment\VnpayController::class, 'ipn'])->name('payment.vnpay.ipn');

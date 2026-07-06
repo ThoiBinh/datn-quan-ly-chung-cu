@@ -19,10 +19,12 @@ class ChucVuSeeder extends Seeder
         ];
 
         foreach ($data as $item) {
-            DB::table('chuc_vu')->insertOrIgnore(array_merge($item, [
-                'createdAt' => now(),
-                'updatedAt' => now(),
-            ]));
+            if (!DB::table('chuc_vu')->where('chuc_vu', $item['chuc_vu'])->exists()) {
+                DB::table('chuc_vu')->insert(array_merge($item, [
+                    'createdAt' => now(),
+                    'updatedAt' => now(),
+                ]));
+            }
         }
     }
 }

@@ -4,14 +4,21 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use App\Models\HoaDon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class NhanVien extends Authenticatable
 {
+    use SoftDeletes;
+
     protected $table = 'nhan_vien';
 
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
+    const DELETED_AT = 'deletedAt';
+
+    public const TRANG_THAI_DANG_LAM = 1;
+    public const TRANG_THAI_DA_NGHI  = 0;
 
     protected $fillable = [
         'ho_ten', 'chuc_vu', 'sdt', 'email',
@@ -61,7 +68,7 @@ class NhanVien extends Authenticatable
     // Accessor để view dùng $user->status hoạt động như với User model
     public function getStatusAttribute(): string
     {
-        return $this->trang_thai == 1 ? 'active' : 'inactive';
+        return $this->trang_thai == self::TRANG_THAI_DANG_LAM ? 'active' : 'inactive';
     }
 
     // Alias phone → sdt
@@ -72,7 +79,7 @@ class NhanVien extends Authenticatable
 
     public function isActive(): bool
     {
-        return $this->trang_thai == 1;
+        return $this->trang_thai == self::TRANG_THAI_DANG_LAM;
     }
 
     public function getCreatedAtAttribute(): ?Carbon
@@ -119,6 +126,6 @@ class NhanVien extends Authenticatable
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 }

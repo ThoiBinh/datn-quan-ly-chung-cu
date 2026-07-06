@@ -57,24 +57,28 @@ class CauHinhWebsiteSeeder extends Seeder
         ];
 
         foreach ($rows as $row) {
-            DB::table('cau_hinh_website')->updateOrInsert(
-                ['ma_thuoc_tinh' => $row['ma_thuoc_tinh']],
-                [
-                    'ten_thuoc_tinh' => $row['ten_thuoc_tinh'],
-                    'gia_tri'        => $row['gia_tri'],
-                    'kieu_du_lieu'   => $row['kieu_du_lieu'],
-                    'ma_nhom'        => $row['ma_nhom'],
-                    'ten_nhom'       => $row['ten_nhom'],
-                    'mo_ta'          => null,
-                    'placeholder'    => null,
-                    'thu_tu'         => $row['thu_tu'],
-                    'la_bao_mat'     => $row['la_bao_mat'],
-                    'duoc_chinh_sua' => true,
-                    'trang_thai'     => true,
-                    'updated_at'     => now(),
-                    'created_at'     => now(),
-                ]
-            );
+            // Chỉ tạo mới nếu key chưa tồn tại - không ghi đè giá trị cấu hình
+            // (ví dụ khóa VNPay/MoMo) mà admin đã cập nhật qua giao diện quản trị.
+            if (DB::table('cau_hinh_website')->where('ma_thuoc_tinh', $row['ma_thuoc_tinh'])->exists()) {
+                continue;
+            }
+
+            DB::table('cau_hinh_website')->insert([
+                'ma_thuoc_tinh'  => $row['ma_thuoc_tinh'],
+                'ten_thuoc_tinh' => $row['ten_thuoc_tinh'],
+                'gia_tri'        => $row['gia_tri'],
+                'kieu_du_lieu'   => $row['kieu_du_lieu'],
+                'ma_nhom'        => $row['ma_nhom'],
+                'ten_nhom'       => $row['ten_nhom'],
+                'mo_ta'          => $row['mo_ta'] ?? null,
+                'placeholder'    => $row['placeholder'] ?? null,
+                'thu_tu'         => $row['thu_tu'],
+                'la_bao_mat'     => $row['la_bao_mat'] ?? false,
+                'duoc_chinh_sua' => true,
+                'trang_thai'     => true,
+                'updated_at'     => now(),
+                'created_at'     => now(),
+            ]);
         }
     }
 }

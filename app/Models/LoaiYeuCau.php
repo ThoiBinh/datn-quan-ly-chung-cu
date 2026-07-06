@@ -24,6 +24,6 @@ class LoaiYeuCau extends Model
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 }

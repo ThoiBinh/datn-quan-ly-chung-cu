@@ -3,11 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PhuongTien extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'phuong_tien';
     public $timestamps = false;
+
+    const DELETED_AT = 'deletedAt';
+
     protected $fillable = [
         'ten_phuong_tien', 'bien_so', 'loai_phuong_tien', 'can_ho',
         'ngay_dang_ky', 'ngay_huy', 'trang_thai', 'nguoi_cap_nhat',
@@ -20,17 +26,17 @@ class PhuongTien extends Model
 
     public function loaiPhuongTien()
     {
-        return $this->belongsTo(LoaiPhuongTien::class, 'loai_phuong_tien');
+        return $this->belongsTo(LoaiPhuongTien::class, 'loai_phuong_tien')->withTrashed();
     }
 
     public function canHo()
     {
-        return $this->belongsTo(CanHo::class, 'can_ho');
+        return $this->belongsTo(CanHo::class, 'can_ho')->withTrashed();
     }
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 
     public function getTrangThaiLabelAttribute(): array

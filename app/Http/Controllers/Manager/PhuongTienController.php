@@ -196,4 +196,18 @@ class PhuongTienController extends Controller
         return redirect()->route('manager.phuong-tien.index')
             ->with('success', "Đã hủy phương tiện «{$phuongTien->bien_so}» (dữ liệu được giữ lại).");
     }
+
+    public function xoaMem(PhuongTien $phuongTien)
+    {
+        DB::transaction(function () use ($phuongTien) {
+            $old = $phuongTien->toArray();
+
+            $phuongTien->delete();
+
+            AuditLogService::log('DELETE', 'phuong_tien', $phuongTien->id, $old, null);
+        });
+
+        return redirect()->route('manager.phuong-tien.index')
+            ->with('success', "Đã xóa phương tiện «{$phuongTien->bien_so}» thành công.");
+    }
 }

@@ -16,6 +16,10 @@ class LoaiTinhPhiDichVuSeeder extends Seeder
             ['ten_loai' => 'Theo số lượng'],
         ];
 
-        DB::table('loai_tinh_phi_dich_vu')->insertOrIgnore($data);
+        foreach ($data as $item) {
+            if (!DB::table('loai_tinh_phi_dich_vu')->where('ten_loai', $item['ten_loai'])->exists()) {
+                DB::table('loai_tinh_phi_dich_vu')->insert($item);
+            }
+        }
     }
 }

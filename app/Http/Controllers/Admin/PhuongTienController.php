@@ -10,6 +10,7 @@ use App\Models\PhuongTien;
 use App\Models\ToaNha;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 
 class PhuongTienController extends Controller
@@ -81,7 +82,10 @@ class PhuongTienController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'bien_so'          => 'required|string|max:50|unique:phuong_tien,bien_so',
+            'bien_so'          => [
+                'required', 'string', 'max:50',
+                Rule::unique('phuong_tien', 'bien_so')->whereNull('deletedAt'),
+            ],
             'ten_phuong_tien'  => 'nullable|string|max:255',
             'loai_phuong_tien' => 'required|exists:loai_phuong_tien,id',
             'can_ho'           => 'required|exists:can_ho,id',
@@ -138,7 +142,10 @@ class PhuongTienController extends Controller
     public function update(Request $request, PhuongTien $phuongTien)
     {
         $request->validate([
-            'bien_so'          => 'required|string|max:50|unique:phuong_tien,bien_so,' . $phuongTien->id,
+            'bien_so'          => [
+                'required', 'string', 'max:50',
+                Rule::unique('phuong_tien', 'bien_so')->whereNull('deletedAt')->ignore($phuongTien->id),
+            ],
             'ten_phuong_tien'  => 'nullable|string|max:255',
             'loai_phuong_tien' => 'required|exists:loai_phuong_tien,id',
             'can_ho'           => 'required|exists:can_ho,id',
@@ -218,5 +225,19 @@ class PhuongTienController extends Controller
         });
 
         return back()->with('success', "Đã khôi phục phương tiện «{$phuongTien->bien_so}» thành công.");
+    }
+
+    public function destroy(PhuongTien $phuongTien)
+    {
+        DB::transaction(function () use ($phuongTien) {
+            $old = $phuongTien->toArray();
+
+            $phuongTien->delete();
+
+            AuditLogService::log('DELETE', 'phuong_tien', $phuongTien->id, $old, null);
+        });
+
+        return redirect()->route('admin.phuong-tien.index')
+            ->with('success', "Đã xóa phương tiện «{$phuongTien->bien_so}» thành công.");
     }
 }

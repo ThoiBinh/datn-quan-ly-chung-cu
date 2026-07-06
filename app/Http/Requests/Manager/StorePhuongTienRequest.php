@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Manager;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePhuongTienRequest extends FormRequest
 {
@@ -15,7 +16,10 @@ class StorePhuongTienRequest extends FormRequest
     {
         return [
             'ten_phuong_tien'  => 'nullable|string|max:150',
-            'bien_so'          => 'required|string|max:20|unique:phuong_tien,bien_so',
+            'bien_so'          => [
+                'required', 'string', 'max:20',
+                Rule::unique('phuong_tien', 'bien_so')->whereNull('deletedAt'),
+            ],
             'loai_phuong_tien' => 'required|integer|exists:loai_phuong_tien,id',
             'can_ho'           => 'required|integer|exists:can_ho,id',
             'ngay_dang_ky'     => 'nullable|date',

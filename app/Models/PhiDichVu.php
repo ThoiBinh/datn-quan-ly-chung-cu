@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PhiDichVu extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'phi_dich_vu';
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
+    const DELETED_AT = 'deletedAt';
     protected $fillable = [
         'loai_phi_dich_vu', 'ten_phi_dich_vu', 'don_gia', 'don_vi_tinh', 'loai_tinh_phi', 'nguoi_cap_nhat',
     ];
@@ -17,17 +21,17 @@ class PhiDichVu extends Model
 
     public function loaiPhiDichVu()
     {
-        return $this->belongsTo(LoaiPhiDichVu::class, 'loai_phi_dich_vu');
+        return $this->belongsTo(LoaiPhiDichVu::class, 'loai_phi_dich_vu')->withTrashed();
     }
 
     public function donViTinh()
     {
-        return $this->belongsTo(DonViTinhPhiDichVu::class, 'don_vi_tinh');
+        return $this->belongsTo(DonViTinhPhiDichVu::class, 'don_vi_tinh')->withTrashed();
     }
 
     public function loaiTinhPhi()
     {
-        return $this->belongsTo(LoaiTinhPhiDichVu::class, 'loai_tinh_phi');
+        return $this->belongsTo(LoaiTinhPhiDichVu::class, 'loai_tinh_phi')->withTrashed();
     }
 
     public function canHo()
@@ -38,6 +42,6 @@ class PhiDichVu extends Model
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 }

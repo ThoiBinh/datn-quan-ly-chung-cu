@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             NguonTaoSeeder::class,
             ThuocTinhSeeder::class,
             CauHinhWebsiteSeeder::class,
+            LoaiTienIchSeeder::class,
 
             // Bảng chính (theo thứ tự phụ thuộc)
             ToaNhaSeeder::class,
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
             PhuongTienSeeder::class,
             YeuCauCuDanSeeder::class,
             BangTinSeeder::class,
+            TienIchSeeder::class,
         ]);
     }
 }
