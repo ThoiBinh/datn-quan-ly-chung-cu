@@ -201,6 +201,16 @@
                                         </button>
                                     </form>
                                     @endif
+                                    <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                    <form method="POST" action="{{ route('manager.phuong-tien.xoa-mem', $pt) }}"
+                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa phương tiện {{ addslashes($pt->bien_so) }}?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            Xóa
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </td>

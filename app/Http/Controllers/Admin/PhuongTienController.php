@@ -229,6 +229,10 @@ class PhuongTienController extends Controller
 
     public function destroy(PhuongTien $phuongTien)
     {
+        if ($phuongTien->trang_thai != 0) {
+            return back()->with('error', 'Không thể xóa phương tiện đang hoạt động. Vui lòng hủy đăng ký phương tiện trước khi xóa.');
+        }
+
         DB::transaction(function () use ($phuongTien) {
             $old = $phuongTien->toArray();
 
