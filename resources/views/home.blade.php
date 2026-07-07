@@ -47,7 +47,7 @@
                 <span class="font-bold text-gray-900 text-lg">{{ $tenChungCu ?? 'Chung Cư Pro' }}</span>
             </div>
             <div class="hidden md:flex items-center gap-8">
-                <a href="#bang-tin" class="text-sm text-gray-600 hover:text-emerald-600 font-medium">Bảng tin</a>
+                <a href="{{ route('bang-tin.index') }}" class="text-sm text-gray-600 hover:text-emerald-600 font-medium">Bảng tin</a>
                 <a href="#tinh-nang" class="text-sm text-gray-600 hover:text-emerald-600 font-medium">Tính năng</a>
                 <a href="#lien-he" class="text-sm text-gray-600 hover:text-emerald-600 font-medium">Liên hệ</a>
                 
@@ -200,7 +200,11 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
         <div class="text-center mb-14">
             <h2 class="text-3xl font-bold text-gray-900 mb-3">Bảng tin</h2>
-            <p class="text-gray-500">Thông tin mới nhất từ ban quản lý</p>
+            <p class="text-gray-500 mb-6">Thông tin mới nhất từ ban quản lý</p>
+            <a href="{{ route('bang-tin.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+                Xem tất cả
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
         </div>
 
         @if($dsBangTin->isEmpty())
@@ -214,9 +218,9 @@
         @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($dsBangTin as $bt)
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
+            <a href="{{ route('bang-tin.show', $bt) }}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
                 <h3 class="font-bold text-gray-900 text-base mb-3 line-clamp-2 leading-snug">{{ $bt->tieu_de }}</h3>
-                <p class="text-sm text-gray-500 leading-relaxed line-clamp-4 flex-1">{{ $bt->noi_dung }}</p>
+                <p class="text-sm text-gray-500 leading-relaxed line-clamp-4 flex-1">{{ Str::limit(strip_tags($bt->noi_dung), 160) }}</p>
                 <div class="mt-5 pt-4 border-t border-gray-100 space-y-1.5">
                     <div class="flex items-center gap-2 text-xs text-gray-400">
                         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +239,7 @@
                     </div>
                     @endif
                 </div>
-            </div>
+            </a>
             @endforeach
         </div>
         @endif
@@ -401,7 +405,7 @@
 @php
     $footerNavLinks = [
         ['label' => 'Trang chủ', 'href' => '#'],
-        ['label' => 'Bảng tin', 'href' => '#bang-tin'],
+        ['label' => 'Bảng tin', 'href' => route('bang-tin.index')],
         ['label' => 'Tính năng', 'href' => '#tinh-nang'],
         ['label' => 'Liên hệ', 'href' => '#lien-he'],
         ['label' => 'Đăng nhập', 'href' => route('login')],

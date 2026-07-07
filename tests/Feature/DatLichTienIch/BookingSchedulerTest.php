@@ -51,7 +51,7 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
 
         $this->assertSame(1, $soLuong);
         $this->assertSame(DatLichTienIch::TRANG_THAI_DA_HUY, $a->fresh()->trang_thai);
-        $this->assertStringContainsString('quá hạn duyệt', $a->fresh()->ly_do_huy);
+        $this->assertStringContainsString('không đủ sức chứa', $a->fresh()->ly_do_huy);
         $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->fresh()->trang_thai);
         $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->fresh()->trang_thai);
     }

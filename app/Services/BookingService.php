@@ -487,7 +487,7 @@ class BookingService
             ->where('thoi_gian_bat_dau', '<=', $mocGio)
             ->get()
             ->each(function (DatLichTienIch $datLich) use (&$soLuong) {
-                $this->huy($datLich, 'Tự động hủy: quá hạn duyệt, chỉ còn dưới 2 giờ đến giờ sử dụng.');
+                $this->huy($datLich, 'Hệ thống tự động hủy do không đủ sức chứa trước giờ sử dụng 2 tiếng.');
                 $soLuong++;
             });
 

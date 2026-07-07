@@ -288,6 +288,40 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
         $this->assertNotContains($daHuyGoc->id, $active);
     }
 
+    public function test_huy_boi_cu_dan_thanh_cong_khi_con_hon_2_gio(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $datLich = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => now()->addHours(3)->format('Y-m-d H:i:s'),
+            'thoi_gian_ket_thuc' => now()->addHours(4)->format('Y-m-d H:i:s'),
+            'so_nguoi' => 1,
+        ]);
+
+        $datLich = $this->service->huyBoiCuDan($datLich);
+
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_HUY, $datLich->trang_thai);
+        $this->assertSame('Cư dân hủy lịch', $datLich->ly_do_huy);
+    }
+
+    public function test_huy_boi_cu_dan_that_bai_khi_con_duoi_2_gio(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $datLich = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
+            'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
+            'so_nguoi' => 1,
+        ]);
+
+        $this->expectException(ValidationException::class);
+        $this->service->huyBoiCuDan($datLich);
+    }
+
     public function test_xoa_va_khoi_phuc(): void
     {
         $cuDan = $this->taoCuDan();
