@@ -19,14 +19,10 @@ class ThuocTinhSeeder extends Seeder
 
         foreach ($data as $item) {
             if (!DB::table('thuoc_tinh')->where('ten_thuoc_tinh', $item['ten_thuoc_tinh'])->exists()) {
-<<<<<<< HEAD
                 DB::table('thuoc_tinh')->insert(array_merge($item, [
                     'createdAt' => now(),
                     'updatedAt' => now(),
                 ]));
-=======
-                DB::table('thuoc_tinh')->insert($item);
->>>>>>> origin/develop
             }
         }
     }
