@@ -3,7 +3,23 @@
 @section('page-title', 'Chi tiết đặt lịch tiện ích')
 
 @section('content')
-<div class="space-y-5" x-data="{ confirmDelete: false }">
+@php
+    $trangThai = (int) $datLichTienIch->trang_thai;
+    $CHO_DUYET = \App\Models\DatLichTienIch::TRANG_THAI_CHO_DUYET;
+    $DA_DUYET = \App\Models\DatLichTienIch::TRANG_THAI_DA_DUYET;
+    $coTheSua = $trangThai === $CHO_DUYET;
+    $coTheDuyetTuChoi = $trangThai === $CHO_DUYET;
+    $coTheHuy = in_array($trangThai, [$CHO_DUYET, $DA_DUYET], true);
+
+    $phut = $datLichTienIch->thoi_luong_phut;
+    $thoiLuong = null;
+    if ($phut !== null) {
+        $gio = intdiv($phut, 60);
+        $conLai = $phut % 60;
+        $thoiLuong = trim(($gio > 0 ? "{$gio} giờ " : '') . ($conLai > 0 ? "{$conLai} phút" : ($gio > 0 ? '' : '0 phút')));
+    }
+@endphp
+<div class="space-y-5" x-data="{ confirmDelete: false, confirmApprove: false, showReject: false, showCancel: false }">
 
     <!-- Breadcrumb + actions -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -12,17 +28,42 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="font-mono font-semibold text-gray-700 dark:text-slate-200">{{ $datLichTienIch->ma_dat_lich }}</span>
         </nav>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('manager.dat-lich-tien-ich.index') }}"
                class="inline-flex items-center gap-2 px-3.5 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Quay lại
             </a>
+
+            @if($coTheDuyetTuChoi)
+            <button @click="confirmApprove = true" type="button"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Duyệt
+            </button>
+            <button @click="showReject = true" type="button"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                Từ chối
+            </button>
+            @endif
+
+            @if($coTheHuy)
+            <button @click="showCancel = true" type="button"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                Hủy lịch
+            </button>
+            @endif
+
+            @if($coTheSua)
             <a href="{{ route('manager.dat-lich-tien-ich.edit', $datLichTienIch) }}"
                class="inline-flex items-center gap-2 px-3.5 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Chỉnh sửa
             </a>
+            @endif
+
             <button @click="confirmDelete = true" type="button"
                     class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -64,15 +105,19 @@
                         </dd>
                     </div>
                     <div class="flex items-baseline px-5 py-3.5">
-                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Ngày sử dụng</dt>
-                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->thoi_gian_bat_dau?->format('d/m/Y') }}</dd>
+                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Thời gian bắt đầu</dt>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->thoi_gian_bat_dau?->format('H:i, d/m/Y') }}</dd>
                     </div>
                     <div class="flex items-baseline px-5 py-3.5">
-                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Giờ bắt đầu - kết thúc</dt>
-                        <dd class="text-sm text-gray-800 dark:text-slate-100">
-                            {{ $datLichTienIch->thoi_gian_bat_dau?->format('H:i') }} - {{ $datLichTienIch->thoi_gian_ket_thuc?->format('H:i') }}
-                        </dd>
+                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Thời gian kết thúc</dt>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->thoi_gian_ket_thuc?->format('H:i, d/m/Y') }}</dd>
                     </div>
+                    @if($thoiLuong)
+                    <div class="flex items-baseline px-5 py-3.5">
+                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Thời lượng sử dụng</dt>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $thoiLuong }}</dd>
+                    </div>
+                    @endif
                     <div class="flex items-baseline px-5 py-3.5">
                         <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Số người</dt>
                         <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->so_nguoi }}</dd>
@@ -101,14 +146,14 @@
                 <dl class="divide-y divide-gray-50 dark:divide-slate-700/50">
                     <div class="flex items-baseline px-5 py-3.5">
                         <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Nhân viên duyệt</dt>
-                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->nhanVienDuyet?->ho_ten ?? '—' }}</dd>
+                        <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->nhanVienDuyet?->ho_ten ?? ($datLichTienIch->ngay_duyet ? 'Hệ thống tự động duyệt' : '—') }}</dd>
                     </div>
                     <div class="flex items-baseline px-5 py-3.5">
                         <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Ngày duyệt</dt>
                         <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->ngay_duyet?->format('d/m/Y H:i') ?? '—' }}</dd>
                     </div>
                     <div class="flex items-baseline px-5 py-3.5">
-                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Ngày hủy</dt>
+                        <dt class="w-44 text-xs text-gray-500 dark:text-slate-400 flex-shrink-0">Ngày hủy / từ chối</dt>
                         <dd class="text-sm text-gray-800 dark:text-slate-100">{{ $datLichTienIch->ngay_huy?->format('d/m/Y H:i') ?? '—' }}</dd>
                     </div>
                     @if($datLichTienIch->ly_do_huy)
@@ -131,7 +176,7 @@
                     <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                         <svg class="w-4.5 h-4.5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </div>
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Cư dân đặt lịch (Người tạo)</h2>
+                    <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Cư dân đặt lịch</h2>
                 </div>
                 @if($datLichTienIch->cuDan)
                 <div class="p-5">
@@ -236,7 +281,7 @@
          x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
          x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-         @click.self="confirmDelete = false">
+         @click.self="confirmDelete = false" @keydown.escape.window="confirmDelete = false">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6" @click.stop>
             <div class="text-center mb-5">
                 <div class="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-3">
@@ -254,6 +299,90 @@
                     <button type="submit" class="block w-full py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-colors">Xóa</button>
                 </form>
             </div>
+        </div>
+    </div>
+    </template>
+
+    <!-- Modal xác nhận duyệt -->
+    <template x-teleport="body">
+    <div x-show="confirmApprove"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+         @click.self="confirmApprove = false" @keydown.escape.window="confirmApprove = false">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6" @click.stop>
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-7 h-7 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <p class="font-semibold text-gray-800 dark:text-white">Duyệt lượt đặt lịch?</p>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Mã <span class="font-medium text-gray-700 dark:text-slate-200">«{{ $datLichTienIch->ma_dat_lich }}»</span> sẽ chuyển sang trạng thái Đã duyệt.</p>
+            </div>
+            <div class="flex gap-3">
+                <button @click="confirmApprove = false" type="button" class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700">Hủy</button>
+                <form action="{{ route('manager.dat-lich-tien-ich.approve', $datLichTienIch) }}" method="POST" class="flex-1">
+                    @csrf @method('PATCH')
+                    <button type="submit" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">Duyệt</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    </template>
+
+    <!-- Modal từ chối -->
+    <template x-teleport="body">
+    <div x-show="showReject"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+         @click.self="showReject = false" @keydown.escape.window="showReject = false">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6" @click.stop>
+            <div class="text-center mb-4">
+                <div class="w-14 h-14 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-7 h-7 text-gray-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <p class="font-semibold text-gray-800 dark:text-white">Từ chối lượt đặt lịch?</p>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Mã <span class="font-medium text-gray-700 dark:text-slate-200">«{{ $datLichTienIch->ma_dat_lich }}»</span> sẽ chuyển sang trạng thái Từ chối.</p>
+            </div>
+            <form action="{{ route('manager.dat-lich-tien-ich.reject', $datLichTienIch) }}" method="POST">
+                @csrf @method('PATCH')
+                <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">Lý do từ chối</label>
+                <textarea name="ly_do" rows="3" maxlength="500" placeholder="Nhập lý do từ chối (không bắt buộc)..."
+                          class="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-4"></textarea>
+                <div class="flex gap-3">
+                    <button @click="showReject = false" type="button" class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700">Đóng</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors">Từ chối</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </template>
+
+    <!-- Modal hủy lịch -->
+    <template x-teleport="body">
+    <div x-show="showCancel"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+         @click.self="showCancel = false" @keydown.escape.window="showCancel = false">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6" @click.stop>
+            <div class="text-center mb-4">
+                <div class="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-7 h-7 text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </div>
+                <p class="font-semibold text-gray-800 dark:text-white">Hủy lượt đặt lịch?</p>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Mã <span class="font-medium text-gray-700 dark:text-slate-200">«{{ $datLichTienIch->ma_dat_lich }}»</span> sẽ chuyển sang trạng thái Đã hủy.</p>
+            </div>
+            <form action="{{ route('manager.dat-lich-tien-ich.cancel', $datLichTienIch) }}" method="POST">
+                @csrf @method('PATCH')
+                <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">Lý do hủy</label>
+                <textarea name="ly_do" rows="3" maxlength="500" placeholder="Nhập lý do hủy (không bắt buộc)..."
+                          class="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-4"></textarea>
+                <div class="flex gap-3">
+                    <button @click="showCancel = false" type="button" class="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700">Đóng</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors">Hủy lịch</button>
+                </div>
+            </form>
         </div>
     </div>
     </template>
