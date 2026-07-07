@@ -18,7 +18,9 @@ class StoreCanHoRequest extends FormRequest
             'toa_nha'              => 'required|integer|exists:toa_nha,id',
             'so_can_ho'            => [
                 'required', 'string', 'max:50',
-                Rule::unique('can_ho', 'so_can_ho')->where(fn ($q) => $q->where('toa_nha', $this->input('toa_nha'))),
+                Rule::unique('can_ho', 'so_can_ho')
+                    ->where(fn ($q) => $q->where('toa_nha', $this->input('toa_nha')))
+                    ->whereNull('deletedAt'),
             ],
             'tang'                 => 'required|integer|min:1',
             'gia'                  => 'nullable|numeric|min:0',

@@ -167,33 +167,29 @@ class CanHoController extends Controller
 
     public function destroy(CanHo $canHo)
     {
-        $daPhatSinhDuLieu = $canHo->cuDanCanHo()->exists()
-            || $canHo->phuongTien()->exists()
-            || $canHo->canHoPhiDichVu()->exists()
-            || $canHo->hoaDon()->exists();
-
-        if ($daPhatSinhDuLieu) {
-            return back()->with('error', 'Căn hộ đã phát sinh dữ liệu nên không thể xóa.');
+        if ($canHo->cuDanCanHo()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có lịch sử cư dân.');
+        }
+        if ($canHo->hoaDon()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có hóa đơn.');
+        }
+        if ($canHo->phuongTien()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có phương tiện đăng ký.');
+        }
+        if ($canHo->canHoPhiDichVu()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã đăng ký phí dịch vụ.');
+        }
+        if ($canHo->datLichTienIch()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có lịch sử đặt lịch tiện ích.');
         }
 
-        // CanHo không dùng SoftDeletes (không có cột deletedAt) nên không xóa vật lý —
-        // chỉ chuyển trạng thái căn hộ về "Trống" để tránh mất liên kết dữ liệu về sau.
-        $old        = $canHo->toArray();
-        $trangThaiTrong = TrangThaiCanHo::where('ten_trang_thai', 'Trống')->first();
+        $old = $canHo->toArray();
 
-        if (!$trangThaiTrong) {
-            return back()->with('error', 'Không tìm thấy trạng thái "Trống" để cập nhật căn hộ.');
-        }
-
-        $canHo->update([
-            'trang_thai'     => $trangThaiTrong->id,
-            'nguoi_cap_nhat' => auth('nhanvien')->id(),
-        ]);
-
-        AuditLogService::log('UPDATE', 'can_ho', $canHo->id, $old, $canHo->fresh()->toArray());
+        AuditLogService::log('DELETE', 'can_ho', $canHo->id, $old, null);
+        $canHo->delete();
 
         return redirect()->route('admin.can-ho.index')
-            ->with('success', "Căn hộ «{$canHo->so_can_ho}» đã được chuyển sang trạng thái Trống.");
+            ->with('success', "Căn hộ «{$canHo->so_can_ho}» đã được xóa.");
     }
 
     private function syncThuocTinh(CanHo $canHo, array $rawInput): void

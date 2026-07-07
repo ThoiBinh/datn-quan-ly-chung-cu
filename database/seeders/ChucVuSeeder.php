@@ -12,10 +12,12 @@ class ChucVuSeeder extends Seeder
         $data = ['Quản lý', 'Kế toán', 'Lễ tân', 'Kỹ thuật', 'Bảo vệ', 'Admin'];
 
         foreach ($data as $item) {
-            DB::table('chuc_vu')->updateOrInsert(
-                ['chuc_vu' => $item],
-                ['chuc_vu' => $item, 'createdAt' => now(), 'updatedAt' => now()]
-            );
+            if (!DB::table('chuc_vu')->where('chuc_vu', $item['chuc_vu'])->exists()) {
+                DB::table('chuc_vu')->insert(array_merge($item, [
+                    'createdAt' => now(),
+                    'updatedAt' => now(),
+                ]));
+            }
         }
     }
 }

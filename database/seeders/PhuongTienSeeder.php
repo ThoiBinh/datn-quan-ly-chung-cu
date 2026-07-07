@@ -9,6 +9,12 @@ class PhuongTienSeeder extends Seeder
 {
     public function run(): void
     {
+        // bien_so được sinh ngẫu nhiên nên không thể dùng làm khóa idempotent giữa
+        // các lần chạy khác nhau -> bỏ qua nếu bảng đã có dữ liệu.
+        if (DB::table('phuong_tien')->exists()) {
+            return;
+        }
+
         // loai_phuong_tien: 1=Ô tô, 2=Xe máy, 3=Xe đạp điện, 4=Xe đạp
         $canHoIds = DB::table('can_ho')->where('trang_thai', 2)->pluck('id')->toArray();
         $prefix   = ['51', '59', '43', '30', '29'];

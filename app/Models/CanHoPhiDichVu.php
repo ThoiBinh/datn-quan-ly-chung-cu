@@ -21,16 +21,16 @@ class CanHoPhiDichVu extends Model
 
     public function canHo()
     {
-        return $this->belongsTo(CanHo::class, 'can_ho');
+        return $this->belongsTo(CanHo::class, 'can_ho')->withTrashed();
     }
 
     public function phiDichVu()
     {
-        return $this->belongsTo(PhiDichVu::class, 'phi_dich_vu');
+        return $this->belongsTo(PhiDichVu::class, 'phi_dich_vu')->withTrashed();
     }
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 }

@@ -12,10 +12,9 @@ class VaiTroSeeder extends Seeder
         $data = ['Chủ hộ', 'Thành viên', 'Người thuê'];
 
         foreach ($data as $item) {
-            DB::table('vai_tro')->updateOrInsert(
-                ['vai_tro' => $item],
-                ['vai_tro' => $item]
-            );
+            if (!DB::table('vai_tro')->where('vai_tro', $item['vai_tro'])->exists()) {
+                DB::table('vai_tro')->insert($item);
+            }
         }
     }
 }

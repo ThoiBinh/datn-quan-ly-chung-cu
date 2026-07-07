@@ -181,6 +181,9 @@ class CanHoController extends Controller
         if ($canHo->phiDichVu()->exists()) {
             return back()->with('error', 'Không thể xóa căn hộ đã đăng ký phí dịch vụ.');
         }
+        if ($canHo->datLichTienIch()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có lịch sử đặt lịch tiện ích.');
+        }
 
         AuditLogService::log('DELETE', 'can_ho', $canHo->id, $canHo->toArray(), null);
         $canHo->delete();

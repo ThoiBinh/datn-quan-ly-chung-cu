@@ -21,6 +21,6 @@ class NhatKyHeThong extends Model
 
     public function nguoiThucHien()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_thuc_hien');
+        return $this->belongsTo(NhanVien::class, 'nguoi_thuc_hien')->withTrashed();
     }
 }

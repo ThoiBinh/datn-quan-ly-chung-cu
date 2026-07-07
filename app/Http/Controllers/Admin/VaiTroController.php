@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\VaiTro;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class VaiTroController extends Controller
 {
@@ -38,7 +39,10 @@ class VaiTroController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vai_tro' => 'required|string|max:100|unique:vai_tro,vai_tro',
+            'vai_tro' => [
+                'required', 'string', 'max:100',
+                Rule::unique('vai_tro', 'vai_tro')->whereNull('deletedAt'),
+            ],
         ], [
             'vai_tro.required' => 'Vui lòng nhập tên vai trò.',
             'vai_tro.unique'   => 'Tên vai trò đã tồn tại.',
@@ -66,7 +70,10 @@ class VaiTroController extends Controller
     public function update(Request $request, VaiTro $vaiTro)
     {
         $request->validate([
-            'vai_tro' => "required|string|max:100|unique:vai_tro,vai_tro,{$vaiTro->id}",
+            'vai_tro' => [
+                'required', 'string', 'max:100',
+                Rule::unique('vai_tro', 'vai_tro')->whereNull('deletedAt')->ignore($vaiTro->id),
+            ],
         ], [
             'vai_tro.required' => 'Vui lòng nhập tên vai trò.',
             'vai_tro.unique'   => 'Tên vai trò đã tồn tại.',

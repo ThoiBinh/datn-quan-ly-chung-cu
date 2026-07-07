@@ -4,13 +4,17 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class YeuCauCuDan extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'yeu_cau_cu_dan';
 
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
+    const DELETED_AT = 'deletedAt';
 
     protected $fillable = [
         'cu_dan', 'loai_yeu_cau', 'tieu_de', 'noi_dung', 'ngay_gui', 'muc_do_uu_tien',
@@ -46,7 +50,7 @@ class YeuCauCuDan extends Model
 
     public function nhanVienXuLy()
     {
-        return $this->belongsTo(NhanVien::class, 'nhan_vien_xu_ly');
+        return $this->belongsTo(NhanVien::class, 'nhan_vien_xu_ly')->withTrashed();
     }
 
     public function loaiYeuCau()

@@ -225,4 +225,11 @@ class YeuCauCuDanController extends Controller
 
         return back()->with('success', 'Đã từ chối yêu cầu đăng ký phương tiện.');
     }
+
+    public function destroy(YeuCauCuDan $yeuCau)
+    {
+        AuditLogService::log('DELETE', 'yeu_cau_cu_dan', $yeuCau->id, $yeuCau->toArray(), null);
+        $yeuCau->delete();
+        return redirect()->route('admin.yeu-cau.index')->with('success', 'Xóa yêu cầu thành công.');
+    }
 }

@@ -12,10 +12,9 @@ class LoaiPhuongTienSeeder extends Seeder
         $data = ['Ô tô', 'Xe máy', 'Xe đạp điện', 'Xe đạp'];
 
         foreach ($data as $item) {
-            DB::table('loai_phuong_tien')->updateOrInsert(
-                ['ten_loai_phuong_tien' => $item],
-                ['ten_loai_phuong_tien' => $item]
-            );
+            if (!DB::table('loai_phuong_tien')->where('ten_loai_phuong_tien', $item['ten_loai_phuong_tien'])->exists()) {
+                DB::table('loai_phuong_tien')->insert($item);
+            }
         }
     }
 }

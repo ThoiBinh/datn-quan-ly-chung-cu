@@ -28,7 +28,7 @@ class ThongBao extends Model
 
     public function nguoiTao()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_tao');
+        return $this->belongsTo(NhanVien::class, 'nguoi_tao')->withTrashed();
     }
 
     public function daDoc()

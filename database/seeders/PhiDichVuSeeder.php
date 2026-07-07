@@ -32,24 +32,13 @@ class PhiDichVuSeeder extends Seeder
         ];
 
         foreach ($data as $item) {
-            if (DB::table('phi_dich_vu')->where('ten_phi_dich_vu', $item['ten'])->exists()) continue;
-
-            $loaiPhiId  = $loaiPhi[$item['loai']] ?? null;
-            $donViId    = $donVi[$item['don_vi']] ?? null;
-            $loaiTinhId = $loaiTinh[$item['tinh_phi']] ?? null;
-
-            if (!$loaiPhiId || !$donViId || !$loaiTinhId) continue;
-
-            DB::table('phi_dich_vu')->insert([
-                'loai_phi_dich_vu' => $loaiPhiId,
-                'ten_phi_dich_vu'  => $item['ten'],
-                'don_gia'          => $item['don_gia'],
-                'don_vi_tinh'      => $donViId,
-                'loai_tinh_phi'    => $loaiTinhId,
-                'nguoi_cap_nhat'   => 1,
-                'createdAt'        => now(),
-                'updatedAt'        => now(),
-            ]);
+            if (!DB::table('phi_dich_vu')->where('ten_phi_dich_vu', $item['ten_phi_dich_vu'])->exists()) {
+                DB::table('phi_dich_vu')->insert(array_merge($item, [
+                    'nguoi_cap_nhat' => 1,
+                    'createdAt'      => now(),
+                    'updatedAt'      => now(),
+                ]));
+            }
         }
     }
 }

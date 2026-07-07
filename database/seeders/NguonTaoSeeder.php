@@ -9,13 +9,18 @@ class NguonTaoSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = ['Hệ thống', 'Thủ công', 'Cổng thanh toán'];
+        $data = [
+            ['ten_nguon_tao' => 'Hệ thống'],
+            ['ten_nguon_tao' => 'Thủ công'],
+            ['ten_nguon_tao' => 'Cổng thanh toán'],
+            ['ten_nguon_tao' => 'VNPay'],
+            ['ten_nguon_tao' => 'Momo'],
+        ];
 
         foreach ($data as $item) {
-            DB::table('nguon_tao')->updateOrInsert(
-                ['ten_nguon_tao' => $item],
-                ['ten_nguon_tao' => $item]
-            );
+            if (!DB::table('nguon_tao')->where('ten_nguon_tao', $item['ten_nguon_tao'])->exists()) {
+                DB::table('nguon_tao')->insert($item);
+            }
         }
     }
 }

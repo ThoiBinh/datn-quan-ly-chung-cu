@@ -11,11 +11,10 @@ class DonViTinhPhiDichVuSeeder extends Seeder
     {
         $data = ['kWh', 'm³', 'Tháng', 'Xe', 'm²'];
 
-        foreach ($data as $donVi) {
-            DB::table('don_vi_tinh_phi_dich_vu')->updateOrInsert(
-                ['don_vi' => $donVi],
-                ['don_vi' => $donVi]
-            );
+        foreach ($data as $item) {
+            if (!DB::table('don_vi_tinh_phi_dich_vu')->where('don_vi', $item['don_vi'])->exists()) {
+                DB::table('don_vi_tinh_phi_dich_vu')->insert($item);
+            }
         }
     }
 }

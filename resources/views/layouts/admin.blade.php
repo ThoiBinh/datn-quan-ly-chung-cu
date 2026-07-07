@@ -121,6 +121,11 @@
                 <span x-show="sidebarOpen" x-transition class="truncate">Yêu cầu cư dân</span>
                 <span x-show="!sidebarOpen" x-cloak class="sidebar-tooltip">Yêu cầu cư dân</span>
             </a>
+            <a href="{{ route('admin.dat-lich-tien-ich.index') }}" class="sidebar-link group {{ request()->routeIs('admin.dat-lich-tien-ich.*') ? 'active' : '' }}" :class="sidebarOpen ? '' : 'justify-center px-0'">
+                <svg class="h-5 w-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span x-show="sidebarOpen" x-transition class="truncate">Đặt lịch tiện ích</span>
+                <span x-show="!sidebarOpen" x-cloak class="sidebar-tooltip">Đặt lịch tiện ích</span>
+            </a>
 
             <div x-show="sidebarOpen" x-transition class="px-3 pb-1 pt-4">
                 <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Tài chính</p>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DonViTinhPhiDichVu;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DonViTinhPhiDichVuController extends Controller
 {
@@ -48,7 +49,10 @@ class DonViTinhPhiDichVuController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'don_vi' => 'required|string|max:50|unique:don_vi_tinh_phi_dich_vu,don_vi',
+            'don_vi' => [
+                'required', 'string', 'max:50',
+                Rule::unique('don_vi_tinh_phi_dich_vu', 'don_vi')->whereNull('deletedAt'),
+            ],
         ], [
             'don_vi.required' => 'Vui lòng nhập tên đơn vị tính.',
             'don_vi.unique'   => 'Tên đơn vị tính đã tồn tại.',
@@ -81,7 +85,10 @@ class DonViTinhPhiDichVuController extends Controller
     public function update(Request $request, DonViTinhPhiDichVu $donViTinhPhiDichVu)
     {
         $request->validate([
-            'don_vi' => "required|string|max:50|unique:don_vi_tinh_phi_dich_vu,don_vi,{$donViTinhPhiDichVu->id}",
+            'don_vi' => [
+                'required', 'string', 'max:50',
+                Rule::unique('don_vi_tinh_phi_dich_vu', 'don_vi')->whereNull('deletedAt')->ignore($donViTinhPhiDichVu->id),
+            ],
         ], [
             'don_vi.required' => 'Vui lòng nhập tên đơn vị tính.',
             'don_vi.unique'   => 'Tên đơn vị tính đã tồn tại.',

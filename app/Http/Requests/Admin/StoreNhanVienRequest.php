@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreNhanVienRequest extends FormRequest
 {
@@ -17,11 +18,20 @@ class StoreNhanVienRequest extends FormRequest
             'ho_ten'        => 'required|string|max:150',
             'chuc_vu'       => 'required|integer|exists:chuc_vu,id',
             'sdt'           => 'nullable|string|max:15',
-            'email'         => 'required|email|max:150|unique:nhan_vien,email',
+            'email'         => [
+                'required', 'email', 'max:150',
+                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt'),
+            ],
             'mat_khau'      => 'required|string|min:8|confirmed',
             'trang_thai'    => 'required|in:0,1',
-            'ma_nhan_vien'  => 'nullable|string|max:50|unique:nhan_vien,ma_nhan_vien',
-            'cccd'          => 'required|string|max:20|unique:nhan_vien,cccd',
+            'ma_nhan_vien'  => [
+                'nullable', 'string', 'max:50',
+                Rule::unique('nhan_vien', 'ma_nhan_vien')->whereNull('deletedAt'),
+            ],
+            'cccd'          => [
+                'required', 'string', 'max:20',
+                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt'),
+            ],
             'ngay_sinh'     => 'nullable|date',
             'ngay_vao_lam'  => 'nullable|date',
             'ngay_nghi_lam' => 'nullable|date',

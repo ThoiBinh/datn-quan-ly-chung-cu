@@ -34,7 +34,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
     // Quản lý tòa nhà
-    Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class)->except(['destroy']);
+    Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class);
 
     // Quản lý căn hộ
     Route::resource('can-ho', \App\Http\Controllers\Admin\CanHoController::class);
@@ -53,7 +53,6 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 
     // Quản lý phương tiện
     Route::resource('phuong-tien', \App\Http\Controllers\Admin\PhuongTienController::class)
-        ->except(['destroy'])
         ->parameters(['phuong-tien' => 'phuongTien']);
     Route::patch('phuong-tien/{phuongTien}/toggle-status', [\App\Http\Controllers\Admin\PhuongTienController::class, 'toggleStatus'])
         ->name('phuong-tien.toggle-status');
@@ -149,6 +148,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::resource('loai-can-ho', \App\Http\Controllers\Admin\LoaiCanHoController::class)
         ->parameters(['loai-can-ho' => 'loaiCanHo']);
 
+    // Quản lý trạng thái căn hộ
+    Route::resource('trang-thai-can-ho', \App\Http\Controllers\Admin\TrangThaiCanHoController::class)
+        ->parameters(['trang-thai-can-ho' => 'trangThaiCanHo']);
+
     // Quản lý loại phí dịch vụ
     Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Admin\LoaiPhiDichVuController::class)
         ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
@@ -159,7 +162,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 
     // Quản lý yêu cầu cư dân
     Route::resource('yeu-cau', \App\Http\Controllers\Admin\YeuCauCuDanController::class)
-        ->only(['index', 'show', 'update'])
+        ->only(['index', 'show', 'update', 'destroy'])
         ->parameters(['yeu-cau' => 'yeuCau']);
     Route::patch('yeu-cau/{yeuCau}/duyet', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'approve'])->name('yeu-cau.approve');
     Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'reject'])->name('yeu-cau.reject');
@@ -170,6 +173,30 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
     Route::patch('cu-dan-can-ho/{cuDanCanHo}/toggle-status', [\App\Http\Controllers\Admin\CuDanCanHoController::class, 'toggleStatus'])
         ->name('cu-dan-can-ho.toggle-status');
+
+    // Quản lý đặt lịch tiện ích
+    // Lưu ý: route dashboard phải đăng ký TRƯỚC resource() để không bị route
+    // show ('{datLichTienIch}') nuốt mất chuỗi "dashboard" như một ID.
+    Route::get('dat-lich-tien-ich/dashboard', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'dashboard'])
+        ->name('dat-lich-tien-ich.dashboard');
+    Route::resource('dat-lich-tien-ich', \App\Http\Controllers\Admin\DatLichTienIchController::class)
+        ->parameters(['dat-lich-tien-ich' => 'datLichTienIch']);
+    Route::patch('dat-lich-tien-ich/{id}/restore', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'restore'])
+        ->name('dat-lich-tien-ich.restore');
+    Route::patch('dat-lich-tien-ich/{datLichTienIch}/approve', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'approve'])
+        ->name('dat-lich-tien-ich.approve');
+    Route::patch('dat-lich-tien-ich/{datLichTienIch}/reject', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'reject'])
+        ->name('dat-lich-tien-ich.reject');
+    Route::patch('dat-lich-tien-ich/{datLichTienIch}/cancel', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'cancel'])
+        ->name('dat-lich-tien-ich.cancel');
+
+    // Quản lý tiện ích
+    Route::resource('tien-ich', \App\Http\Controllers\Admin\TienIchController::class)
+        ->parameters(['tien-ich' => 'tienIch']);
+
+    // Quản lý loại tiện ích
+    Route::resource('loai-tien-ich', \App\Http\Controllers\Admin\LoaiTienIchController::class)
+        ->parameters(['loai-tien-ich' => 'loaiTienIch']);
 });
 
 // ==================== MANAGER ====================
@@ -182,6 +209,8 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);
     Route::resource('phuong-tien', \App\Http\Controllers\Manager\PhuongTienController::class)
         ->parameters(['phuong-tien' => 'phuongTien']);
+    Route::delete('phuong-tien/{phuongTien}/xoa-mem', [\App\Http\Controllers\Manager\PhuongTienController::class, 'xoaMem'])
+        ->name('phuong-tien.xoa-mem');
     Route::resource('phi-dich-vu', \App\Http\Controllers\Manager\PhiDichVuController::class);
     Route::get('hoa-don/preview-phi', [\App\Http\Controllers\Manager\HoaDonController::class, 'previewPhi'])->name('hoa-don.preview-phi');
     Route::get('hoa-don/can-ho-services', [\App\Http\Controllers\Manager\HoaDonController::class, 'canHoServices'])->name('hoa-don.can-ho-services');
@@ -261,6 +290,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::resource('loai-can-ho', \App\Http\Controllers\Manager\LoaiCanHoController::class)
         ->parameters(['loai-can-ho' => 'loaiCanHo']);
 
+    // Quản lý trạng thái căn hộ
+    Route::resource('trang-thai-can-ho', \App\Http\Controllers\Manager\TrangThaiCanHoController::class)
+        ->parameters(['trang-thai-can-ho' => 'trangThaiCanHo']);
+
     // Quản lý loại phí dịch vụ
     Route::resource('loai-phi-dich-vu', \App\Http\Controllers\Manager\LoaiPhiDichVuController::class)
         ->parameters(['loai-phi-dich-vu' => 'loaiPhiDichVu']);
@@ -286,6 +319,30 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     // Quản lý phí dịch vụ căn hộ
     Route::resource('can-ho-phi-dich-vu', \App\Http\Controllers\Manager\CanHoPhiDichVuController::class)
         ->parameters(['can-ho-phi-dich-vu' => 'canHoPhiDichVu']);
+
+    // Quản lý đặt lịch tiện ích
+    // Lưu ý: route dashboard phải đăng ký TRƯỚC resource() để không bị route
+    // show ('{datLichTienIch}') nuốt mất chuỗi "dashboard" như một ID.
+    Route::get('dat-lich-tien-ich/dashboard', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'dashboard'])
+        ->name('dat-lich-tien-ich.dashboard');
+    Route::resource('dat-lich-tien-ich', \App\Http\Controllers\Manager\DatLichTienIchController::class)
+        ->parameters(['dat-lich-tien-ich' => 'datLichTienIch']);
+    Route::patch('dat-lich-tien-ich/{id}/restore', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'restore'])
+        ->name('dat-lich-tien-ich.restore');
+    Route::patch('dat-lich-tien-ich/{datLichTienIch}/approve', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'approve'])
+        ->name('dat-lich-tien-ich.approve');
+    Route::patch('dat-lich-tien-ich/{datLichTienIch}/reject', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'reject'])
+        ->name('dat-lich-tien-ich.reject');
+    Route::patch('dat-lich-tien-ich/{datLichTienIch}/cancel', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'cancel'])
+        ->name('dat-lich-tien-ich.cancel');
+
+    // Quản lý tiện ích
+    Route::resource('tien-ich', \App\Http\Controllers\Manager\TienIchController::class)
+        ->parameters(['tien-ich' => 'tienIch']);
+
+    // Quản lý loại tiện ích
+    Route::resource('loai-tien-ich', \App\Http\Controllers\Manager\LoaiTienIchController::class)
+        ->parameters(['loai-tien-ich' => 'loaiTienIch']);
 });
 
 // ==================== RESIDENT ====================
@@ -317,6 +374,19 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     Route::get('/yeu-cau/{yeuCau}/chinh-sua', [\App\Http\Controllers\Resident\YeuCauController::class, 'edit'])->name('yeu-cau.edit');
     Route::put('/yeu-cau/{yeuCau}', [\App\Http\Controllers\Resident\YeuCauController::class, 'update'])->name('yeu-cau.update');
     Route::patch('/yeu-cau/{yeuCau}/huy', [\App\Http\Controllers\Resident\YeuCauController::class, 'cancel'])->name('yeu-cau.huy');
+
+    // Tiện ích (xem danh sách / chi tiết)
+    Route::get('/tien-ich', [\App\Http\Controllers\Resident\TienIchController::class, 'index'])->name('tien-ich.index');
+    Route::get('/tien-ich/{tienIch}', [\App\Http\Controllers\Resident\TienIchController::class, 'show'])->name('tien-ich.show');
+
+    // Đặt lịch tiện ích
+    // Lưu ý: route "dat-lich" (form tạo mới) phải đăng ký TRƯỚC route show
+    // ('{datLichTienIch}') để không bị nuốt mất chuỗi "dat-lich" như một ID.
+    Route::get('/dat-lich-tien-ich/dat-lich', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'create'])->name('dat-lich-tien-ich.create');
+    Route::post('/dat-lich-tien-ich', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'store'])->name('dat-lich-tien-ich.store');
+    Route::get('/dat-lich-tien-ich', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'index'])->name('dat-lich-tien-ich.index');
+    Route::get('/dat-lich-tien-ich/{datLichTienIch}', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'show'])->name('dat-lich-tien-ich.show');
+    Route::patch('/dat-lich-tien-ich/{datLichTienIch}/huy', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'cancel'])->name('dat-lich-tien-ich.huy');
 });
 
 // Payment Callbacks (legacy — redirect URL đã chuyển sang payment.momo.return)
@@ -329,4 +399,4 @@ Route::post('/payment/momo/ipn', [\App\Http\Controllers\Payment\MomoController::
 
 // VNPay Payment — nằm ngoài mọi auth middleware
 Route::get('/payment/vnpay/return', [\App\Http\Controllers\Payment\VnpayController::class, 'return'])->name('payment.vnpay.return');
-Route::post('/payment/vnpay/ipn', [\App\Http\Controllers\Payment\VnpayController::class, 'ipn'])->name('payment.vnpay.ipn');
+Route::get('/payment/vnpay/ipn', [\App\Http\Controllers\Payment\VnpayController::class, 'ipn'])->name('payment.vnpay.ipn');

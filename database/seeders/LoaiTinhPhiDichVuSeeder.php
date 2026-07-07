@@ -12,10 +12,9 @@ class LoaiTinhPhiDichVuSeeder extends Seeder
         $data = ['Cố định', 'Theo chỉ số', 'Theo diện tích', 'Theo số lượng'];
 
         foreach ($data as $item) {
-            DB::table('loai_tinh_phi_dich_vu')->updateOrInsert(
-                ['ten_loai' => $item],
-                ['ten_loai' => $item]
-            );
+            if (!DB::table('loai_tinh_phi_dich_vu')->where('ten_loai', $item['ten_loai'])->exists()) {
+                DB::table('loai_tinh_phi_dich_vu')->insert($item);
+            }
         }
     }
 }

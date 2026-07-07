@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateNhanVienRequest extends FormRequest
 {
@@ -19,11 +20,20 @@ class UpdateNhanVienRequest extends FormRequest
             'ho_ten'        => 'required|string|max:150',
             'chuc_vu'       => 'required|integer|exists:chuc_vu,id',
             'sdt'           => 'nullable|string|max:15',
-            'email'         => "required|email|max:150|unique:nhan_vien,email,{$id}",
+            'email'         => [
+                'required', 'email', 'max:150',
+                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt')->ignore($id),
+            ],
             'mat_khau'      => 'nullable|string|min:8|confirmed',
             'trang_thai'    => 'required|in:0,1',
-            'ma_nhan_vien'  => "nullable|string|max:50|unique:nhan_vien,ma_nhan_vien,{$id}",
-            'cccd'          => "required|string|max:20|unique:nhan_vien,cccd,{$id}",
+            'ma_nhan_vien'  => [
+                'nullable', 'string', 'max:50',
+                Rule::unique('nhan_vien', 'ma_nhan_vien')->whereNull('deletedAt')->ignore($id),
+            ],
+            'cccd'          => [
+                'required', 'string', 'max:20',
+                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt')->ignore($id),
+            ],
             'ngay_sinh'     => 'nullable|date',
             'ngay_vao_lam'  => 'nullable|date',
             'ngay_nghi_lam' => 'nullable|date',

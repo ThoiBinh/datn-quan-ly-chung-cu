@@ -178,18 +178,24 @@ class DashboardReportService
 
         $result = [];
         foreach ($phiList as $phi) {
-            $soCanHo = DB::table('can_ho_phi_dich_vu')->where('phi_dich_vu', $phi->id)->count();
+            $soCanHo = DB::table('can_ho_phi_dich_vu')
+                ->join('can_ho', 'can_ho_phi_dich_vu.can_ho', '=', 'can_ho.id')
+                ->where('can_ho_phi_dich_vu.phi_dich_vu', $phi->id)
+                ->whereNull('can_ho.deletedAt')
+                ->count();
 
             $dtQuery = DB::table('chi_tiet_hoa_don as ct')
                 ->join('hoa_don as hd', 'ct.hoa_don', '=', 'hd.id')
                 ->where('ct.ten_phi_dich_vu', $phi->ten_phi_dich_vu)
                 ->where('hd.trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)
-                ->whereBetween('hd.createdAt', [$dateFrom, $dateTo]);
+                ->whereBetween('hd.createdAt', [$dateFrom, $dateTo])
+                ->whereNull('hd.deletedAt');
 
             if (!empty($filters['toa_nha'])) {
                 $tnId = (int) $filters['toa_nha'];
                 $dtQuery->join('can_ho as ch', 'hd.can_ho', '=', 'ch.id')
-                         ->where('ch.toa_nha', $tnId);
+                         ->where('ch.toa_nha', $tnId)
+                         ->whereNull('ch.deletedAt');
             }
 
             $result[] = [
@@ -275,11 +281,14 @@ class DashboardReportService
         $noQuery = DB::table('hoa_don as hd')
             ->select('hd.can_ho', DB::raw('SUM(hd.tong_tien - hd.so_tien_da_thanh_toan) as tong_no'))
             ->whereIn('hd.trang_thai', [HoaDon::TRANG_THAI_CHUA_THANH_TOAN, HoaDon::TRANG_THAI_QUA_HAN])
-            ->whereBetween('hd.createdAt', [$dateFrom, $dateTo]);
+            ->whereBetween('hd.createdAt', [$dateFrom, $dateTo])
+            ->whereNull('hd.deletedAt');
 
         if (!empty($filters['toa_nha'])) {
             $tnId = (int) $filters['toa_nha'];
-            $noQuery->join('can_ho as ch', 'hd.can_ho', '=', 'ch.id')->where('ch.toa_nha', $tnId);
+            $noQuery->join('can_ho as ch', 'hd.can_ho', '=', 'ch.id')
+                    ->where('ch.toa_nha', $tnId)
+                    ->whereNull('ch.deletedAt');
         }
 
         $canHoNo = $noQuery->groupBy('hd.can_ho')->orderByDesc('tong_no')->limit(10)->get();
@@ -297,11 +306,14 @@ class DashboardReportService
             ->join('hoa_don as hd', 'ct.hoa_don', '=', 'hd.id')
             ->select('ct.ten_phi_dich_vu', DB::raw('SUM(ct.thanh_tien) as tong_doanh_thu'))
             ->where('hd.trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)
-            ->whereBetween('hd.createdAt', [$dateFrom, $dateTo]);
+            ->whereBetween('hd.createdAt', [$dateFrom, $dateTo])
+            ->whereNull('hd.deletedAt');
 
         if (!empty($filters['toa_nha'])) {
             $tnId = (int) $filters['toa_nha'];
-            $phiDtQuery->join('can_ho as ch', 'hd.can_ho', '=', 'ch.id')->where('ch.toa_nha', $tnId);
+            $phiDtQuery->join('can_ho as ch', 'hd.can_ho', '=', 'ch.id')
+                       ->where('ch.toa_nha', $tnId)
+                       ->whereNull('ch.deletedAt');
         }
 
         $phiDvDoanhThu = $phiDtQuery->groupBy('ct.ten_phi_dich_vu')
@@ -318,7 +330,9 @@ class DashboardReportService
             $tnId = (int) $filters['toa_nha'];
             $cuDanTtQuery->join('hoa_don as hd', 'lst.hoa_don', '=', 'hd.id')
                           ->join('can_ho as ch', 'hd.can_ho', '=', 'ch.id')
-                          ->where('ch.toa_nha', $tnId);
+                          ->where('ch.toa_nha', $tnId)
+                          ->whereNull('hd.deletedAt')
+                          ->whereNull('ch.deletedAt');
         }
 
         $cuDanTtNhieu = $cuDanTtQuery->groupBy('cd.id', 'cd.ho_ten_dem', 'cd.ten')
@@ -329,7 +343,9 @@ class DashboardReportService
             ->join('hoa_don as hd', 'lst.hoa_don', '=', 'hd.id')
             ->join('nhan_vien as nv', 'hd.nguoi_cap_nhat', '=', 'nv.id')
             ->select('nv.id', 'nv.ho_ten', DB::raw('COUNT(*) as so_gd, SUM(lst.so_tien) as tong_tien'))
-            ->whereBetween('lst.ngay_thanh_toan', [$dateFrom, $dateTo]);
+            ->whereBetween('lst.ngay_thanh_toan', [$dateFrom, $dateTo])
+            ->whereNull('hd.deletedAt')
+            ->whereNull('nv.deletedAt');
 
         $nvXuLyNhieu = $nvQuery->groupBy('nv.id', 'nv.ho_ten')
             ->orderByDesc('so_gd')->limit(10)->get();

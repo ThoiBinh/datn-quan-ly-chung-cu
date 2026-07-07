@@ -29,11 +29,11 @@ class BangTin extends Model
 
     public function nguoiTao()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_tao');
+        return $this->belongsTo(NhanVien::class, 'nguoi_tao')->withTrashed();
     }
 
     public function nguoiCapNhat()
     {
-        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat');
+        return $this->belongsTo(NhanVien::class, 'nguoi_cap_nhat')->withTrashed();
     }
 }

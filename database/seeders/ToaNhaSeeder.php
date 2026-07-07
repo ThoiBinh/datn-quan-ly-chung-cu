@@ -16,10 +16,12 @@ class ToaNhaSeeder extends Seeder
         ];
 
         foreach ($data as $item) {
-            DB::table('toa_nha')->updateOrInsert(
-                ['ten_toa_nha' => $item['ten_toa_nha']],
-                array_merge($item, ['createdAt' => now(), 'updatedAt' => now()])
-            );
+            if (!DB::table('toa_nha')->where('ten_toa_nha', $item['ten_toa_nha'])->exists()) {
+                DB::table('toa_nha')->insert(array_merge($item, [
+                    'createdAt' => now(),
+                    'updatedAt' => now(),
+                ]));
+            }
         }
     }
 }

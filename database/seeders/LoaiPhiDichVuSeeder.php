@@ -28,10 +28,16 @@ class LoaiPhiDichVuSeeder extends Seeder
         ];
 
         foreach ($data as $item) {
+<<<<<<< HEAD
+            if (!DB::table('loai_phi_dich_vu')->where('ten_loai_phi_dich_vu', $item['ten_loai_phi_dich_vu'])->exists()) {
+                DB::table('loai_phi_dich_vu')->insert($item);
+            }
+=======
             DB::table('loai_phi_dich_vu')->updateOrInsert(
                 ['ten_loai_phi_dich_vu' => $item['ten_loai_phi_dich_vu']],
                 $item
             );
+>>>>>>> origin/develop
         }
     }
 }

@@ -25,11 +25,11 @@ class CuDanCanHo extends Model
 
     public function canHo()
     {
-        return $this->belongsTo(CanHo::class, 'can_ho');
+        return $this->belongsTo(CanHo::class, 'can_ho')->withTrashed();
     }
 
     public function vaiTro()
     {
-        return $this->belongsTo(VaiTro::class, 'vai_tro');
+        return $this->belongsTo(VaiTro::class, 'vai_tro')->withTrashed();
     }
 }

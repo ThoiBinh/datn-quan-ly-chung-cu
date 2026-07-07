@@ -7,16 +7,19 @@ use App\Models\ChucVu;
 use App\Models\CuDan;
 use App\Models\NhanVien;
 use App\Services\AuditLogService;
+use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     private function resolveUser(string $type, int $id): NhanVien|CuDan
     {
         if ($type === 'nhan-vien') {
-            return NhanVien::with('chucVu')->findOrFail($id);
+            $nv = NhanVien::with('chucVu')->findOrFail($id);
+            return NhanVienTrangThaiService::syncOne($nv);
         }
         return CuDan::findOrFail($id);
     }
@@ -31,6 +34,8 @@ class UserController extends Controller
 
         // --- NhanVien ---
         if (!$type || $type === 'nhan_vien') {
+            NhanVienTrangThaiService::syncExpired();
+
             $nvQuery = NhanVien::with('chucVu');
 
             if ($search) {
@@ -138,10 +143,16 @@ class UserController extends Controller
             'ho_ten'        => 'required|string|max:255',
             'chuc_vu'       => 'required|exists:chuc_vu,id',
             'sdt'           => 'nullable|string|max:20',
-            'email'         => 'required|email|unique:nhan_vien,email',
+            'email'         => [
+                'required', 'email',
+                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt'),
+            ],
             'mat_khau'      => 'required|min:8|confirmed',
             'ma_nhan_vien'  => 'nullable|string|max:50',
-            'cccd'          => 'required|string|max:20|unique:nhan_vien,cccd',
+            'cccd'          => [
+                'required', 'string', 'max:20',
+                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt'),
+            ],
             'ngay_sinh'     => 'nullable|date',
             'ngay_vao_lam'  => 'nullable|date',
             'ngay_nghi_lam' => 'nullable|date',
@@ -261,9 +272,15 @@ class UserController extends Controller
             'ho_ten'        => 'required|string|max:255',
             'chuc_vu'       => 'required|exists:chuc_vu,id',
             'sdt'           => 'nullable|string|max:20',
-            'email'         => 'required|email|unique:nhan_vien,email,' . $id,
+            'email'         => [
+                'required', 'email',
+                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt')->ignore($id),
+            ],
             'ma_nhan_vien'  => 'nullable|string|max:50',
-            'cccd'          => 'required|string|max:20|unique:nhan_vien,cccd,' . $id,
+            'cccd'          => [
+                'required', 'string', 'max:20',
+                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt')->ignore($id),
+            ],
             'ngay_sinh'     => 'nullable|date',
             'ngay_vao_lam'  => 'nullable|date',
             'ngay_nghi_lam' => 'nullable|date',
