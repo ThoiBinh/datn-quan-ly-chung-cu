@@ -9,12 +9,7 @@ class LoaiPhuongTienSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['ten_loai_phuong_tien' => 'Ô tô'],
-            ['ten_loai_phuong_tien' => 'Xe máy'],
-            ['ten_loai_phuong_tien' => 'Xe đạp điện'],
-            ['ten_loai_phuong_tien' => 'Xe đạp'],
-        ];
+        $data = ['Ô tô', 'Xe máy', 'Xe đạp điện', 'Xe đạp'];
 
         foreach ($data as $item) {
             if (!DB::table('loai_phuong_tien')->where('ten_loai_phuong_tien', $item['ten_loai_phuong_tien'])->exists()) {

@@ -9,11 +9,7 @@ class VaiTroSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['vai_tro' => 'Chủ hộ'],
-            ['vai_tro' => 'Thành viên'],
-            ['vai_tro' => 'Người thuê'],
-        ];
+        $data = ['Chủ hộ', 'Thành viên', 'Người thuê'];
 
         foreach ($data as $item) {
             if (!DB::table('vai_tro')->where('vai_tro', $item['vai_tro'])->exists()) {

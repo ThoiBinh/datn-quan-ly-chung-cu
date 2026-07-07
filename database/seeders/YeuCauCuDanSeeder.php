@@ -55,6 +55,8 @@ class YeuCauCuDanSeeder extends Seeder
             ];
         }
 
-        DB::table('yeu_cau_cu_dan')->insertOrIgnore($data);
+        if (DB::table('yeu_cau_cu_dan')->count() === 0) {
+            DB::table('yeu_cau_cu_dan')->insert($data);
+        }
     }
 }
