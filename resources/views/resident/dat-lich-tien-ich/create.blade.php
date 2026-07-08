@@ -40,8 +40,8 @@
         <div class="mx-5 mt-5 flex items-start gap-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-4 py-3">
             <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                Mã đặt lịch và phí sử dụng được hệ thống tự tính. Lịch sẽ tự động <strong>Đã duyệt</strong> nếu tiện ích còn đủ chỗ trong khung giờ bạn chọn,
-                ngược lại sẽ ở trạng thái <strong>Chờ duyệt</strong> để ban quản lý xem xét.
+                Mã đặt lịch và phí sử dụng được hệ thống tự tính. Lịch của bạn sẽ ở trạng thái <strong>Chờ duyệt</strong> trước, hệ thống sẽ tự động duyệt
+                theo đúng thứ tự ai đặt trước (kể cả khi bạn không mở app) ngay khi tiện ích còn đủ chỗ, hoặc ban quản lý có thể duyệt sớm hơn.
             </p>
         </div>
 

@@ -36,7 +36,7 @@
             <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
                 Mã đặt lịch được hệ thống tự sinh, phí sử dụng được tự động tính theo <strong>số người × đơn giá tiện ích × số giờ sử dụng</strong>.
-                Trạng thái sẽ tự động là <strong>Đã duyệt</strong> nếu tiện ích còn đủ sức chứa trong khung giờ chọn, ngược lại sẽ ở trạng thái <strong>Chờ duyệt</strong> để nhân viên xem xét.
+                Lượt đặt sẽ luôn ở trạng thái <strong>Chờ duyệt</strong> khi tạo mới; hệ thống tự động duyệt theo đúng thứ tự đặt trước (FIFO) và sức chứa còn lại mỗi phút, hoặc nhân viên có thể duyệt tay ngay tại đây.
             </p>
         </div>
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature\DatLichTienIch;
 
 use App\Models\DatLichTienIch;
+use App\Models\TienIch;
 use App\Services\BookingService;
 use Illuminate\Validation\ValidationException;
 
@@ -16,56 +17,38 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
         $this->service = new BookingService();
     }
 
-    public function test_tao_dat_lich_tu_dong_duyet_khi_du_suc_chua(): void
+    public function test_tao_dat_lich_luon_o_trang_thai_cho_duyet_bat_ke_suc_chua(): void
     {
         $cuDan = $this->taoCuDan();
-        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
+        $tienIchConCho = $this->taoTienIch(['suc_chua' => 80]);
+        $tienIchKhongGioiHan = $this->taoTienIch(['suc_chua' => 0]);
 
-        $datLich = $this->service->taoDatLich([
-            'cu_dan' => $cuDan->id,
-            'tien_ich' => $tienIch->id,
-            'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
-            'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+        // Con du cho rieng le -> van la Cho duyet (FIFO tuyệt đối: không tự
+        // động duyệt ngay lúc tạo nữa, phải chờ scheduler tuDongDuyetTheoFifo()).
+        $duCho = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchConCho->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
             'so_nguoi' => 10,
         ]);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $duCho->trang_thai);
+        $this->assertNull($duCho->ngay_duyet);
+        $this->assertMatchesRegularExpression('/^DL\d{8}\d{4}$/', $duCho->ma_dat_lich);
 
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $datLich->trang_thai);
-        $this->assertNotNull($datLich->ngay_duyet);
-        $this->assertNull($datLich->nhan_vien_duyet);
-        $this->assertMatchesRegularExpression('/^DL\d{8}\d{4}$/', $datLich->ma_dat_lich);
-    }
-
-    public function test_tao_dat_lich_cho_duyet_khi_vuot_suc_chua(): void
-    {
-        $cuDan = $this->taoCuDan();
-        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
-
-        $datLich = $this->service->taoDatLich([
-            'cu_dan' => $cuDan->id,
-            'tien_ich' => $tienIch->id,
-            'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
-            'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+        // Vuot suc chua -> cung la Cho duyet
+        $vuotCho = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchConCho->id,
+            'thoi_gian_bat_dau' => '2026-09-02 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-02 09:00:00',
             'so_nguoi' => 90,
         ]);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $vuotCho->trang_thai);
 
-        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $datLich->trang_thai);
-        $this->assertNull($datLich->ngay_duyet);
-    }
-
-    public function test_khong_gioi_han_khi_suc_chua_bang_khong(): void
-    {
-        $cuDan = $this->taoCuDan();
-        $tienIch = $this->taoTienIch(['suc_chua' => 0]);
-
-        $datLich = $this->service->taoDatLich([
-            'cu_dan' => $cuDan->id,
-            'tien_ich' => $tienIch->id,
-            'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
-            'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+        // Khong gioi han suc chua (suc_chua = 0) -> VAN la Cho duyet luc tao
+        $khongGioiHan = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchKhongGioiHan->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
             'so_nguoi' => 100000,
         ]);
-
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $datLich->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $khongGioiHan->trang_thai);
     }
 
     public function test_tao_dat_lich_tinh_dung_phi(): void
@@ -88,7 +71,7 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
     public function test_tao_dat_lich_that_bai_khi_tien_ich_ngung_hoat_dong(): void
     {
         $cuDan = $this->taoCuDan();
-        $tienIch = $this->taoTienIch(['trang_thai' => \App\Models\TienIch::TRANG_THAI_NGUNG_HOAT_DONG]);
+        $tienIch = $this->taoTienIch(['trang_thai' => TienIch::TRANG_THAI_NGUNG_HOAT_DONG]);
 
         $this->expectException(ValidationException::class);
 
@@ -101,57 +84,183 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  FIFO tuyệt đối (tuDongDuyetTheoFifo)
+    // ─────────────────────────────────────────────────────────────
+
     /**
-     * Ma trận giao nhau thời gian: xác nhận thuật toán sức chứa xử lý đúng
-     * mọi kiểu chồng lấn (một phần, lồng nhau, nối đuôi chạm mốc, rời rạc).
+     * Kịch bản cốt lõi của FIFO tuyệt đối, thu hẹp theo CỤM khung giờ giao
+     * nhau: A tạo trước, đủ chỗ riêng lẻ -> được duyệt. B tạo sau A, giao
+     * giờ với A, cộng lại vượt sức chứa -> phải chờ, và vì B là booking đầu
+     * tiên KHÔNG đủ chỗ trong CỤM của nó nên CỤM đó dừng lại. C tạo sau B
+     * nhưng khung giờ hoàn toàn KHÔNG giao với A/B (thuộc một cụm khác) nên
+     * KHÔNG bị ảnh hưởng bởi việc B đang chờ — C vẫn được duyệt ngay.
      */
-    public function test_giao_nhau_thoi_gian_xu_ly_dung_moi_truong_hop(): void
+    public function test_fifo_duyet_dung_thu_tu_tao_truoc_va_dung_lai_dung_cho(): void
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
 
-        // A: 08h-10h, 50 nguoi -> doc lap, du cho -> Da duyet
         $a = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 10:00:00',
             'so_nguoi' => 50,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $a->trang_thai);
+        usleep(1000);
+        $b = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-09-01 09:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 11:00:00',
+            'so_nguoi' => 40, // giao voi A: 50+40=90 > 80 -> khong du, chan cum nay
+        ]);
+        usleep(1000);
+        $c = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-10-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-10-01 09:00:00',
+            'so_nguoi' => 5, // khong giao gio voi A/B -> khac cum, khong bi chan
+        ]);
 
-        // B: 09h-11h, giao mot phan voi A, 40 nguoi -> 50+40=90>80 -> Cho duyet
+        $soLuong = $this->service->tuDongDuyetTheoFifo();
+
+        $this->assertSame(2, $soLuong);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $a->fresh()->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->fresh()->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->fresh()->trang_thai);
+    }
+
+    /**
+     * Sau khi A (chặn cụm của nó) bị hủy, giải phóng sức chứa, lần chạy FIFO
+     * kế tiếp phải duyệt được B (vì cụm A-B nay đã đủ chỗ). C ở cụm khác nên
+     * đã được duyệt ngay từ lần chạy đầu tiên, không liên quan tới việc hủy A.
+     */
+    public function test_fifo_tiep_tuc_hang_doi_sau_khi_giai_phong_cho(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
+
+        $a = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 10:00:00',
+            'so_nguoi' => 50,
+        ]);
         $b = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 09:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 11:00:00',
             'so_nguoi' => 40,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->trang_thai);
-
-        // C: 10h-11h, noi duoi A dung moc gio (khong giao), 40 nguoi -> 0+40<=80 -> Da duyet
         $c = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
-            'thoi_gian_bat_dau' => '2026-09-01 10:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 11:00:00',
-            'so_nguoi' => 40,
+            'thoi_gian_bat_dau' => '2026-10-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-10-01 09:00:00',
+            'so_nguoi' => 5,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->trang_thai);
 
-        // D: 08:30-09:30, long trong A hoan toan, 35 nguoi -> 50+35=85>80 -> Cho duyet
-        $d = $this->service->taoDatLich([
-            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
-            'thoi_gian_bat_dau' => '2026-09-01 08:30:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:30:00',
-            'so_nguoi' => 35,
-        ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $d->trang_thai);
+        // Lan chay dau: A duyet (du cho rieng), C duyet (khac cum), B cho (chan cum voi A)
+        $soLuongLanDau = $this->service->tuDongDuyetTheoFifo();
+        $this->assertSame(2, $soLuongLanDau);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->fresh()->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->fresh()->trang_thai);
 
-        // E: ngay khac hoan toan roi rac, 80 nguoi -> Da duyet
-        $e = $this->service->taoDatLich([
-            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
-            'thoi_gian_bat_dau' => '2026-09-10 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-10 09:00:00',
-            'so_nguoi' => 80,
-        ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $e->trang_thai);
+        $this->service->huy($a->fresh(), 'giải phóng test');
+
+        $soLuong = $this->service->tuDongDuyetTheoFifo();
+
+        $this->assertSame(1, $soLuong);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $b->fresh()->trang_thai);
     }
 
-    public function test_duyet_that_bai_neu_het_cho_luc_duyet(): void
+    /**
+     * Bắc cầu qua booking trung gian: D (08h-09h) và F (09h15-10h) không giao
+     * giờ trực tiếp, nhưng E (08h30-09h30) giao cả D lẫn F nên D-E-F thuộc
+     * CÙNG một cụm theo tính bắc cầu. E khiến cụm vượt sức chứa (D+E > 80)
+     * nên cụm dừng tại E — F dù không giao trực tiếp với D vẫn phải chờ vì
+     * cùng cụm, không được xét tách biệt.
+     */
+    public function test_fifo_bac_cau_qua_booking_trung_gian_van_chung_mot_cum(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
+
+        $d = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2027-01-10 08:00:00', 'thoi_gian_ket_thuc' => '2027-01-10 09:00:00',
+            'so_nguoi' => 70,
+        ]);
+        $e = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2027-01-10 08:30:00', 'thoi_gian_ket_thuc' => '2027-01-10 09:30:00',
+            'so_nguoi' => 20, // giao D: 70+20=90 > 80 -> chan cum ngay tai E
+        ]);
+        $f = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2027-01-10 09:15:00', 'thoi_gian_ket_thuc' => '2027-01-10 10:00:00',
+            'so_nguoi' => 5, // khong giao D truc tiep nhung giao E -> bac cau chung cum voi D
+        ]);
+
+        $soLuong = $this->service->tuDongDuyetTheoFifo();
+
+        $this->assertSame(1, $soLuong);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $d->fresh()->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $e->fresh()->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $f->fresh()->trang_thai);
+    }
+
+    public function test_fifo_duyet_het_khi_suc_chua_khong_gioi_han(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch(['suc_chua' => 0]);
+
+        $a = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+            'so_nguoi' => 100000,
+        ]);
+        $b = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:30:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:30:00',
+            'so_nguoi' => 200000,
+        ]);
+
+        $soLuong = $this->service->tuDongDuyetTheoFifo();
+
+        $this->assertSame(2, $soLuong);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $a->fresh()->trang_thai);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $b->fresh()->trang_thai);
+    }
+
+    public function test_fifo_hang_doi_tach_biet_theo_tung_tien_ich(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIchBiChan = $this->taoTienIch(['suc_chua' => 80]);
+        $tienIchKhac = $this->taoTienIch(['suc_chua' => 80]);
+
+        // Tien ich 1: A du cho, B (giao gio) khong du -> hang doi bi chan tai B
+        $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchBiChan->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 10:00:00',
+            'so_nguoi' => 50,
+        ]);
+        $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchBiChan->id,
+            'thoi_gian_bat_dau' => '2026-09-01 09:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 11:00:00',
+            'so_nguoi' => 40,
+        ]);
+
+        // Tien ich 2: hoan toan doc lap, khong lien quan gi den hang doi bi chan o tren
+        $dKhac = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchKhac->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+            'so_nguoi' => 10,
+        ]);
+
+        $this->service->tuDongDuyetTheoFifo();
+
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $dKhac->fresh()->trang_thai);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Duyệt thủ công (nhân viên) — vẫn hoạt động ngoài luồng FIFO tự động
+    // ─────────────────────────────────────────────────────────────
+
+    public function test_duyet_thu_cong_that_bai_neu_khong_du_cho(): void
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
@@ -161,20 +270,19 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 10:00:00',
             'so_nguoi' => 80,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $a->trang_thai);
+        $this->service->duyet($a); // nhân viên duyệt tay, bỏ qua FIFO — vẫn được phép
 
         $b = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:30:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:30:00',
             'so_nguoi' => 5,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->trang_thai);
 
         $this->expectException(ValidationException::class);
         $this->service->duyet($b);
     }
 
-    public function test_duyet_thanh_cong_sau_khi_huy_giai_phong_suc_chua(): void
+    public function test_duyet_thu_cong_thanh_cong_sau_khi_huy_giai_phong_suc_chua(): void
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
@@ -184,14 +292,15 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 10:00:00',
             'so_nguoi' => 80,
         ]);
+        $this->service->duyet($a);
+
         $b = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:30:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:30:00',
             'so_nguoi' => 5,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->trang_thai);
 
-        $this->service->huy($a, 'giải phóng test');
+        $this->service->huy($a->fresh(), 'giải phóng test');
         $b = $this->service->duyet($b);
 
         $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $b->trang_thai);
@@ -207,15 +316,40 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
             'so_nguoi' => 1,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $datLich->trang_thai);
+        $this->service->duyet($datLich);
 
         $this->expectException(ValidationException::class);
-        $this->service->capNhatDatLich($datLich, [
+        $this->service->capNhatDatLich($datLich->fresh(), [
             'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
             'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
             'so_nguoi' => 2,
         ]);
+    }
+
+    public function test_cap_nhat_dat_lich_khong_tu_nhay_da_duyet(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
+
+        $datLich = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+            'so_nguoi' => 1,
+        ]);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $datLich->trang_thai);
+
+        // So_nguoi con rat nho, thua suc chua rieng le, nhung sua khong duoc
+        // phep tu nhay len Da duyet — van phai cho FIFO nhu moi booking khac.
+        $datLich = $this->service->capNhatDatLich($datLich, [
+            'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
+            'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+            'so_nguoi' => 2,
+        ]);
+
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $datLich->trang_thai);
+        $this->assertSame(2, $datLich->so_nguoi);
     }
 
     public function test_tu_choi_chi_ap_dung_cho_cho_duyet(): void
@@ -226,7 +360,7 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
         $datLich = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
-            'so_nguoi' => 200, // vuot suc chua -> Cho duyet
+            'so_nguoi' => 1,
         ]);
 
         $datLich = $this->service->tuChoi($datLich, 'không phù hợp');
@@ -248,9 +382,9 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
             'so_nguoi' => 1,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $datLich->trang_thai);
+        $this->service->duyet($datLich);
 
-        $datLich = $this->service->hoanThanh($datLich);
+        $datLich = $this->service->hoanThanh($datLich->fresh());
         $this->assertSame(DatLichTienIch::TRANG_THAI_HOAN_THANH, $datLich->trang_thai);
 
         $this->expectException(ValidationException::class);
@@ -262,17 +396,18 @@ class BookingServiceCapacityTest extends DatLichTienIchTestCase
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
 
-        $choDuyet = $this->service->taoDatLich([
+        $seChoDuyet = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
-            'so_nguoi' => 999,
+            'so_nguoi' => 1,
         ]);
         $daDuyet = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-02 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-02 09:00:00',
             'so_nguoi' => 1,
         ]);
-        $bTuChoi = $this->service->tuChoi($choDuyet, 'test');
+        $this->service->duyet($daDuyet);
+        $bTuChoi = $this->service->tuChoi($seChoDuyet->fresh());
 
         $daHuyGoc = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
