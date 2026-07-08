@@ -26,6 +26,15 @@ class CanHo extends Model
         return $this->belongsTo(ToaNha::class, 'toa_nha')->withTrashed();
     }
 
+    public static function sinhSoCanHo(ToaNha $toaNha, int $tang, int $soPhong): string
+    {
+        $tienTo = strtoupper($toaNha->tien_to);
+        $tangStr = str_pad((string) $tang, 2, '0', STR_PAD_LEFT);
+        $phongStr = str_pad((string) $soPhong, 3, '0', STR_PAD_LEFT);
+
+        return $tienTo.$tangStr.$phongStr;
+    }
+
     public function loaiCanHo()
     {
         return $this->belongsTo(LoaiCanHo::class, 'loai_can_ho')->withTrashed();

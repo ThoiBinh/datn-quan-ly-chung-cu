@@ -31,8 +31,7 @@ class HoaDonService
             ])->findOrFail($canHoId);
 
             $hoaDon = HoaDon::create([
-                'ma_thanh_toan'         => 'HD-' . $nam . str_pad($thang, 2, '0', STR_PAD_LEFT)
-                                         . '-' . str_pad($canHoId, 4, '0', STR_PAD_LEFT),
+                'ma_thanh_toan'         => 'HD'. (int) (microtime(true) * 1000),
                 'can_ho'                => $canHoId,
                 'thang'                 => $thang,
                 'nam'                   => $nam,

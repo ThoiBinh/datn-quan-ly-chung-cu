@@ -41,15 +41,29 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Địa chỉ</label>
-                <input type="text" name="dia_chi" value="{{ old('dia_chi') }}"
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                    Tiền tố <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="tien_to" value="{{ old('tien_to') }}" required maxlength="10"
+                       oninput="this.value = this.value.toUpperCase()"
+                       class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="VD: A, B, A1...">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                    Địa chỉ <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="dia_chi" value="{{ old('dia_chi') }}" required
                        class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                        placeholder="Số nhà, đường, quận/huyện, tỉnh/thành phố">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Số tầng</label>
-                <input type="number" name="so_tang" value="{{ old('so_tang') }}" min="1" max="200"
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                    Số tầng <span class="text-red-500">*</span>
+                </label>
+                <input type="number" name="so_tang" value="{{ old('so_tang') }}" required min="1"
                        class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                        placeholder="VD: 20">
             </div>

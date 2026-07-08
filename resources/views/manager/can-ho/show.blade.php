@@ -82,8 +82,16 @@
                         <dd class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $canHo->so_can_ho }}</dd>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Tiền tố</dt>
+                        <dd class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $canHo->toaNha?->tien_to ?? '–' }}</dd>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
                         <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Tầng</dt>
                         <dd class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $canHo->tang }}</dd>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Số phòng</dt>
+                        <dd class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ substr($canHo->so_can_ho, -3) }}</dd>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
                         <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Giá</dt>

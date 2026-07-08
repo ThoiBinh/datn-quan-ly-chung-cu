@@ -13,10 +13,15 @@ class ToaNha extends Model
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
     const DELETED_AT = 'deletedAt';
-    protected $fillable = ['ten_toa_nha', 'dia_chi', 'so_tang'];
+    protected $fillable = ['ten_toa_nha', 'dia_chi', 'so_tang','tien_to'];
 
     public function canHo()
     {
         return $this->hasMany(CanHo::class, 'toa_nha');
+    }
+
+    public function tienIch()
+    {
+        return $this->hasMany(TienIch::class, 'toa_nha');
     }
 }

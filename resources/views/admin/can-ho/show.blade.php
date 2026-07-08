@@ -152,7 +152,9 @@
             @foreach([
                 ['ID', $canHo->id, true],
                 ['Tòa nhà', $canHo->toaNha?->ten_toa_nha, false],
+                ['Tiền tố', $canHo->toaNha?->tien_to, true],
                 ['Tầng', $canHo->tang, false],
+                ['Số phòng', substr($canHo->so_can_ho, -3), true],
                 ['Loại', $canHo->loaiCanHo?->ten_loai_can_ho, false],
                 ['Trạng thái', $canHo->trangThai?->ten_trang_thai, false],
                 ['Giá', $canHo->gia ? number_format($canHo->gia, 0, ',', '.') . ' ₫' : null, false],

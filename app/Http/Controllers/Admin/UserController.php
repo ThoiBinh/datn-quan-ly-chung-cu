@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -168,7 +169,7 @@ class UserController extends Controller
             'mat_khau.confirmed' => 'Xác nhận mật khẩu không khớp.',
         ]);
 
-        $nextId = (NhanVien::max('id') ?? 0) + 1;
+        
 
         $nv = NhanVien::create([
             'ho_ten'        => $request->ho_ten,
@@ -176,13 +177,14 @@ class UserController extends Controller
             'sdt'           => $request->sdt,
             'email'         => $request->email,
             'mat_khau'      => Hash::make($request->mat_khau),
-            'ma_nhan_vien'  => $request->ma_nhan_vien ?: 'NV' . str_pad($nextId, 4, '0', STR_PAD_LEFT),
+            'ma_nhan_vien'  => $request->ma_nhan_vien ?: 'NV-' . strtoupper(Str::uuid()),
             'cccd'          => $request->cccd,
             'ngay_sinh'     => $request->ngay_sinh     ?: null,
             'ngay_vao_lam'  => $request->ngay_vao_lam  ?: null,
             'ngay_nghi_lam' => $request->ngay_nghi_lam ?: null,
             'ghi_chu'       => $request->ghi_chu,
             'trang_thai'    => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ]);
 
         AuditLogService::log('INSERT', 'nhan_vien', $nv->id, null, $nv->toArray());
@@ -228,6 +230,7 @@ class UserController extends Controller
             'xa'         => $request->xa,
             'dia_chi'    => $request->dia_chi,
             'trang_thai' => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ]);
 
         AuditLogService::log('INSERT', 'cu_dan', $cd->id, null, $cd->toArray());
@@ -306,6 +309,7 @@ class UserController extends Controller
             'ngay_nghi_lam' => $request->ngay_nghi_lam ?: null,
             'ghi_chu'       => $request->ghi_chu,
             'trang_thai'    => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ];
 
         if ($request->filled('mat_khau')) {
@@ -362,6 +366,7 @@ class UserController extends Controller
             'xa'         => $request->xa,
             'dia_chi'    => $request->dia_chi,
             'trang_thai' => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ];
 
         if ($request->filled('mat_khau')) {
