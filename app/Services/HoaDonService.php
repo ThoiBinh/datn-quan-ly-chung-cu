@@ -52,32 +52,123 @@ class HoaDonService
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Meter-reading update (for edit form)
+    //  Existing chi_tiet update / removal (for edit form)
     // ─────────────────────────────────────────────────────────────
 
-    public function capNhatChiSo(HoaDon $hoaDon, array $chiTietData): void
+    /**
+     * Cập nhật các dòng chi_tiet_hoa_don đã tồn tại: chỉ số cũ/mới (dịch vụ điện/nước)
+     * hoặc số lượng (dịch vụ cố định). Tự nhận diện loại dòng dựa vào chi_so_cu hiện có
+     * trong CSDL (không đổi loại dòng khi sửa).
+     *
+     * Đơn giá KHÔNG được nhận từ $chiTietData — luôn lấy lại từ phi_dich_vu.don_gia
+     * hiện hành (so tên), tránh bị client gửi đơn giá giả từ trình duyệt.
+     * Dịch vụ tính theo diện tích căn hộ cũng không nhận số lượng từ client — luôn lấy
+     * lại từ thuoc_tinh_can_ho qua calculateAreaFee().
+     */
+    public function capNhatChiTiet(HoaDon $hoaDon, array $chiTietData): void
     {
+        $bangPhi = $this->layBangPhiTheoTen();
+
         foreach ($chiTietData as $id => $values) {
             $chiTiet = ChiTietHoaDon::where('id', $id)
                 ->where('hoa_don', $hoaDon->id)
-                ->whereNotNull('chi_so_cu')
                 ->first();
 
             if (!$chiTiet) {
                 continue;
             }
 
-            $chiSoCu  = (int) ($values['chi_so_cu']  ?? 0);
-            $chiSoMoi = (int) ($values['chi_so_moi'] ?? 0);
-            $result   = $this->calculateMeterFee((float) $chiTiet->don_gia, $chiSoCu, $chiSoMoi);
+            $phi         = $bangPhi[mb_strtolower(trim($chiTiet->ten_phi_dich_vu))] ?? null;
+            $donGia      = $phi ? (float) $phi->don_gia : (float) $chiTiet->don_gia;
+            $billingType = $phi ? $this->identifyBillingType($phi) : ($chiTiet->chi_so_cu !== null ? 'meter' : 'fixed');
 
-            $chiTiet->update([
-                'chi_so_cu'  => $chiSoCu,
-                'chi_so_moi' => $chiSoMoi,
-                'so_luong'   => $result['so_luong'],
-                'thanh_tien' => $result['thanh_tien'],
-            ]);
+            if ($chiTiet->chi_so_cu !== null) {
+                $chiSoCu  = (int) ($values['chi_so_cu']  ?? $chiTiet->chi_so_cu);
+                $chiSoMoi = (int) ($values['chi_so_moi'] ?? $chiTiet->chi_so_moi);
+                $result   = $this->calculateMeterFee($donGia, $chiSoCu, $chiSoMoi);
+
+                $chiTiet->update([
+                    'don_gia'    => $donGia,
+                    'chi_so_cu'  => $chiSoCu,
+                    'chi_so_moi' => $chiSoMoi,
+                    'so_luong'   => $result['so_luong'],
+                    'thanh_tien' => $result['thanh_tien'],
+                ]);
+            } elseif ($billingType === 'area') {
+                $result = $this->calculateAreaFee($hoaDon->canHo, $donGia);
+
+                $chiTiet->update([
+                    'don_gia'    => $donGia,
+                    'so_luong'   => $result['so_luong'],
+                    'thanh_tien' => $result['thanh_tien'],
+                ]);
+            } else {
+                $soLuong = isset($values['so_luong']) ? (float) $values['so_luong'] : (float) $chiTiet->so_luong;
+                $result  = $this->calculateFixedFee($donGia, $soLuong);
+
+                $chiTiet->update([
+                    'don_gia'    => $donGia,
+                    'so_luong'   => $result['so_luong'],
+                    'thanh_tien' => $result['thanh_tien'],
+                ]);
+            }
         }
+
+        $this->calculateInvoiceTotal($hoaDon);
+    }
+
+    /**
+     * Danh sách chi_tiet_hoa_don để hiển thị/chỉnh sửa trên màn hình edit, kèm đơn giá
+     * hiện hành đọc lại từ phi_dich_vu.don_gia (so tên), fallback về đơn giá đã lưu nếu
+     * không còn dịch vụ tương ứng (đã xóa/đổi tên). Dịch vụ tính theo diện tích căn hộ
+     * hiển thị số lượng = diện tích từ thuoc_tinh_can_ho (không cho sửa).
+     */
+    public function layChiTietChoEdit(HoaDon $hoaDon): array
+    {
+        $bangPhi = $this->layBangPhiTheoTen();
+
+        return $hoaDon->chiTiet->map(function ($ct) use ($hoaDon, $bangPhi) {
+            $phi         = $bangPhi[mb_strtolower(trim($ct->ten_phi_dich_vu))] ?? null;
+            $donGia      = $phi ? (float) $phi->don_gia : (float) $ct->don_gia;
+            $billingType = $phi ? $this->identifyBillingType($phi) : ($ct->chi_so_cu !== null ? 'meter' : 'fixed');
+            $soLuong     = $billingType === 'area'
+                ? $this->calculateAreaFee($hoaDon->canHo, $donGia)['so_luong']
+                : (float) $ct->so_luong;
+
+            return [
+                'chi_tiet_id'     => $ct->id,
+                'ten_phi_dich_vu' => $ct->ten_phi_dich_vu,
+                'don_gia'         => $donGia,
+                'so_luong'        => $soLuong,
+                'chi_so_cu'       => $ct->chi_so_cu,
+                'chi_so_moi'      => $ct->chi_so_moi,
+                'is_meter'        => $ct->chi_so_cu !== null,
+                'billing_type'    => $billingType,
+            ];
+        })->values()->toArray();
+    }
+
+    /**
+     * Bảng tra phi_dich_vu hiện hành theo tên (chuẩn hóa lowercase + trim), dùng để luôn
+     * lấy đơn giá và loại tính phí từ CSDL thay vì giá trị client gửi lên.
+     */
+    private function layBangPhiTheoTen(): array
+    {
+        return PhiDichVu::with('loaiTinhPhi')->get()
+            ->keyBy(fn ($p) => mb_strtolower(trim($p->ten_phi_dich_vu)))
+            ->all();
+    }
+
+    /**
+     * Xóa các dòng chi_tiet_hoa_don khỏi hóa đơn (theo id) và tính lại tổng tiền.
+     */
+    public function xoaChiTietHoaDon(HoaDon $hoaDon, array $chiTietIds): void
+    {
+        if (empty($chiTietIds)) {
+            return;
+        }
+
+        ChiTietHoaDon::where('hoa_don', $hoaDon->id)->whereIn('id', $chiTietIds)->delete();
 
         $this->calculateInvoiceTotal($hoaDon);
     }
@@ -201,6 +292,112 @@ class HoaDonService
                 );
             }
         });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Quick-add fee services on edit form (checkbox add)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Danh sách phí dịch vụ đang hoạt động (chưa xóa) mà hóa đơn này chưa có
+     * (so khớp theo tên, vì chi_tiet_hoa_don không lưu FK tới phi_dich_vu).
+     */
+    public function layDichVuChuaCoTrongHoaDon(HoaDon $hoaDon): array
+    {
+        $existingNames = $hoaDon->chiTiet->pluck('ten_phi_dich_vu')
+            ->map(fn ($ten) => mb_strtolower(trim($ten)))
+            ->all();
+
+        return PhiDichVu::with(['donViTinh', 'loaiTinhPhi'])
+            ->orderBy('ten_phi_dich_vu')
+            ->get()
+            ->reject(fn ($phi) => in_array(mb_strtolower(trim($phi->ten_phi_dich_vu)), $existingNames))
+            ->map(function ($phi) use ($hoaDon) {
+                $donGia      = (float) $phi->don_gia;
+                $billingType = $this->identifyBillingType($phi);
+                $soLuong     = $billingType === 'area'
+                    ? $this->calculateAreaFee($hoaDon->canHo, $donGia)['so_luong']
+                    : 1;
+
+                return [
+                    'phi_dich_vu_id'  => $phi->id,
+                    'ten_phi_dich_vu' => $phi->ten_phi_dich_vu,
+                    'don_vi_tinh'     => $phi->donViTinh?->don_vi ?? '',
+                    'billing_type'    => $billingType,
+                    'don_gia'         => $donGia,
+                    'don_gia_fmt'     => number_format($donGia, 0, ',', '.') . 'đ',
+                    'chi_so_cu'       => 0,
+                    'chi_so_moi'      => 0,
+                    'so_luong'        => $soLuong,
+                ];
+            })->values()->toArray();
+    }
+
+    /**
+     * Thêm các phí dịch vụ được tick vào hóa đơn hiện có (tạo dòng chi_tiet_hoa_don mới).
+     * Bỏ qua các dịch vụ đã tồn tại (so tên) để tránh trùng lặp.
+     * $soLuongData: số lượng do người dùng nhập cho các dịch vụ cố định (mặc định 1 nếu không có).
+     */
+    public function themPhiDichVuVaoHoaDon(HoaDon $hoaDon, array $phiDichVuIds, array $chiSoData = [], array $soLuongData = []): void
+    {
+        $existingNames = ChiTietHoaDon::where('hoa_don', $hoaDon->id)
+            ->pluck('ten_phi_dich_vu')
+            ->map(fn ($ten) => mb_strtolower(trim($ten)))
+            ->all();
+
+        $phis = PhiDichVu::with('loaiTinhPhi')->whereIn('id', array_unique($phiDichVuIds))->get();
+
+        foreach ($phis as $phi) {
+            $tenChuan = mb_strtolower(trim($phi->ten_phi_dich_vu));
+            if (in_array($tenChuan, $existingNames)) {
+                continue;
+            }
+
+            $donGia      = (float) $phi->don_gia;
+            $billingType = $this->identifyBillingType($phi);
+
+            if ($billingType === 'meter') {
+                $chiSoCu  = (int) ($chiSoData[$phi->id]['chi_so_cu']  ?? 0);
+                $chiSoMoi = (int) ($chiSoData[$phi->id]['chi_so_moi'] ?? 0);
+                $result   = $this->calculateMeterFee($donGia, $chiSoCu, $chiSoMoi);
+
+                ChiTietHoaDon::create([
+                    'hoa_don'         => $hoaDon->id,
+                    'ten_phi_dich_vu' => $phi->ten_phi_dich_vu,
+                    'don_gia'         => $donGia,
+                    'chi_so_cu'       => $chiSoCu,
+                    'chi_so_moi'      => $chiSoMoi,
+                    'so_luong'        => $result['so_luong'],
+                    'thanh_tien'      => $result['thanh_tien'],
+                ]);
+            } elseif ($billingType === 'area') {
+                // Số lượng luôn lấy từ thuoc_tinh_can_ho, không nhận từ client.
+                $result = $this->calculateAreaFee($hoaDon->canHo, $donGia);
+
+                ChiTietHoaDon::create([
+                    'hoa_don'         => $hoaDon->id,
+                    'ten_phi_dich_vu' => $phi->ten_phi_dich_vu,
+                    'don_gia'         => $donGia,
+                    'so_luong'        => $result['so_luong'],
+                    'thanh_tien'      => $result['thanh_tien'],
+                ]);
+            } else {
+                $soLuong = (float) ($soLuongData[$phi->id] ?? 1);
+                $result  = $this->calculateFixedFee($donGia, $soLuong);
+
+                ChiTietHoaDon::create([
+                    'hoa_don'         => $hoaDon->id,
+                    'ten_phi_dich_vu' => $phi->ten_phi_dich_vu,
+                    'don_gia'         => $donGia,
+                    'so_luong'        => $result['so_luong'],
+                    'thanh_tien'      => $result['thanh_tien'],
+                ]);
+            }
+
+            $existingNames[] = $tenChuan;
+        }
+
+        $this->calculateInvoiceTotal($hoaDon);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -418,7 +615,7 @@ class HoaDonService
      * Determine billing type by loaiTinhPhi.ten_loai (name-based, ID-fallback).
      * Returns: 'meter' | 'vehicle' | 'area' | 'fixed'
      */
-    private function identifyBillingType(PhiDichVu $phi): string
+    public function identifyBillingType(PhiDichVu $phi): string
     {
         $ten = mb_strtolower($phi->loaiTinhPhi?->ten_loai ?? '');
 

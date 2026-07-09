@@ -19,5 +19,5 @@ class NguonTao extends Model
     const ADMIN = 1;
     const RESIDENT_APP = 2;
     const MOMO = 3;
-    const VNPAY = 4;
+    const VNPAY = 3;
 }

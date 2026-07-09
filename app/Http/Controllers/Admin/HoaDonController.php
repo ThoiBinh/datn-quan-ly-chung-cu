@@ -165,9 +165,11 @@ class HoaDonController extends Controller
 
         $this->hoaDonService->capNhatTrangThaiTreHan();
         $hoaDon->refresh();
-        $hoaDon->load('chiTiet', 'canHo.toaNha');
+        $hoaDon->load('chiTiet', 'canHo.toaNha', 'canHo.thuocTinh');
         $isDaTT = $hoaDon->trang_thai === HoaDon::TRANG_THAI_DA_THANH_TOAN;
-        return view('admin.hoa-don.edit', compact('hoaDon', 'isDaTT'));
+        $dsPhiDichVuMoi = $this->hoaDonService->layDichVuChuaCoTrongHoaDon($hoaDon);
+        $existingRows   = $this->hoaDonService->layChiTietChoEdit($hoaDon);
+        return view('admin.hoa-don.edit', compact('hoaDon', 'isDaTT', 'dsPhiDichVuMoi', 'existingRows'));
     }
 
     public function update(Request $request, HoaDon $hoaDon)
@@ -177,33 +179,75 @@ class HoaDonController extends Controller
         }
 
         $request->validate(
-            ['han_thanh_toan' => 'nullable|date'],
+            [
+                'han_thanh_toan'    => 'nullable|date',
+                'phi_dich_vu_ids'   => 'array',
+                'phi_dich_vu_ids.*' => 'integer|exists:phi_dich_vu,id',
+            ],
             ['han_thanh_toan.date' => 'Hạn thanh toán không đúng định dạng ngày.']
         );
 
-        // chi_so edit only when CHUA_THANH_TOAN
+        // chi_tiet edit (chỉ số, đơn giá, số lượng) chỉ khi CHUA_THANH_TOAN
         $isCurrentlyChuaTT = $hoaDon->trang_thai == HoaDon::TRANG_THAI_CHUA_THANH_TOAN;
 
         if ($isCurrentlyChuaTT && $request->has('chi_tiet')) {
             foreach ($request->chi_tiet as $id => $values) {
-                $cu  = (int) ($values['chi_so_cu']  ?? 0);
-                $moi = (int) ($values['chi_so_moi'] ?? 0);
-                if ($moi < $cu) {
-                    return back()->withInput()->with('error', 'Chỉ số mới không được nhỏ hơn chỉ số cũ.');
+                if (array_key_exists('chi_so_cu', $values) || array_key_exists('chi_so_moi', $values)) {
+                    $cu  = (int) ($values['chi_so_cu']  ?? 0);
+                    $moi = (int) ($values['chi_so_moi'] ?? 0);
+                    if ($moi < $cu) {
+                        return back()->withInput()->with('error', 'Chỉ số mới không được nhỏ hơn chỉ số cũ.');
+                    }
                 }
+                if (array_key_exists('so_luong', $values) && (!is_numeric($values['so_luong']) || (float) $values['so_luong'] <= 0)) {
+                    return back()->withInput()->with('error', 'Số lượng dịch vụ phải lớn hơn 0.');
+                }
+            }
+        }
+
+        $removeChiTietIds = array_map('intval', $request->input('remove_chi_tiet', []));
+        $phiDichVuMoi     = array_map('intval', $request->input('phi_dich_vu_ids', []));
+        $chiSoDichVuMoi   = $request->input('chi_so_moi_dich_vu', []);
+        $soLuongDichVuMoi = $request->input('so_luong_dich_vu', []);
+
+        foreach ($chiSoDichVuMoi as $phiId => $values) {
+            if (!in_array((int) $phiId, $phiDichVuMoi, true)) {
+                continue;
+            }
+            $cu  = (int) ($values['chi_so_cu']  ?? 0);
+            $moi = (int) ($values['chi_so_moi'] ?? 0);
+            if ($moi < $cu) {
+                return back()->withInput()->with('error', 'Chỉ số mới của dịch vụ vừa thêm không được nhỏ hơn chỉ số cũ.');
+            }
+        }
+
+        foreach ($soLuongDichVuMoi as $phiId => $value) {
+            if (!in_array((int) $phiId, $phiDichVuMoi, true)) {
+                continue;
+            }
+            if (!is_numeric($value) || (float) $value <= 0) {
+                return back()->withInput()->with('error', 'Số lượng của dịch vụ vừa thêm phải lớn hơn 0.');
             }
         }
 
         $old = $hoaDon->toArray();
 
-        DB::transaction(function () use ($request, $hoaDon, $isCurrentlyChuaTT) {
+        DB::transaction(function () use ($request, $hoaDon, $isCurrentlyChuaTT, $removeChiTietIds, $phiDichVuMoi, $chiSoDichVuMoi, $soLuongDichVuMoi) {
             $hoaDon->update(array_merge(
                 $request->only('han_thanh_toan'),
                 ['nguoi_cap_nhat' => auth('nhanvien')->id()]
             ));
 
             if ($isCurrentlyChuaTT && $request->has('chi_tiet')) {
-                $this->hoaDonService->capNhatChiSo($hoaDon, $request->chi_tiet);
+                $this->hoaDonService->capNhatChiTiet($hoaDon, $request->chi_tiet);
+            }
+
+            if ($isCurrentlyChuaTT && !empty($removeChiTietIds)) {
+                $this->hoaDonService->xoaChiTietHoaDon($hoaDon, $removeChiTietIds);
+            }
+
+            if (!empty($phiDichVuMoi)) {
+                $this->hoaDonService->themPhiDichVuVaoHoaDon($hoaDon, $phiDichVuMoi, $chiSoDichVuMoi, $soLuongDichVuMoi);
             }
 
             $this->hoaDonService->syncStatus($hoaDon->refresh());
