@@ -160,7 +160,6 @@ $sortIcon = function($col) {
                                 Cư dân {!! $sortIcon('ho_ten') !!}
                             </a>
                         </th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide text-xs">Căn hộ</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide text-xs">Tiện ích</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide text-xs">
                             <a href="{{ $sortUrl('thoi_gian_bat_dau') }}" class="inline-flex items-center gap-1 hover:text-gray-700 dark:hover:text-slate-200">
@@ -187,14 +186,7 @@ $sortIcon = function($col) {
                             <p class="font-medium">{{ $item->cuDan?->ho_ten ?? '—' }}</p>
                             <p class="text-xs text-gray-400 dark:text-slate-500">{{ $item->cuDan?->email ?? '—' }}</p>
                         </td>
-                        <td class="px-4 py-3.5 whitespace-nowrap text-gray-600 dark:text-slate-300">
-                            @if($item->canHo)
-                                {{ $item->canHo->so_can_ho }}
-                                <p class="text-xs text-gray-400 dark:text-slate-500">{{ $item->canHo->toaNha?->ten_toa_nha ?? '—' }}</p>
-                            @else
-                                <span class="text-gray-400 dark:text-slate-500">—</span>
-                            @endif
-                        </td>
+                        
                         <td class="px-4 py-3.5 whitespace-nowrap">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                                 {{ $item->tienIch?->ten_tien_ich ?? '—' }}

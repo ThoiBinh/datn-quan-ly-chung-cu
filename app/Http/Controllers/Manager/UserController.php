@@ -10,6 +10,7 @@ use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -84,8 +85,9 @@ class UserController extends Controller
             'mat_khau'     => Hash::make($request->password),
             'chuc_vu'      => $request->input('chuc_vu') ?: $chucVuId,
             'trang_thai'   => $request->status === 'active' ? 1 : 0,
-            'ma_nhan_vien' => $request->input('ma_nhan_vien') ?: 'NV' . str_pad($nextId, 4, '0', STR_PAD_LEFT),
+            'ma_nhan_vien' => $request->input('ma_nhan_vien') ?: 'NV-' . strtoupper(Str::uuid()),
             'cccd'         => $request->input('cccd') ?: '',
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ]);
 
         AuditLogService::log('INSERT', 'nhan_vien', $nv->id, null, $nv->toArray());
@@ -136,6 +138,7 @@ class UserController extends Controller
             'email'      => $request->email,
             'sdt'        => $request->phone,
             'trang_thai' => $request->status === 'active' ? 1 : 0,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ];
 
         if ($request->filled('chuc_vu')) {

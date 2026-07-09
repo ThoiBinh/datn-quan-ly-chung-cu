@@ -8,11 +8,42 @@ use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 
 /**
  * Validation cross-field dùng chung cho mọi FormRequest đặt lịch tiện ích:
- * thời gian bắt đầu/kết thúc phải cùng ngày, và phải nằm trong giờ mở cửa
- * của tiện ích đã chọn. Trait để tránh lặp lại giữa Resident/Admin/Manager.
+ * không được ở quá khứ, phải cùng ngày, phải nằm trong giờ mở cửa, và phải
+ * có thời lượng hợp lệ (tối thiểu 30 phút, tối đa 8 giờ). Trait để tránh
+ * lặp lại giữa Resident/Admin/Manager.
  */
 trait ValidatesKhungGioTienIch
 {
+    /**
+     * Không được đặt lịch trong quá khứ: thời gian bắt đầu phải lớn hơn
+     * thời điểm hiện tại.
+     */
+    private function validateKhongQuaKhu(
+        ValidatorContract $validator,
+        string $fieldBatDau = 'thoi_gian_bat_dau',
+        string $fieldKetThuc = 'thoi_gian_ket_thuc'
+    ): void {
+        if ($validator->errors()->hasAny([$fieldBatDau, $fieldKetThuc])) {
+            return;
+        }
+
+        $batDau = $this->input($fieldBatDau);
+
+        if (!$batDau) {
+            return;
+        }
+
+        try {
+            $batDau = Carbon::parse($batDau);
+        } catch (\Throwable) {
+            return;
+        }
+
+        if ($batDau->lte(now())) {
+            $validator->errors()->add($fieldBatDau, 'Không được đặt lịch trong quá khứ.');
+        }
+    }
+
     private function validateCungNgay(
         ValidatorContract $validator,
         string $fieldBatDau = 'thoi_gian_bat_dau',
@@ -37,7 +68,43 @@ trait ValidatesKhungGioTienIch
         }
 
         if ($ngayBatDau !== $ngayKetThuc) {
-            $validator->errors()->add($fieldKetThuc, 'Thời gian bắt đầu và kết thúc phải cùng một ngày.');
+            $validator->errors()->add($fieldKetThuc, 'Không được đặt lịch qua ngày.');
+        }
+    }
+
+    /**
+     * Thời lượng sử dụng phải từ 30 phút đến 8 giờ.
+     */
+    private function validateThoiLuong(
+        ValidatorContract $validator,
+        string $fieldBatDau = 'thoi_gian_bat_dau',
+        string $fieldKetThuc = 'thoi_gian_ket_thuc'
+    ): void {
+        if ($validator->errors()->hasAny([$fieldBatDau, $fieldKetThuc])) {
+            return;
+        }
+
+        $batDau  = $this->input($fieldBatDau);
+        $ketThuc = $this->input($fieldKetThuc);
+
+        if (!$batDau || !$ketThuc) {
+            return;
+        }
+
+        try {
+            $soPhut = Carbon::parse($batDau)->diffInMinutes(Carbon::parse($ketThuc));
+        } catch (\Throwable) {
+            return;
+        }
+
+        if ($soPhut < 30) {
+            $validator->errors()->add($fieldKetThuc, 'Thời gian sử dụng tối thiểu là 30 phút.');
+
+            return;
+        }
+
+        if ($soPhut > 8 * 60) {
+            $validator->errors()->add($fieldKetThuc, 'Một lượt đặt không được vượt quá 8 giờ.');
         }
     }
 
@@ -68,10 +135,7 @@ trait ValidatesKhungGioTienIch
         $gioDongCua = Carbon::parse($tienIch->gio_dong_cua)->format('H:i:s');
 
         if ($gioBatDau < $gioMoCua || $gioKetThuc > $gioDongCua) {
-            $validator->errors()->add(
-                $fieldBatDau,
-                "Tiện ích chỉ hoạt động trong khung giờ {$tienIch->gio_hoat_dong}."
-            );
+            $validator->errors()->add($fieldBatDau, 'Thời gian đặt phải nằm trong giờ hoạt động của tiện ích.');
         }
     }
 }

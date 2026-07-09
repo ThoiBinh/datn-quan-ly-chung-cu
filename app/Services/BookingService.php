@@ -52,9 +52,12 @@ class BookingService
             $ketThuc = Carbon::parse($data['thoi_gian_ket_thuc']);
             $soNguoi = (int) $data['so_nguoi'];
 
-            $trangThai = $this->xacDinhTrangThaiTheoSucChua($tienIch, $batDau, $ketThuc, $soNguoi);
-            $daDuocDuyet = $trangThai === DatLichTienIch::TRANG_THAI_DA_DUYET;
-
+            // FIFO tuyệt đối: mọi booking mới (Admin/Manager/Resident như nhau)
+            // LUÔN bắt đầu ở Chờ duyệt, không tự động duyệt ngay dù còn đủ chỗ.
+            // Việc chuyển sang Đã duyệt chỉ do job scheduler tuDongDuyetTheoFifo()
+            // đảm nhiệm, xét đúng thứ tự tạo trước — tránh trường hợp một booking
+            // tạo sau (dù nhỏ hơn, tự nó đủ chỗ) "vượt hàng" một booking tạo trước
+            // vẫn đang chờ. Xem tuDongDuyetTheoFifo() để biết chi tiết thuật toán.
             $datLich = $this->taoBanGhiVoiMaDuyNhat([
                 'cu_dan'             => $data['cu_dan'],
                 'can_ho'             => $data['can_ho'] ?? null,
@@ -66,11 +69,9 @@ class BookingService
                 // từ $data để tránh Controller/FormRequest tự ý ghi đè số tiền.
                 'phi_su_dung'        => $this->tinhPhi($tienIch, $soNguoi, $batDau, $ketThuc),
                 'ghi_chu'            => $data['ghi_chu'] ?? null,
-                'trang_thai'         => $trangThai,
-                // Đã duyệt ngay từ khi tạo là do hệ thống tự động duyệt theo sức chứa,
-                // không phải một nhân viên cụ thể duyệt → nhan_vien_duyet để null.
+                'trang_thai'         => DatLichTienIch::TRANG_THAI_CHO_DUYET,
                 'nhan_vien_duyet'    => null,
-                'ngay_duyet'         => $daDuocDuyet ? now() : null,
+                'ngay_duyet'         => null,
                 'nguoi_cap_nhat'     => auth('nhanvien')->id(),
             ]);
 
@@ -131,9 +132,11 @@ class BookingService
             $ketThuc = Carbon::parse($data['thoi_gian_ket_thuc']);
             $soNguoi = (int) $data['so_nguoi'];
 
-            $trangThai   = $this->xacDinhTrangThaiTheoSucChua($tienIch, $batDau, $ketThuc, $soNguoi);
-            $daDuocDuyet = $trangThai === DatLichTienIch::TRANG_THAI_DA_DUYET;
-
+            // FIFO tuyệt đối: sửa nội dung một booking đang Chờ duyệt không được
+            // phép "nhảy hàng" lên Đã duyệt ngay — nó vẫn phải chờ tới lượt của
+            // mình theo đúng thứ tự tạo (createdAt), do tuDongDuyetTheoFifo() xử
+            // lý. Vì damBaoTrangThai() ở trên đã đảm bảo $datLich đang là Chờ
+            // duyệt, không cần set lại 'trang_thai'/'nhan_vien_duyet'/'ngay_duyet'.
             $old = $datLich->toArray();
 
             $datLich->update([
@@ -144,9 +147,6 @@ class BookingService
                 'so_nguoi'           => $soNguoi,
                 'phi_su_dung'        => $this->tinhPhi($tienIch, $soNguoi, $batDau, $ketThuc),
                 'ghi_chu'            => $data['ghi_chu'] ?? null,
-                'trang_thai'         => $trangThai,
-                'nhan_vien_duyet'    => null,
-                'ngay_duyet'         => $daDuocDuyet ? now() : null,
                 'nguoi_cap_nhat'     => auth('nhanvien')->id(),
             ]);
 
@@ -214,13 +214,21 @@ class BookingService
     // ─────────────────────────────────────────────────────────────
 
     /**
-     * Quyết định trạng thái ban đầu của một lượt đặt lịch dựa trên sức chứa:
+     * Tính xem một khung giờ CÓ ĐANG còn đủ sức chứa hay không (tại thời điểm
+     * gọi, không xét thứ tự tạo):
      *
      *   tổng so_nguoi của các booking ĐÃ DUYỆT giao nhau về thời gian + so_nguoi mới
-     *       <= suc_chua  → Đã duyệt (tự động duyệt)
+     *       <= suc_chua  → Đã duyệt
      *       >  suc_chua  → Chờ duyệt
      *
      * suc_chua rỗng/0 nghĩa là không giới hạn → luôn Đã duyệt.
+     *
+     * LƯU Ý: kể từ khi áp dụng FIFO tuyệt đối, method này KHÔNG còn được
+     * taoDatLich()/capNhatDatLich() gọi để quyết định trạng thái lúc tạo/sửa
+     * nữa (mọi booking mới luôn vào Chờ duyệt, xem tuDongDuyetTheoFifo()).
+     * Giữ lại làm hàm tiện ích thuần (vd. để sau này làm tính năng "xem trước
+     * còn chỗ không" mà không ảnh hưởng dữ liệu) — không xóa vì chưa có cơ sở
+     * chứng minh nó thật sự thừa.
      */
     public function xacDinhTrangThaiTheoSucChua(TienIch $tienIch, Carbon $batDau, Carbon $ketThuc, int $soNguoiMoi): int
     {
@@ -307,6 +315,139 @@ class BookingService
 
             return $datLich->fresh();
         });
+    }
+
+    /**
+     * Scheduler FIFO tuyệt đối: quét MỌI tiện ích đang có booking Chờ duyệt và
+     * tự động duyệt theo đúng thứ tự tạo trước (createdAt ASC, id ASC) — áp
+     * dụng như nhau cho booking do Admin/Manager/Resident tạo, vì sức chứa là
+     * tài nguyên dùng chung của tiện ích, không phân biệt ai đặt.
+     *
+     * @return int Tổng số lượt đã tự động duyệt (cộng dồn mọi tiện ích).
+     */
+    public function tuDongDuyetTheoFifo(): int
+    {
+        $tienIchIds = DatLichTienIch::query()
+            ->where('trang_thai', DatLichTienIch::TRANG_THAI_CHO_DUYET)
+            ->distinct()
+            ->pluck('tien_ich');
+
+        $soLuong = 0;
+
+        foreach ($tienIchIds as $tienIchId) {
+            $soLuong += $this->duyetHangDoiFifo((int) $tienIchId);
+        }
+
+        return $soLuong;
+    }
+
+    /**
+     * Xử lý hàng đợi FIFO của MỘT tiện ích. Vì "dừng khi không đủ chỗ" chỉ có
+     * ý nghĩa giữa các booking THỰC SỰ tranh chấp cùng một khung giờ, hàng
+     * đợi được chia thành từng CỤM độc lập bằng gomNhomGiaoNhau() (các booking
+     * có khung giờ giao nhau, kể cả bắc cầu qua booking khác, gộp chung 1
+     * cụm). Trong mỗi cụm, xét đúng thứ tự tạo trước (FIFO tuyệt đối) và DỪNG
+     * hẳn cụm đó ngay khi gặp booking đầu tiên không đủ chỗ — không xét các
+     * booking phía sau CÙNG CỤM, kể cả khi tự chúng đủ chỗ. Nhưng một cụm bị
+     * chặn KHÔNG ảnh hưởng tới cụm khác (khung giờ không liên quan gì nhau)
+     * — cụm đó vẫn được xét và duyệt bình thường trong cùng lượt chạy.
+     *
+     * Trong 1 cụm: booking nào đủ chỗ thì duyệt ngay (tuDongDuyet() có sẵn)
+     * rồi mới xét booking kế tiếp — nhờ vậy tongNguoiDaDuyetGiaoNhau() ở vòng
+     * lặp sau tự động thấy cả những booking vừa được duyệt trước đó trong
+     * CÙNG lượt chạy này.
+     *
+     * lockForUpdate() trên tien_ich đảm bảo lượt quét này không chồng lấn với
+     * một request taoDatLich()/duyet() khác đang xử lý đồng thời cùng tiện ích.
+     */
+    private function duyetHangDoiFifo(int $tienIchId): int
+    {
+        return DB::transaction(function () use ($tienIchId) {
+            $tienIch = TienIch::withTrashed()->lockForUpdate()->find($tienIchId);
+
+            if (!$tienIch) {
+                return 0;
+            }
+
+            $hangDoi = DatLichTienIch::query()
+                ->where('tien_ich', $tienIchId)
+                ->where('trang_thai', DatLichTienIch::TRANG_THAI_CHO_DUYET)
+                ->get();
+
+            $soLuong = 0;
+
+            foreach ($this->gomNhomGiaoNhau($hangDoi) as $nhom) {
+                // Trong 1 cụm: xét đúng thứ tự tạo trước (FIFO tuyệt đối)
+                $theoThuTuTao = $nhom
+                    ->sortBy(fn (DatLichTienIch $dl) => [$dl->createdAt->getTimestamp(), $dl->id])
+                    ->values();
+
+                foreach ($theoThuTuTao as $datLich) {
+                    $tongDaDuyet = $this->tongNguoiDaDuyetGiaoNhau(
+                        $tienIchId,
+                        $datLich->thoi_gian_bat_dau,
+                        $datLich->thoi_gian_ket_thuc
+                    );
+
+                    if ($tienIch->suc_chua && ($tongDaDuyet + $datLich->so_nguoi > $tienIch->suc_chua)) {
+                        break; // Dừng hẳn CỤM này, không xét booking phía sau CÙNG CỤM
+                    }
+
+                    $this->tuDongDuyet($datLich);
+                    $soLuong++;
+                }
+            }
+
+            return $soLuong;
+        });
+    }
+
+    /**
+     * Gom các booking có khung giờ giao nhau (trực tiếp hoặc bắc cầu qua một
+     * booking trung gian) thành từng cụm độc lập — thuật toán "merge
+     * overlapping intervals" kinh điển: sắp theo thoi_gian_bat_dau tăng dần,
+     * duyệt tuần tự; một booking thuộc cụm đang mở nếu nó bắt đầu TRƯỚC mốc
+     * kết thúc xa nhất đã thấy trong cụm đó (đúng ngữ nghĩa giao nhau s1 < e2
+     * dùng xuyên suốt Service này — hai booking nối đuôi chạm đúng mốc giờ
+     * KHÔNG được coi là giao nhau, sẽ tách thành 2 cụm riêng).
+     *
+     * @param  \Illuminate\Support\Collection<int, DatLichTienIch>  $danhSach
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, DatLichTienIch>>
+     */
+    private function gomNhomGiaoNhau($danhSach)
+    {
+        $daSapXep = $danhSach
+            ->sortBy(fn (DatLichTienIch $dl) => [
+                $dl->thoi_gian_bat_dau->getTimestamp(),
+                $dl->thoi_gian_ket_thuc->getTimestamp(),
+            ])
+            ->values();
+
+        $cacCum = collect();
+        $cumHienTai = collect();
+        $mocKetThucXaNhat = null;
+
+        foreach ($daSapXep as $datLich) {
+            $thuocCumHienTai = $mocKetThucXaNhat !== null
+                && $datLich->thoi_gian_bat_dau->lt($mocKetThucXaNhat);
+
+            if (!$thuocCumHienTai && $cumHienTai->isNotEmpty()) {
+                $cacCum->push($cumHienTai);
+                $cumHienTai = collect();
+            }
+
+            $cumHienTai->push($datLich);
+
+            $mocKetThucXaNhat = ($mocKetThucXaNhat === null || $datLich->thoi_gian_ket_thuc->gt($mocKetThucXaNhat))
+                ? $datLich->thoi_gian_ket_thuc
+                : $mocKetThucXaNhat;
+        }
+
+        if ($cumHienTai->isNotEmpty()) {
+            $cacCum->push($cumHienTai);
+        }
+
+        return $cacCum;
     }
 
     /**
@@ -487,7 +628,7 @@ class BookingService
             ->where('thoi_gian_bat_dau', '<=', $mocGio)
             ->get()
             ->each(function (DatLichTienIch $datLich) use (&$soLuong) {
-                $this->huy($datLich, 'Tự động hủy: quá hạn duyệt, chỉ còn dưới 2 giờ đến giờ sử dụng.');
+                $this->huy($datLich, 'Hệ thống tự động hủy do không đủ sức chứa trước giờ sử dụng 2 tiếng.');
                 $soLuong++;
             });
 

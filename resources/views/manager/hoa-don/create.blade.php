@@ -14,6 +14,7 @@
          fetchError: null,
          oldChiSo: {{ Js::from(old('chi_so', [])) }},
          soLuongMap: {},
+         meterMap: {},
          phuongTienInfo: [],
          removedFeeIds: [],
 
@@ -45,11 +46,17 @@
                      this.removedFeeIds = [];
                      this.phuongTienInfo = data.phuong_tien_info || [];
                      data.fees.forEach(fee => {
+                         const id = String(fee.phi_dich_vu_id);
                          if (fee.billing_type === 'fixed') {
-                             const id = String(fee.phi_dich_vu_id);
                              if (!(id in this.soLuongMap)) {
                                  const oldVal = (this.oldChiSo[id] || {}).so_luong;
                                  this.soLuongMap[id] = oldVal ? parseInt(oldVal) : 1;
+                             }
+                         } else if (fee.billing_type === 'meter') {
+                             if (!((id + '_cu') in this.meterMap)) {
+                                 const oldVal = this.oldChiSo[id] || {};
+                                 this.meterMap[id + '_cu'] = oldVal.cu ?? 0;
+                                 this.meterMap[id + '_moi'] = oldVal.moi ?? 0;
                              }
                          }
                      });
@@ -119,10 +126,33 @@
              return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
          },
 
+         meterCu(fee) {
+             const v = parseFloat(this.meterMap[String(fee.phi_dich_vu_id) + '_cu']);
+             return isNaN(v) ? 0 : v;
+         },
+
+         meterMoi(fee) {
+             const v = parseFloat(this.meterMap[String(fee.phi_dich_vu_id) + '_moi']);
+             return isNaN(v) ? 0 : v;
+         },
+
+         isMeterInvalid(fee) {
+             return this.meterMoi(fee) < this.meterCu(fee);
+         },
+
+         getMeterQty(fee) {
+             const qty = this.meterMoi(fee) - this.meterCu(fee);
+             return qty > 0 ? qty : 0;
+         },
+
          getFeeTotal(fee) {
              if (fee.billing_type === 'fixed') {
                  const sl = parseInt(this.soLuongMap[String(fee.phi_dich_vu_id)] ?? 1);
                  return sl * fee.don_gia;
+             }
+             if (fee.billing_type === 'meter') {
+                 if (this.isMeterInvalid(fee)) return 0;
+                 return this.getMeterQty(fee) * fee.don_gia;
              }
              return fee.thanh_tien;
          },
@@ -259,8 +289,9 @@
                                 <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
                                     <span class="text-sm font-medium text-gray-800" x-text="fee.ten_phi_dich_vu"></span>
                                     <div class="flex items-center gap-3">
-                                        <span class="text-sm font-semibold text-gray-900 tabular-nums"
-                                              x-text="fee.billing_type === 'meter' ? '(nhập chỉ số)' : fmtMoney(getFeeTotal(fee))"></span>
+                                        <span class="text-sm font-semibold tabular-nums"
+                                              :class="fee.billing_type === 'meter' && isMeterInvalid(fee) ? 'text-red-600' : 'text-gray-900'"
+                                              x-text="fee.billing_type === 'meter' && isMeterInvalid(fee) ? 'Số liệu không hợp lệ' : fmtMoney(getFeeTotal(fee))"></span>
                                         <button type="button" @click="confirmDeleteFeeId = fee.phi_dich_vu_id"
                                                 title="Loại dịch vụ này khỏi hóa đơn"
                                                 class="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
@@ -275,21 +306,31 @@
                                             <label class="block text-xs text-gray-500 mb-1">Chỉ số cũ</label>
                                             <input type="number"
                                                    :name="'chi_so[' + fee.phi_dich_vu_id + '][cu]'"
-                                                   :value="(oldChiSo[String(fee.phi_dich_vu_id)] || {}).cu || 0"
+                                                   x-model="meterMap[String(fee.phi_dich_vu_id) + '_cu']"
                                                    min="0"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                                   class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2"
+                                                   :class="isMeterInvalid(fee) ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-indigo-400'">
                                         </div>
                                         <div>
                                             <label class="block text-xs text-gray-500 mb-1">Chỉ số mới</label>
                                             <input type="number"
                                                    :name="'chi_so[' + fee.phi_dich_vu_id + '][moi]'"
-                                                   :value="(oldChiSo[String(fee.phi_dich_vu_id)] || {}).moi || 0"
+                                                   x-model="meterMap[String(fee.phi_dich_vu_id) + '_moi']"
                                                    min="0"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                                   class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2"
+                                                   :class="isMeterInvalid(fee) ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-indigo-400'">
                                         </div>
-                                        <p class="col-span-2 text-xs text-blue-600">
-                                            Sản lượng = Chỉ số mới − Chỉ số cũ × Đơn giá: <span x-text="fee.don_gia_fmt"></span>
-                                        </p>
+                                        <template x-if="isMeterInvalid(fee)">
+                                            <p class="col-span-2 text-xs font-medium text-red-600">
+                                                Chỉ số mới phải lớn hơn hoặc bằng chỉ số cũ.
+                                            </p>
+                                        </template>
+                                        <template x-if="!isMeterInvalid(fee)">
+                                            <p class="col-span-2 text-xs text-blue-600">
+                                                Sản lượng: <span class="font-medium" x-text="getMeterQty(fee)"></span> × <span x-text="fee.don_gia_fmt"></span> =
+                                                <span class="font-semibold" x-text="fmtMoney(getFeeTotal(fee))"></span>
+                                            </p>
+                                        </template>
                                     </div>
                                 </template>
 
@@ -346,7 +387,7 @@
                         </template>
 
                         <div class="flex items-center justify-between pt-2 border-t border-gray-200">
-                            <span class="text-sm font-medium text-gray-600">Dự kiến tổng tiền <span class="text-xs text-gray-400">(chưa gồm điện/nước)</span></span>
+                            <span class="text-sm font-medium text-gray-600">Dự kiến tổng tiền</span>
                             <span class="text-lg font-bold text-gray-900 tabular-nums" x-text="fmtMoney(previewTotal())"></span>
                         </div>
                     </div>

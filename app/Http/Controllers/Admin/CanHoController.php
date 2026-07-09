@@ -83,11 +83,13 @@ class CanHoController extends Controller
     public function store(StoreCanHoRequest $request)
     {
         $validated = $request->validated();
+        $toaNha    = ToaNha::findOrFail($validated['toa_nha']);
+        $soCanHo   = CanHo::sinhSoCanHo($toaNha, $validated['tang'], $validated['so_phong']);
 
-        $canHo = DB::transaction(function () use ($request, $validated) {
+        $canHo = DB::transaction(function () use ($request, $validated, $soCanHo) {
             $canHo = CanHo::create([
                 'toa_nha'        => $validated['toa_nha'],
-                'so_can_ho'      => $validated['so_can_ho'],
+                'so_can_ho'      => $soCanHo,
                 'tang'           => $validated['tang'],
                 'loai_can_ho'    => $validated['loai_can_ho'],
                 'trang_thai'     => $validated['trang_thai'],
@@ -133,22 +135,25 @@ class CanHoController extends Controller
         $dsTrangThai      = TrangThaiCanHo::orderBy('id')->get();
         $dsThuocTinh      = ThuocTinh::orderBy('ten_thuoc_tinh')->get();
         $currentThuocTinh = $canHo->thuocTinh->keyBy('id');
+        $currentSoPhong   = (int) substr($canHo->so_can_ho, -3);
 
         return view('admin.can-ho.edit', compact(
-            'canHo', 'dsToaNha', 'dsLoaiCanHo', 'dsTrangThai', 'dsThuocTinh', 'currentThuocTinh'
+            'canHo', 'dsToaNha', 'dsLoaiCanHo', 'dsTrangThai', 'dsThuocTinh', 'currentThuocTinh', 'currentSoPhong'
         ));
     }
 
     public function update(UpdateCanHoRequest $request, CanHo $canHo)
     {
         $validated = $request->validated();
+        $toaNha    = ToaNha::findOrFail($validated['toa_nha']);
+        $soCanHo   = CanHo::sinhSoCanHo($toaNha, $validated['tang'], $validated['so_phong']);
 
-        DB::transaction(function () use ($request, $validated, $canHo) {
+        DB::transaction(function () use ($request, $validated, $canHo, $soCanHo) {
             $old = $canHo->toArray();
 
             $canHo->update([
                 'toa_nha'        => $validated['toa_nha'],
-                'so_can_ho'      => $validated['so_can_ho'],
+                'so_can_ho'      => $soCanHo,
                 'tang'           => $validated['tang'],
                 'loai_can_ho'    => $validated['loai_can_ho'],
                 'trang_thai'     => $validated['trang_thai'],

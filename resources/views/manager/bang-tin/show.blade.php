@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="max-w-2xl space-y-5">
-    @if($bangTin->hinh_url)
+    @if($bangTin->hinh_url_full)
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <img src="{{ $bangTin->hinh_url }}" alt="{{ $bangTin->tieu_de }}" class="w-full max-h-72 object-cover" onerror="this.parentElement.style.display='none'">
+        <img src="{{ $bangTin->hinh_url_full }}" alt="{{ $bangTin->tieu_de }}" class="w-full max-h-72 object-cover">
     </div>
     @endif
 

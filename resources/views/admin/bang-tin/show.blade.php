@@ -6,8 +6,8 @@
 <div class="max-w-3xl space-y-5">
 
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-        @if($bangTin->hinh_url)
-        <img src="{{ $bangTin->hinh_url }}" alt="{{ $bangTin->tieu_de }}" class="w-full h-48 object-cover rounded-t-xl" onerror="this.remove()">
+        @if($bangTin->hinh_url_full)
+        <img src="{{ $bangTin->hinh_url_full }}" alt="{{ $bangTin->tieu_de }}" class="w-full h-48 object-cover rounded-t-xl">
         @endif
         <div class="p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-3">{{ $bangTin->tieu_de }}</h2>

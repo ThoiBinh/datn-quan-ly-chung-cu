@@ -3,12 +3,12 @@
 @section('page-title', 'Đăng bài mới')
 
 @section('content')
-<div class="max-w-2xl">
+<div class="max-w-2xl" x-data="{ preview: null }">
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="font-semibold text-gray-700">Nội dung bài đăng</h3>
         </div>
-        <form action="{{ route('admin.bang-tin.store') }}" method="POST" class="p-6 space-y-5">
+        <form action="{{ route('admin.bang-tin.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
             @csrf
             @if($errors->any())
             <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
@@ -24,12 +24,21 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                    URL hình ảnh
+                    Hình ảnh
                     <span class="text-xs text-gray-400 font-normal ml-1">(tùy chọn)</span>
                 </label>
-                <input type="url" name="hinh_url" value="{{ old('hinh_url') }}" placeholder="https://..."
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $errors->has('hinh_url') ? 'border-red-400' : '' }}"/>
-                @error('hinh_url')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                <div class="flex items-center gap-4">
+                    <div class="w-20 h-20 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <template x-if="!preview">
+                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </template>
+                        <img x-show="preview" :src="preview" class="w-full h-full object-cover">
+                    </div>
+                    <input type="file" name="hinh_anh" accept="image/*"
+                           @change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"
+                           class="block flex-1 text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 {{ $errors->has('hinh_anh') ? 'border-red-400' : '' }}"/>
+                </div>
+                @error('hinh_anh')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
             </div>
 
             <div>

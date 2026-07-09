@@ -117,11 +117,11 @@ class ThanhToanController extends Controller
         }
 
         $request->validate([
-            'so_tien' => ['required', 'numeric', 'min:1', 'max:' . (int) $conNo],
+            'so_tien' => ['required', 'numeric', 'min:10000', 'max:' . (int) $conNo],
         ], [
             'so_tien.required' => 'Vui lòng nhập số tiền.',
             'so_tien.numeric'  => 'Số tiền phải là số.',
-            'so_tien.min'      => 'Số tiền phải lớn hơn 0.',
+            'so_tien.min'      => 'Số tiền phải lớn hơn 10.000đ.',
             'so_tien.max'      => 'Số tiền không được lớn hơn số tiền còn nợ (' . number_format($conNo, 0, ',', '.') . 'đ).',
         ]);
 

@@ -36,7 +36,9 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
             ->get(route('admin.dat-lich-tien-ich.index'));
 
         $response->assertOk();
-        $response->assertViewHas('thongKe', fn ($tk) => $tk['tong'] === 1 && $tk['da_duyet'] === 1);
+        // FIFO tuyệt đối: booking mới tạo luôn ở Chờ duyệt, không tự động
+        // duyệt ngay lập tức nữa (xem BookingService::tuDongDuyetTheoFifo()).
+        $response->assertViewHas('thongKe', fn ($tk) => $tk['tong'] === 1 && $tk['cho_duyet'] === 1);
     }
 
     public function test_store_tao_thanh_cong_va_redirect_sang_show(): void
@@ -110,6 +112,94 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
         $response->assertSessionHasErrors(['thoi_gian_bat_dau']);
     }
 
+    public function test_store_bao_loi_khi_dat_lich_qua_khu(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $response = $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => now()->subHour()->format('Y-m-d H:i:s'),
+                'thoi_gian_ket_thuc' => now()->addHour()->format('Y-m-d H:i:s'),
+                'so_nguoi' => 1,
+            ]
+        );
+
+        $response->assertSessionHasErrors(['thoi_gian_bat_dau']);
+        $this->assertDatabaseCount('dat_lich_tien_ich', 0);
+    }
+
+    public function test_store_bao_loi_khi_thoi_luong_duoi_30_phut(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $response = $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
+                'thoi_gian_ket_thuc' => '2026-09-01 08:15:00',
+                'so_nguoi' => 1,
+            ]
+        );
+
+        $response->assertSessionHasErrors(['thoi_gian_ket_thuc']);
+    }
+
+    public function test_store_bao_loi_khi_thoi_luong_vuot_8_gio(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $response = $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
+                'thoi_gian_ket_thuc' => '2026-09-01 18:00:00',
+                'so_nguoi' => 1,
+            ]
+        );
+
+        $response->assertSessionHasErrors(['thoi_gian_ket_thuc']);
+    }
+
+    public function test_store_hop_le_voi_thoi_luong_bien_30_phut_va_8_gio(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch(['gio_mo_cua' => '00:00:00', 'gio_dong_cua' => '23:59:59']);
+
+        $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
+                'thoi_gian_ket_thuc' => '2026-09-01 08:30:00', // dung 30 phut
+                'so_nguoi' => 1,
+            ]
+        )->assertSessionDoesntHaveErrors();
+
+        $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-02 08:00:00',
+                'thoi_gian_ket_thuc' => '2026-09-02 16:00:00', // dung 8 gio
+                'so_nguoi' => 1,
+            ]
+        )->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseCount('dat_lich_tien_ich', 2);
+    }
+
     public function test_show_hien_thi_chi_tiet(): void
     {
         $cuDan = $this->taoCuDan();
@@ -155,11 +245,15 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch();
-        $datLich = app(\App\Services\BookingService::class)->taoDatLich([
+        $service = app(\App\Services\BookingService::class);
+        $datLich = $service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
-            'so_nguoi' => 1, // du cho -> Da duyet
+            'so_nguoi' => 1,
         ]);
+        // FIFO tuyệt đối: tạo xong luôn là Chờ duyệt, phải chủ động duyệt để
+        // thiết lập đúng tiền đề "đã duyệt" cho bài test này.
+        $service->duyet($datLich);
 
         $response = $this->actingAs($this->admin, 'nhanvien')->put(
             route('admin.dat-lich-tien-ich.update', $datLich),
@@ -181,10 +275,9 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
         $service = app(\App\Services\BookingService::class);
 
-        // Booking A chiem het suc chua (tu dong duyet), khien booking B (giao
-        // gio) roi vao Cho duyet. Huy A de giai phong cho, luc do approve B
-        // moi thanh cong — dung kich ban thuc te thay vi mot booking khong
-        // bao gio vua duoc du so_nguoi vuot han suc chua.
+        // Ca A va B deu tao xong la Cho duyet (FIFO tuyet doi, khong tu duyet
+        // ngay). A (80 nguoi) van dang "giu cho" it mo hinh dung — huy A de B
+        // (5 nguoi, giao gio voi A) co the duoc duyet() thu cong qua HTTP.
         $a = $service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => '2026-09-01 08:00:00', 'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',

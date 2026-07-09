@@ -26,38 +26,37 @@
                 </div>
                 <h2 class="font-semibold text-gray-800 dark:text-gray-200">Thông tin căn hộ</h2>
             </div>
-            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4"
+                 x-data="{
+                    toaNhaMap: @json($toaNha->pluck('tien_to', 'id')),
+                    toaNhaId: '{{ old('toa_nha') }}',
+                    tang: '{{ old('tang') }}',
+                    soPhong: '{{ old('so_phong') }}',
+                    get soCanHoPreview() {
+                        const prefix = this.toaNhaMap[this.toaNhaId];
+                        if (!prefix || !this.tang || !this.soPhong) return '—';
+                        const tangStr = String(this.tang).padStart(2, '0');
+                        const phongStr = String(this.soPhong).padStart(3, '0');
+                        return String(prefix).toUpperCase() + tangStr + phongStr;
+                    }
+                 }">
 
                 {{-- Tòa nhà --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Tòa nhà <span class="text-red-500">*</span>
                     </label>
-                    <select name="toa_nha" required
+                    <select name="toa_nha" required x-model="toaNhaId"
                             class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
                                    bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
                                    focus:outline-none focus:ring-2 focus:ring-indigo-500
                                    @error('toa_nha') border-red-400 @enderror">
                         <option value="">— Chọn tòa nhà —</option>
                         @foreach($toaNha as $tn)
-                        <option value="{{ $tn->id }}" @selected(old('toa_nha') == $tn->id)>{{ $tn->ten_toa_nha }}</option>
+                        <option value="{{ $tn->id }}">{{ $tn->ten_toa_nha }} ({{ $tn->tien_to }})</option>
                         @endforeach
                     </select>
                     @error('toa_nha')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Số căn hộ --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Số căn hộ <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="so_can_ho" value="{{ old('so_can_ho') }}" required
-                           placeholder="VD: A101"
-                           class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
-                                  bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
-                                  focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                  @error('so_can_ho') border-red-400 @enderror">
-                    @error('so_can_ho')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 {{-- Tầng --}}
@@ -65,13 +64,38 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Tầng <span class="text-red-500">*</span>
                     </label>
-                    <input type="number" name="tang" value="{{ old('tang') }}" required min="1"
+                    <input type="number" name="tang" x-model="tang" required min="1"
                            placeholder="VD: 3"
                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
                                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
                                   focus:outline-none focus:ring-2 focus:ring-indigo-500
                                   @error('tang') border-red-400 @enderror">
                     @error('tang')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Số phòng --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Số phòng <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="so_phong" x-model="soPhong" required min="1" max="999"
+                           placeholder="VD: 12"
+                           class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
+                                  bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
+                                  focus:outline-none focus:ring-2 focus:ring-indigo-500
+                                  @error('so_phong') border-red-400 @enderror">
+                    @error('so_phong')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Số căn hộ (preview, tự động sinh) --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Số căn hộ (tự động sinh)
+                    </label>
+                    <div class="w-full px-4 py-2.5 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm
+                                bg-gray-50 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 font-mono font-semibold"
+                         x-text="soCanHoPreview"></div>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Được sinh tự động từ Tiền tố tòa nhà + Tầng + Số phòng.</p>
                 </div>
 
                 {{-- Loại căn hộ --}}

@@ -26,7 +26,7 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 999, // vuot suc chua -> Cho duyet
+            'so_nguoi' => 1,
         ]);
         $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $a->trang_thai);
 
@@ -35,23 +35,23 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHours(3)->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(4)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 999,
+            'so_nguoi' => 1,
         ]);
 
-        // C: Da duyet, con 1 gio -> khong bi huy vi khac trang thai
+        // C: Da duyet (duyet tay), con 1 gio -> khong bi huy vi khac trang thai
         $c = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
             'so_nguoi' => 1,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->trang_thai);
+        $this->service->duyet($c);
 
         $soLuong = $this->service->tuDongHuyQuaHan();
 
         $this->assertSame(1, $soLuong);
         $this->assertSame(DatLichTienIch::TRANG_THAI_DA_HUY, $a->fresh()->trang_thai);
-        $this->assertStringContainsString('quá hạn duyệt', $a->fresh()->ly_do_huy);
+        $this->assertStringContainsString('không đủ sức chứa', $a->fresh()->ly_do_huy);
         $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->fresh()->trang_thai);
         $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->fresh()->trang_thai);
     }
@@ -61,22 +61,23 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch();
 
-        // D: Da duyet, da qua gio ket thuc -> phai tu dong hoan thanh
+        // D: Da duyet (duyet tay), da qua gio ket thuc -> phai tu dong hoan thanh
         $d = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->subHours(3)->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->subHour()->format('Y-m-d H:i:s'),
             'so_nguoi' => 1,
         ]);
-        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $d->trang_thai);
+        $this->service->duyet($d);
 
-        // E: Da duyet, chua den gio ket thuc -> khong doi
+        // E: Da duyet (duyet tay), chua den gio ket thuc -> khong doi
         $e = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHours(5)->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(6)->format('Y-m-d H:i:s'),
             'so_nguoi' => 1,
         ]);
+        $this->service->duyet($e);
 
         $soLuong = $this->service->tuDongHoanThanh();
 
@@ -94,7 +95,7 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 999,
+            'so_nguoi' => 1,
         ]);
 
         $lanMot = $this->service->tuDongHuyQuaHan();
@@ -113,7 +114,7 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 999,
+            'so_nguoi' => 1,
         ]);
 
         $exitCode = Artisan::call('dat-lich-tien-ich:auto-cancel');
@@ -134,6 +135,7 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'thoi_gian_ket_thuc' => now()->subHour()->format('Y-m-d H:i:s'),
             'so_nguoi' => 1,
         ]);
+        $this->service->duyet($datLich);
 
         $exitCode = Artisan::call('dat-lich-tien-ich:auto-complete');
 
@@ -142,11 +144,32 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
         $this->assertSame(DatLichTienIch::TRANG_THAI_HOAN_THANH, $datLich->fresh()->trang_thai);
     }
 
-    public function test_ca_hai_job_deu_duoc_dang_ky_moi_5_phut(): void
+    public function test_command_auto_approve_chay_dung_va_goi_service_fifo(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
+
+        $datLich = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => now()->addHours(3)->format('Y-m-d H:i:s'),
+            'thoi_gian_ket_thuc' => now()->addHours(4)->format('Y-m-d H:i:s'),
+            'so_nguoi' => 10,
+        ]);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $datLich->trang_thai);
+
+        $exitCode = Artisan::call('dat-lich-tien-ich:auto-approve');
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('Đã tự động duyệt 1', Artisan::output());
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $datLich->fresh()->trang_thai);
+    }
+
+    public function test_ca_ba_job_deu_duoc_dang_ky_lich_chay(): void
     {
         $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
         $moTa = collect($schedule->events())->map(fn ($e) => $e->command)->implode(' | ');
 
+        $this->assertStringContainsString('dat-lich-tien-ich:auto-approve', $moTa);
         $this->assertStringContainsString('dat-lich-tien-ich:auto-cancel', $moTa);
         $this->assertStringContainsString('dat-lich-tien-ich:auto-complete', $moTa);
     }

@@ -10,6 +10,10 @@ Route::get('/', fn() => view('home', [
     'cauHinhWebsite' => \App\Models\CauHinhWebsite::where('trang_thai', 1)->get()->keyBy('ma_thuoc_tinh'),
 ]))->name('home');
 
+// Bảng tin (public — không cần đăng nhập)
+Route::get('/bang-tin', [\App\Http\Controllers\PublicBangTinController::class, 'index'])->name('bang-tin.index');
+Route::get('/bang-tin/{bangTin}', [\App\Http\Controllers\PublicBangTinController::class, 'show'])->name('bang-tin.show');
+
 // Auth
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);

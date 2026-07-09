@@ -23,7 +23,12 @@
                 </svg>
             </div>
             <div class="flex-1 min-w-0">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $toaNha->ten_toa_nha }}</h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $toaNha->ten_toa_nha }}</h2>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-mono">
+                        {{ $toaNha->tien_to }}
+                    </span>
+                </div>
                 @if($toaNha->dia_chi)
                 <p class="text-sm text-gray-500 dark:text-slate-400 mt-1 flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -77,6 +82,10 @@
             <p class="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1">Tổng cư dân</p>
             <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ $totalCuDan }}</p>
         </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-5">
+            <p class="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1">Tổng tiện ích</p>
+            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ $toaNha->tien_ich_count }}</p>
+        </div>
         @foreach($statsByTrangThai as $trangThai => $soLuong)
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-5">
             <p class="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1">{{ $trangThai }}</p>
@@ -94,6 +103,7 @@
             @foreach([
                 ['ID', $toaNha->id, true],
                 ['Tên tòa nhà', $toaNha->ten_toa_nha, false],
+                ['Tiền tố', $toaNha->tien_to, false],
                 ['Số tầng', $toaNha->so_tang ? $toaNha->so_tang . ' tầng' : '—', false],
                 ['Địa chỉ', $toaNha->dia_chi, false],
                 ['Ngày tạo', $toaNha->createdAt?->format('d/m/Y H:i'), false],

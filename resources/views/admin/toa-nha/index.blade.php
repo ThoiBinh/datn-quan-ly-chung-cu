@@ -32,11 +32,18 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Tên tòa nhà, địa chỉ..."
+                       placeholder="Tên tòa nhà, tiền tố, địa chỉ..."
                        class="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
+            <input type="number" name="so_tang" value="{{ request('so_tang') }}" min="1" placeholder="Số tầng"
+                   class="w-28 px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select name="co_can_ho" class="px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Căn hộ --</option>
+                <option value="co" @selected(request('co_can_ho') === 'co')>Có căn hộ</option>
+                <option value="khong" @selected(request('co_can_ho') === 'khong')>Không có căn hộ</option>
+            </select>
             <button type="submit" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">Tìm</button>
-            @if(request()->filled('search'))
+            @if(request()->filled('search') || request()->filled('so_tang') || request()->filled('co_can_ho'))
             <a href="{{ route('admin.toa-nha.index') }}" class="px-4 py-2.5 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors">Xóa lọc</a>
             @endif
             <div class="ml-auto">
@@ -61,12 +68,14 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-600">
                     <tr>
+                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider w-12">STT</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             <a href="{{ $sortUrl('ten_toa_nha') }}" class="hover:text-blue-600 flex items-center gap-1">Tên tòa nhà {!! $sortIcon('ten_toa_nha') !!}</a>
                         </th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                            <a href="{{ $sortUrl('dia_chi') }}" class="hover:text-blue-600 flex items-center gap-1">Địa chỉ {!! $sortIcon('dia_chi') !!}</a>
+                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                            <a href="{{ $sortUrl('tien_to') }}" class="hover:text-blue-600 flex items-center justify-center gap-1">Tiền tố {!! $sortIcon('tien_to') !!}</a>
                         </th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Địa chỉ</th>
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             <a href="{{ $sortUrl('so_tang') }}" class="hover:text-blue-600 flex items-center justify-center gap-1">Số tầng {!! $sortIcon('so_tang') !!}</a>
                         </th>
@@ -76,6 +85,7 @@
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             <a href="{{ $sortUrl('createdAt') }}" class="hover:text-blue-600 flex items-center gap-1">Ngày tạo {!! $sortIcon('createdAt') !!}</a>
                         </th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Ngày cập nhật</th>
                         <th class="px-4 py-3 w-24"></th>
                     </tr>
                 </thead>
@@ -87,6 +97,9 @@
                         $trong  = $total - $coCuDan;
                     @endphp
                     <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-700/40 transition-colors">
+                        <td class="px-4 py-3.5 text-center text-gray-400 dark:text-slate-500 text-xs">
+                            {{ $toaNha->firstItem() + $loop->index }}
+                        </td>
                         <td class="px-4 py-3.5">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
@@ -96,6 +109,11 @@
                                 </div>
                                 <span class="font-semibold text-gray-800 dark:text-white">{{ $tn->ten_toa_nha }}</span>
                             </div>
+                        </td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-mono">
+                                {{ $tn->tien_to }}
+                            </span>
                         </td>
                         <td class="px-4 py-3.5 text-gray-600 dark:text-slate-300 text-xs max-w-xs">
                             <span class="line-clamp-1" title="{{ $tn->dia_chi }}">{{ $tn->dia_chi ?: '—' }}</span>
@@ -120,6 +138,9 @@
                         </td>
                         <td class="px-4 py-3.5 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
                             {{ $tn->createdAt?->format('d/m/Y') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3.5 text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
+                            {{ $tn->updatedAt?->format('d/m/Y') ?? '—' }}
                         </td>
                         <td class="px-4 py-3.5">
                             <div class="flex items-center gap-1 justify-end">
@@ -147,7 +168,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-14 text-center">
+                        <td colspan="10" class="px-5 py-14 text-center">
                             <svg class="w-14 h-14 mx-auto mb-3 text-gray-200 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
