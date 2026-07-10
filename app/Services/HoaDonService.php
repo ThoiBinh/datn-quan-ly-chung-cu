@@ -580,8 +580,22 @@ class HoaDonService
         ?int $nguoiThanhToan = null
     ): LichSuThanhToan {
         return DB::transaction(function () use ($hoaDon, $soTien, $phuongThuc, $maGiaoDich, $nguonTao, $ngayThanhToan, $ghiChu, $nguoiThanhToan) {
+            // Lock đúng 1 dòng hoa_don ngay khi vào transaction (không lock bảng khác) để
+            // các thanh toán đồng thời cho cùng hóa đơn phải chờ nhau, tránh race condition.
+            $locked = HoaDon::query()->lockForUpdate()->findOrFail($hoaDon->id);
+
+            // Idempotent check — thực hiện SAU khi đã lock: nếu mã giao dịch đã được ghi
+            // nhận trước đó (IPN gửi trùng / refresh callback) thì coi như thành công,
+            // không insert, không update, không cộng tiền lại.
+            if ($maGiaoDich !== null) {
+                $existing = LichSuThanhToan::where('ma_giao_dich', $maGiaoDich)->first();
+                if ($existing) {
+                    return $existing;
+                }
+            }
+
             $ls = LichSuThanhToan::create([
-                'hoa_don'                => $hoaDon->id,
+                'hoa_don'                => $locked->id,
                 'ngay_thanh_toan'        => $ngayThanhToan ?? now()->format('Y-m-d'),
                 'so_tien'                => $soTien,
                 'phuong_thuc_thanh_toan' => $phuongThuc,
@@ -592,14 +606,24 @@ class HoaDonService
                 'createdAt'              => now(),
             ]);
 
-            $tongDaTT = (float) LichSuThanhToan::where('hoa_don', $hoaDon->id)->sum('so_tien');
-            $hoaDon->so_tien_da_thanh_toan = $tongDaTT;
+            $tongDaTT = (float) LichSuThanhToan::where('hoa_don', $locked->id)->sum('so_tien');
 
-            $hoaDon->update([
+            // Over-payment guard: nếu tổng đã thanh toán vượt tổng tiền hóa đơn thì rollback
+            // toàn bộ (kể cả bản ghi lich_su_thanh_toan vừa insert), không lưu gì cả.
+            if ($tongDaTT > (float) $locked->tong_tien + 0.01) {
+                throw new \RuntimeException('Số tiền thanh toán vượt quá số tiền còn lại của hóa đơn.');
+            }
+
+            $locked->so_tien_da_thanh_toan = $tongDaTT;
+            $locked->update([
                 'so_tien_da_thanh_toan' => $tongDaTT,
-                'trang_thai'            => $this->calculateStatus($hoaDon),
+                'trang_thai'            => $this->calculateStatus($locked),
                 'nguoi_cap_nhat'        => auth('nhanvien')->id(),
             ]);
+
+            // Đồng bộ lại instance gốc mà caller đang giữ tham chiếu, giữ nguyên hành vi cũ
+            // (Controller vẫn thấy $hoaDon với dữ liệu mới nhất sau khi gọi hàm này).
+            $hoaDon->setRawAttributes($locked->getAttributes(), true);
 
             AuditLogService::log('INSERT', 'lich_su_thanh_toan', $ls->id, null, $ls->toArray());
 
