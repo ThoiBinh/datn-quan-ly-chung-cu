@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'resident' => \App\Http\Middleware\ResidentMiddleware::class,
         ]);
 
+        // Single Session Login: chạy sau khi session đã khởi tạo, áp dụng cho toàn bộ route web
+        // (bản thân middleware sẽ bỏ qua guest và các route login/logout).
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureSingleSession::class);
+
         // IPN từ MoMo/VNPay là server-to-server, không có CSRF token
         $middleware->validateCsrfTokens(except: [
             'payment/momo/ipn',
