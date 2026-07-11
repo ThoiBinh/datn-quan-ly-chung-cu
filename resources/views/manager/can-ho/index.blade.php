@@ -160,7 +160,6 @@
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Xe</th>
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Hóa đơn</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Trạng thái</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Thuộc tính</th>
                         <th class="px-4 py-3 w-12"></th>
                     </tr>
                 </thead>
@@ -212,21 +211,7 @@
                                 {{ $ttLabel }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 max-w-[180px]">
-                            @if($ch->thuocTinh->isEmpty())
-                            <span class="text-gray-400 dark:text-gray-600">—</span>
-                            @else
-                            <div class="flex flex-wrap gap-1">
-                                @foreach($ch->thuocTinh as $tt)
-                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-100 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800 whitespace-nowrap"
-                                      title="{{ $tt->ten_thuoc_tinh }}: {{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}">
-                                    <span class="font-medium">{{ $tt->ten_thuoc_tinh }}:</span>
-                                    <span>{{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}</span>
-                                </span>
-                                @endforeach
-                            </div>
-                            @endif
-                        </td>
+                        
                         <td class="px-4 py-3">
                             <div class="relative flex justify-end" @click.away="open = false">
                                 <button @click="open = !open"

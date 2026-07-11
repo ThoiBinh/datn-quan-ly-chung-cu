@@ -250,7 +250,6 @@
                             <tr>
                                 <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Thuộc tính</th>
                                 <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Giá trị</th>
-                                <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Kiểu dữ liệu</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -258,13 +257,7 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                                 <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ $tt->ten_thuoc_tinh }}</td>
                                 <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $tt->pivot->gia_tri_thuoc_tinh ?? '–' }}</td>
-                                <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
-                                    @switch($tt->pivot->kieu_du_lieu)
-                                        @case(1) Số nguyên @break
-                                        @case(2) Văn bản @break
-                                        @case(3) Ngày giờ @break
-                                        @default – @endswitch
-                                </td>
+                                
                             </tr>
                             @endforeach
                         </tbody>

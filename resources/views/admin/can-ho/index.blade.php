@@ -225,7 +225,6 @@
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider" title="Tổng cư dân đang ở">Cư dân</th>
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider" title="Tổng phương tiện">Xe</th>
                         <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider" title="Tổng hóa đơn">Hóa đơn</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Thuộc tính</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">
                             <a href="{{ $sortUrl('createdAt') }}" class="hover:text-emerald-600 flex items-center gap-1">Ngày tạo {!! $sortIcon('createdAt') !!}</a>
                         </th>
@@ -280,21 +279,7 @@
                                 {{ $ch->hoa_don_count }}
                             </span>
                         </td>
-                        <td class="px-4 py-3.5 max-w-[200px]">
-                            @if($ch->thuocTinh->isEmpty())
-                            <span class="text-gray-400 dark:text-slate-600">—</span>
-                            @else
-                            <div class="flex flex-wrap gap-1">
-                                @foreach($ch->thuocTinh as $tt)
-                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-100 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800 whitespace-nowrap"
-                                      title="{{ $tt->ten_thuoc_tinh }}: {{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}">
-                                    <span class="font-medium">{{ $tt->ten_thuoc_tinh }}:</span>
-                                    <span>{{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}</span>
-                                </span>
-                                @endforeach
-                            </div>
-                            @endif
-                        </td>
+                        
                         <td class="px-4 py-3.5 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
                             {{ $ch->createdAt?->format('d/m/Y') ?? '—' }}
                         </td>

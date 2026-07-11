@@ -321,7 +321,6 @@
                         <tr>
                             <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tên thuộc tính</th>
                             <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Giá trị</th>
-                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Kiểu dữ liệu</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
@@ -333,13 +332,7 @@
                                     {{ $tt->pivot->gia_tri_thuoc_tinh ?? '—' }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">
-                                @switch($tt->pivot->kieu_du_lieu)
-                                    @case(1) Số nguyên @break
-                                    @case(3) Ngày giờ @break
-                                    @default Văn bản
-                                @endswitch
-                            </td>
+                            
                         </tr>
                         @endforeach
                     </tbody>

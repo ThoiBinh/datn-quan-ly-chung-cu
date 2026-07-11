@@ -14,9 +14,6 @@ class LoaiYeuCauSeeder extends Seeder
             ['name' => 'Khiếu nại'],
             ['name' => 'Hỏi đáp'],
             ['name' => 'Đăng ký phương tiện'],
-            ['name' => 'Thêm nhân khẩu'],
-            ['name' => 'Hủy đăng ký phương tiện'],
-            ['name' => 'Sửa thông tin phương tiện'],
         ];
 
         foreach ($data as $item) {

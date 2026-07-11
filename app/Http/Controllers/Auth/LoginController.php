@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChucVu;
+use App\Services\SingleSessionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    public function __construct(private readonly SingleSessionService $singleSession) {}
+
     /**
      * Lấy ID chức vụ Admin
      */
@@ -106,6 +109,7 @@ class LoginController extends Controller
                 }
 
                 $request->session()->regenerate();
+                $this->singleSession->remember('nhanvien', $user->getAuthIdentifier(), $request->session()->getId());
 
                 if ($user->chuc_vu == $this->adminChucVuId()) {
                     return redirect()->route('admin.dashboard');
@@ -138,6 +142,7 @@ class LoginController extends Controller
                 }
 
                 $request->session()->regenerate();
+                $this->singleSession->remember('cudan', $user->getAuthIdentifier(), $request->session()->getId());
 
                 return redirect()->route('resident.dashboard');
             }
@@ -152,8 +157,13 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::guard('nhanvien')->logout();
-        Auth::guard('cudan')->logout();
+        foreach (['nhanvien', 'cudan'] as $guard) {
+            if (Auth::guard($guard)->check()) {
+                $this->singleSession->forget($guard, Auth::guard($guard)->id());
+            }
+
+            Auth::guard($guard)->logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

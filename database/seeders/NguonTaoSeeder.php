@@ -13,8 +13,6 @@ class NguonTaoSeeder extends Seeder
             ['ten_nguon_tao' => 'Hệ thống'],
             ['ten_nguon_tao' => 'Thủ công'],
             ['ten_nguon_tao' => 'Cổng thanh toán'],
-            ['ten_nguon_tao' => 'VNPay'],
-            ['ten_nguon_tao' => 'Momo'],
         ];
 
         foreach ($data as $item) {
