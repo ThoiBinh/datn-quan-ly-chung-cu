@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             YeuCauCuDanSeeder::class,
             BangTinSeeder::class,
             TienIchSeeder::class,
+            DatLichTienIchSeeder::class,
         ]);
     }
 }

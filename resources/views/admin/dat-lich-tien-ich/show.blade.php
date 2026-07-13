@@ -9,7 +9,12 @@
     $DA_DUYET = \App\Models\DatLichTienIch::TRANG_THAI_DA_DUYET;
     $coTheSua = $trangThai === $CHO_DUYET;
     $coTheDuyetTuChoi = $trangThai === $CHO_DUYET;
-    $coTheHuy = in_array($trangThai, [$CHO_DUYET, $DA_DUYET], true);
+    // Booking Đã duyệt chỉ được hủy khi còn cách giờ bắt đầu ít nhất 2 giờ —
+    // Chờ duyệt hủy được bất kỳ lúc nào (áp dụng như nhau cho Admin/Manager/
+    // Resident, xem BookingApprovalService::huy()).
+    $conThoiGianHuy = $trangThai !== $DA_DUYET || now()->addHours(2)->lte($datLichTienIch->thoi_gian_bat_dau);
+    $coTheHuy = in_array($trangThai, [$CHO_DUYET, $DA_DUYET], true) && $conThoiGianHuy;
+    $khongTheHuyDoQuaHan = $trangThai === $DA_DUYET && !$conThoiGianHuy;
 
     $phut = $datLichTienIch->thoi_luong_phut;
     $thoiLuong = null;
@@ -72,6 +77,13 @@
         </div>
     </div>
 
+    @if($khongTheHuyDoQuaHan)
+    <div class="flex items-start gap-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 px-4 py-3">
+        <svg class="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <p class="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">Không thể hủy (còn dưới 2 giờ trước thời gian bắt đầu).</p>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         <!-- Cột chính -->
@@ -86,7 +98,8 @@
                         </div>
                         <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Thông tin đặt lịch</h2>
                     </div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $datLichTienIch->trang_thai_label['class'] }}">
+                    <span id="dlti-status-badge" data-booking-id="{{ $datLichTienIch->id }}"
+                          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $datLichTienIch->trang_thai_label['class'] }}">
                         {{ $datLichTienIch->trang_thai_label['text'] }}
                     </span>
                 </div>
@@ -388,4 +401,18 @@
     </template>
 
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.DatLichRealtime) return;
+    window.DatLichRealtime.subscribeNhanVienBooking((tenSuKien, payload) => {
+        const badge = document.getElementById('dlti-status-badge');
+        if (!badge || Number(badge.dataset.bookingId) !== payload.id) return;
+        badge.textContent = payload.trang_thai_label.text;
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ' + payload.trang_thai_label.class;
+    });
+});
+</script>
+@endpush
 @endsection

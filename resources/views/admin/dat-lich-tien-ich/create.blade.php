@@ -23,7 +23,7 @@
              batDau: '{{ old('thoi_gian_bat_dau') }}',
              ketThuc: '{{ old('thoi_gian_ket_thuc') }}',
              soNguoi: {{ (int) old('so_nguoi', 1) }},
-         })">
+         })" x-init="initRealtime()">
         <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                 <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -104,6 +104,15 @@
                             Giờ hoạt động: <span x-text="tienIchDaChon.gioHoatDong || 'cả ngày'" class="font-medium"></span>
                             <template x-if="tienIchDaChon.sucChua > 0"> · Sức chứa tối đa: <span x-text="tienIchDaChon.sucChua" class="font-medium"></span> người</template>
                             · Đơn giá: <span x-text="formatTien(tienIchDaChon.phi)" class="font-medium"></span>/giờ/người
+                        </p>
+                    </template>
+                    <!-- Cập nhật real-time qua Reverb/Echo (kênh public tien-ich.{id}): không cần refresh -->
+                    <template x-if="conLaiRealtime !== null">
+                        <p class="mt-1 text-xs flex items-center gap-1"
+                           :class="hetChoNgay ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'">
+                            <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                            <span x-show="!hetChoNgay">Còn <span x-text="conLaiRealtime" class="font-semibold"></span> chỗ cho khung giờ này (cập nhật trực tiếp)</span>
+                            <span x-show="hetChoNgay">Vừa hết chỗ cho khung giờ này — lượt đặt sẽ vào hàng chờ</span>
                         </p>
                     </template>
                 </div>
@@ -200,6 +209,37 @@ function datLichForm({ tienIchInfo, tienIch, batDau, ketThuc, soNguoi }) {
         },
         formatTien(value) {
             return new Intl.NumberFormat('vi-VN').format(Math.round(value || 0)) + ' đ';
+        },
+
+        // ── Realtime (Reverb/Echo, kênh public "tien-ich.{id}") ──
+        // Không polling: chỉ cập nhật khi server thật sự broadcast lúc có
+        // booking khác vừa được duyệt/hủy/từ chối/hoàn thành ảnh hưởng sức chứa.
+        realtimeChannelId: null,
+        realtimeSlot: null,
+        initRealtime() {
+            this.$watch('tienIch', (value) => this.subscribeTienIch(value));
+            if (this.tienIch) this.subscribeTienIch(this.tienIch);
+        },
+        subscribeTienIch(tienIchId) {
+            if (this.realtimeChannelId && window.Echo) {
+                window.Echo.leaveChannel('tien-ich.' + this.realtimeChannelId);
+            }
+            this.realtimeSlot = null;
+            this.realtimeChannelId = tienIchId || null;
+            if (!tienIchId || !window.Echo) return;
+            window.Echo.channel('tien-ich.' + tienIchId)
+                .listen('.booking.slot-updated', (e) => { this.realtimeSlot = e; });
+        },
+        get conLaiRealtime() {
+            if (!this.realtimeSlot || !this.batDau || !this.ketThuc) return null;
+            const s1 = new Date(this.batDau), e1 = new Date(this.ketThuc);
+            const s2 = new Date(this.realtimeSlot.thoi_gian_bat_dau), e2 = new Date(this.realtimeSlot.thoi_gian_ket_thuc);
+            const giaoNhau = s1 < e2 && e1 > s2; // cùng công thức giao nhau dùng ở BookingCapacityService
+            if (!giaoNhau || this.realtimeSlot.con_lai === null) return null;
+            return this.realtimeSlot.con_lai;
+        },
+        get hetChoNgay() {
+            return this.conLaiRealtime !== null && this.conLaiRealtime <= 0;
         },
     };
 }

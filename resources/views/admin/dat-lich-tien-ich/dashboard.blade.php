@@ -56,6 +56,13 @@
         </a>
     </div>
 
+    <!-- Realtime (Reverb/Echo): báo có cập nhật mới, không tự tải lại trang -->
+    <a id="dlti-realtime-banner" href="{{ request()->fullUrl() }}" style="display:none"
+       class="flex items-center gap-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+        Số liệu vừa thay đổi — bấm để cập nhật thống kê
+    </a>
+
     <!-- 10 Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         @foreach($cards as $card)
@@ -161,5 +168,14 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.DatLichRealtime) return;
+    window.DatLichRealtime.subscribeNhanVienBooking(() => {
+        const banner = document.getElementById('dlti-realtime-banner');
+        if (banner) banner.style.display = 'flex';
+    });
+});
+</script>
 @endpush
 @endsection

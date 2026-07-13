@@ -35,7 +35,8 @@ class HoaDonController extends Controller
                 $q->where('ma_thanh_toan', 'like', "%$s%")
                   ->orWhereHas('canHo', fn ($q2) => $q2->where('so_can_ho', 'like', "%$s%"))
                   ->orWhereHas('canHo.toaNha', fn ($q2) => $q2->where('ten_toa_nha', 'like', "%$s%"))
-                  ->orWhereHas('canHo.chuHo.cuDan', fn ($q2) => $q2->where('ho_ten', 'like', "%$s%"));
+                  ->orWhereHas('canHo.chuHo.cuDan', fn ($q2) => $q2->where('ho_ten_dem', 'like', "%$s%")
+                      ->orWhere('ten', 'like', "%$s%"));
             });
         }
         if ($request->filled('trang_thai')) {

@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('loai_can_ho', function (Blueprint $table) {
             $table->integer('id')->autoIncrement();
             $table->string('ten_loai_can_ho', 100);
+            
         });
     }
 

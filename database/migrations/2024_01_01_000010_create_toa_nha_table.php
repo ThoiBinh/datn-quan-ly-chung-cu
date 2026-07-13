@@ -11,10 +11,12 @@ return new class extends Migration
         Schema::create('toa_nha', function (Blueprint $table) {
             $table->integer('id')->autoIncrement();
             $table->string('ten_toa_nha', 255);
+            $table->string('tien_to', 10)->default('A')->unique();
             $table->string('dia_chi', 255);
             $table->integer('so_tang')->default(1);
             $table->dateTime('createdAt')->useCurrent();
             $table->dateTime('updatedAt')->useCurrent()->useCurrentOnUpdate();
+            $table->dateTime('deletedAt')->nullable();
         });
     }
 

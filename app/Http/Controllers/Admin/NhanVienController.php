@@ -78,12 +78,10 @@ class NhanVienController extends Controller
 
         DB::transaction(function () use ($data, &$nhanVien) {
             $nextId = (NhanVien::max('id') ?? 0) + 1;
-
             $data['mat_khau']       = Hash::make($data['mat_khau']);
             $data['ma_nhan_vien']   = $data['ma_nhan_vien'] ?: 'NV' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
             $data['nguoi_cap_nhat'] = auth('nhanvien')->id();
             unset($data['mat_khau_confirmation']);
-
             $nhanVien = NhanVien::create($data);
 
             AuditLogService::log('INSERT', 'nhan_vien', $nhanVien->id, null, $nhanVien->toArray());

@@ -9,7 +9,14 @@ class ChucVuSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = ['Quản lý', 'Kế toán', 'Lễ tân', 'Kỹ thuật', 'Bảo vệ', 'Admin'];
+        $data = [
+    ['chuc_vu' => 'Quản lý'],
+    ['chuc_vu' => 'Kế toán'],
+    ['chuc_vu' => 'Lễ tân'],
+    ['chuc_vu' => 'Kỹ thuật'],
+    ['chuc_vu' => 'Bảo vệ'],
+    ['chuc_vu' => 'Admin'],
+    ];
 
         foreach ($data as $item) {
             if (!DB::table('chuc_vu')->where('chuc_vu', $item['chuc_vu'])->exists()) {

@@ -59,6 +59,13 @@ $sortIcon = function($col) {
         </div>
     </div>
 
+    <!-- Realtime (Reverb/Echo): báo có cập nhật mới, không tự tải lại trang -->
+    <a id="dlti-realtime-banner" href="{{ request()->fullUrl() }}" style="display:none"
+       class="flex items-center gap-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+        Có <span id="dlti-realtime-count">0</span> cập nhật mới — bấm để xem
+    </a>
+
     <!-- Dashboard: thống kê nhanh -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -285,4 +292,20 @@ $sortIcon = function($col) {
     </template>
 
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.DatLichRealtime) return;
+    let soCapNhat = 0;
+    window.DatLichRealtime.subscribeNhanVienBooking(() => {
+        soCapNhat++;
+        const banner = document.getElementById('dlti-realtime-banner');
+        const count = document.getElementById('dlti-realtime-count');
+        if (count) count.textContent = soCapNhat;
+        if (banner) banner.style.display = 'flex';
+    });
+});
+</script>
+@endpush
 @endsection
