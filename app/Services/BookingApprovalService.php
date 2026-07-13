@@ -434,6 +434,12 @@ class BookingApprovalService
     public function xoa(DatLichTienIch $datLich): void
     {
         DB::transaction(function () use ($datLich) {
+            $datLich = DatLichTienIch::lockForUpdate()
+            ->findOrFail($datLich->id);
+
+             $datLich->update([
+            'trang_thai' => DatLichTienIch::TRANG_THAI_DA_HUY,
+        ]);
             AuditLogService::log('DELETE', 'dat_lich_tien_ich', $datLich->id, $datLich->toArray(), null);
             $datLich->delete();
         }, self::SO_LAN_THU_LAI);

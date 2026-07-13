@@ -22,17 +22,17 @@ class UpdateNhanVienRequest extends FormRequest
             'sdt'           => 'nullable|string|max:15',
             'email'         => [
                 'required', 'email', 'max:150',
-                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt')->ignore($id),
+                Rule::unique('nhan_vien', 'email')->ignore($id),
             ],
             'mat_khau'      => 'nullable|string|min:8|confirmed',
             'trang_thai'    => 'required|in:0,1',
             'ma_nhan_vien'  => [
                 'nullable', 'string', 'max:50',
-                Rule::unique('nhan_vien', 'ma_nhan_vien')->whereNull('deletedAt')->ignore($id),
+                Rule::unique('nhan_vien', 'ma_nhan_vien')->ignore($id),
             ],
             'cccd'          => [
                 'required', 'string', 'max:20',
-                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt')->ignore($id),
+                Rule::unique('nhan_vien', 'cccd')->ignore($id),
             ],
             'ngay_sinh'     => 'nullable|date',
             'ngay_vao_lam'  => 'nullable|date',
