@@ -58,7 +58,7 @@
                 {{-- Mã nhân viên --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mã nhân viên</label>
-                    <input type="text" name="ma_nhan_vien" value="{{ old('ma_nhan_vien', $nhanVien->ma_nhan_vien) }}"
+                    <input type="text" readonly name="ma_nhan_vien" value="{{ old('ma_nhan_vien', $nhanVien->ma_nhan_vien) }}"
                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
                                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
                                   focus:outline-none focus:ring-2 focus:ring-indigo-500
@@ -210,16 +210,17 @@
             <div class="p-5">
                 <div class="max-w-sm">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Chức vụ <span class="text-red-500">*</span>
+                        Chức vụ: <span class="text-red-500">{{ $nhanVien->chucVu->chuc_vu ?? 'Chưa có' }}</span>
                     </label>
-                    <select name="chuc_vu" required
+                    
+                    <select name="chuc_vu" required hidden
                             class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
                                    bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
                                    focus:outline-none focus:ring-2 focus:ring-indigo-500
                                    @error('chuc_vu') border-red-400 @enderror">
                         <option value="">-- Chọn chức vụ --</option>
                         @foreach($dsChucVu as $cv)
-                        <option value="{{ $cv->id }}" @selected(old('chuc_vu', $nhanVien->chuc_vu) == $cv->id)>{{ $cv->chuc_vu }}</option>
+                        <option  value="{{ $cv->id }}" @selected(old('chuc_vu', $nhanVien->chuc_vu) == $cv->id)>{{ $cv->chuc_vu }}</option>
                         @endforeach
                     </select>
                     @error('chuc_vu')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror

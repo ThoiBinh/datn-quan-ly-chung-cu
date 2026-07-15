@@ -9,13 +9,9 @@ class PhiDichVuSeeder extends Seeder
 {
     public function run(): void
     {
-        $donVi   = DB::table('don_vi_tinh_phi_dich_vu')->pluck('id', 'don_vi')->toArray();
-        $loaiTinh = DB::table('loai_tinh_phi_dich_vu')->pluck('id', 'ten_loai')->toArray();
-        $loaiPhi  = DB::table('loai_phi_dich_vu')->pluck('id', 'ten_loai_phi_dich_vu')->toArray();
-
         $data = [
             ['loai' => 'Phí quản lý',  'ten' => 'Phí quản lý căn hộ',        'don_gia' => 15000,   'don_vi' => 'm²',    'tinh_phi' => 'Theo diện tích'],
-            ['loai' => 'Điện',          'ten' => 'Tiền điện',                  'don_gia' => 3500,    'don_vi' => 'kWh',   'tinh_phi' => 'Theo chỉ số'],
+            
             ['loai' => 'Nước',          'ten' => 'Tiền nước',                  'don_gia' => 15000,   'don_vi' => 'm³',    'tinh_phi' => 'Theo chỉ số'],
             ['loai' => 'Gửi xe',        'ten' => 'Phí gửi xe ô tô',           'don_gia' => 1200000, 'don_vi' => 'Xe',    'tinh_phi' => 'Theo số lượng'],
             ['loai' => 'Gửi xe',        'ten' => 'Phí gửi xe máy',            'don_gia' => 200000,  'don_vi' => 'Xe',    'tinh_phi' => 'Theo số lượng'],
@@ -31,12 +27,49 @@ class PhiDichVuSeeder extends Seeder
             ['loai' => 'Gửi xe',        'ten' => 'Phí gửi xe đạp điện',     'don_gia' => 100000,  'don_vi' => 'Xe',    'tinh_phi' => 'Theo số lượng'],
         ];
 
+        // Đảm bảo các loại phí tham chiếu đã tồn tại (tránh vi phạm khóa ngoại fk_pdv_loai)
+        // mà không chỉnh sửa LoaiPhiDichVuSeeder.
+        foreach (array_unique(array_column($data, 'loai')) as $tenLoai) {
+            $exists = DB::table('loai_phi_dich_vu')->where('ten_loai_phi_dich_vu', $tenLoai)->exists();
+            if (!$exists) {
+                DB::table('loai_phi_dich_vu')->insert(['ten_loai_phi_dich_vu' => $tenLoai]);
+            }
+        }
+
+        $loaiPhiIds  = DB::table('loai_phi_dich_vu')->pluck('id', 'ten_loai_phi_dich_vu');
+        $donViIds    = DB::table('don_vi_tinh_phi_dich_vu')->pluck('id', 'don_vi');
+        $loaiTinhIds = DB::table('loai_tinh_phi_dich_vu')->pluck('id', 'ten_loai');
+
+        $nguoiCapNhat = DB::table('nhan_vien')->where('email', 'admin@chungcu.vn')->value('id');
+
         foreach ($data as $item) {
-            if (!DB::table('phi_dich_vu')->where('ten_phi_dich_vu', $item['ten_phi_dich_vu'])->exists()) {
-                DB::table('phi_dich_vu')->insert(array_merge($item, [
-                    'nguoi_cap_nhat' => 1,
-                    'createdAt'      => now(),
-                    'updatedAt'      => now(),
+            $loaiId    = $loaiPhiIds[$item['loai']] ?? null;
+            $donViId   = $donViIds[$item['don_vi']] ?? null;
+            $tinhPhiId = $loaiTinhIds[$item['tinh_phi']] ?? null;
+
+            if (!$loaiId || !$donViId || !$tinhPhiId) {
+                continue;
+            }
+
+            $existing = DB::table('phi_dich_vu')
+                ->where('ten_phi_dich_vu', $item['ten'])
+                ->first();
+
+            $payload = [
+                'loai_phi_dich_vu' => $loaiId,
+                'don_gia'          => $item['don_gia'],
+                'don_vi_tinh'      => $donViId,
+                'loai_tinh_phi'    => $tinhPhiId,
+                'nguoi_cap_nhat'   => $nguoiCapNhat,
+                'updatedAt'        => now(),
+            ];
+
+            if ($existing) {
+                DB::table('phi_dich_vu')->where('id', $existing->id)->update($payload);
+            } else {
+                DB::table('phi_dich_vu')->insert(array_merge($payload, [
+                    'ten_phi_dich_vu' => $item['ten'],
+                    'createdAt'       => now(),
                 ]));
             }
         }

@@ -3,26 +3,31 @@
 namespace Tests\Unit;
 
 use App\Models\TienIch;
-use App\Services\BookingService;
+use App\Services\BookingCapacityService;
 use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Unit test thuần cho công thức tính phí của BookingService::tinhPhi().
+ * Unit test thuần cho công thức tính phí của BookingCapacityService::tinhPhi()
+ * (trước refactor: BookingService::tinhPhi() — logic tính phí nay thuộc về
+ * BookingCapacityService, không đổi công thức/chữ ký method).
  *
  *   phi_su_dung = so_nguoi × tien_ich.phi_su_dung × số giờ
  *   số giờ      = TIMESTAMPDIFF(MINUTE, batDau, ketThuc) / 60
  *
  * Không cần Laravel app/DB — chỉ khởi tạo Model và Carbon thuần trong bộ nhớ.
+ * BookingCapacityService không có constructor dependency nên khởi tạo trực
+ * tiếp được mà không cần container/app() — giữ đúng tính chất "pure unit
+ * test" của file này.
  */
 class BookingServiceTinhPhiTest extends TestCase
 {
-    private BookingService $service;
+    private BookingCapacityService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new BookingService();
+        $this->service = new BookingCapacityService();
     }
 
     private function tienIchGiaPhi(float $phiSuDung): TienIch

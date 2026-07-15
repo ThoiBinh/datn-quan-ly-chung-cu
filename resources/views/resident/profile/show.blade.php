@@ -73,7 +73,7 @@
                         <p class="text-gray-800">{{ $cuDan->sdt ?: '—' }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">CCCD/CMND</p>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">CCCD</p>
                         <p class="text-gray-800">{{ $cuDan->cccd ?: '—' }}</p>
                     </div>
                     <div>

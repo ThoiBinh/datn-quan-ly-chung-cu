@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manager\StoreCuDanCanHoRequest;
+use App\Http\Requests\Manager\UpdateCuDanCanHoRequest;
 use App\Models\CanHo;
 use App\Models\CuDan;
 use App\Models\CuDanCanHo;
@@ -75,22 +77,8 @@ class CuDanCanHoController extends Controller
         return view('manager.cu-dan-can-ho.create', compact('dsCuDan', 'dsCanHo', 'dsVaiTro', 'dsTrangThai'));
     }
 
-    public function store(Request $request)
+    public function store(StoreCuDanCanHoRequest $request)
     {
-        $validTrangThai = implode(',', array_keys($this->dsTrangThai()));
-        $request->validate([
-            'cu_dan'          => 'required|integer|exists:cu_dan,id',
-            'can_ho'          => 'required|integer|exists:can_ho,id',
-            'vai_tro'         => 'nullable|integer|exists:vai_tro,id',
-            'ngay_chuyen_den' => 'nullable|date',
-            'ngay_chuyen_di'  => 'nullable|date|after_or_equal:ngay_chuyen_den',
-            'trang_thai'      => 'required|in:' . $validTrangThai,
-        ], [
-            'cu_dan.required'              => 'Vui lòng chọn cư dân.',
-            'can_ho.required'              => 'Vui lòng chọn căn hộ.',
-            'ngay_chuyen_di.after_or_equal' => 'Ngày chuyển đi phải sau hoặc bằng ngày chuyển đến.',
-        ]);
-
         $record = CuDanCanHo::create([
             'cu_dan'          => $request->cu_dan,
             'can_ho'          => $request->can_ho,
@@ -138,22 +126,8 @@ class CuDanCanHoController extends Controller
         return view('manager.cu-dan-can-ho.edit', compact('cuDanCanHo', 'dsCuDan', 'dsCanHo', 'dsVaiTro', 'dsTrangThai'));
     }
 
-    public function update(Request $request, CuDanCanHo $cuDanCanHo)
+    public function update(UpdateCuDanCanHoRequest $request, CuDanCanHo $cuDanCanHo)
     {
-        $validTrangThai = implode(',', array_keys($this->dsTrangThai()));
-        $request->validate([
-            'cu_dan'          => 'required|integer|exists:cu_dan,id',
-            'can_ho'          => 'required|integer|exists:can_ho,id',
-            'vai_tro'         => 'nullable|integer|exists:vai_tro,id',
-            'ngay_chuyen_den' => 'nullable|date',
-            'ngay_chuyen_di'  => 'nullable|date|after_or_equal:ngay_chuyen_den',
-            'trang_thai'      => 'required|in:' . $validTrangThai,
-        ], [
-            'cu_dan.required'              => 'Vui lòng chọn cư dân.',
-            'can_ho.required'              => 'Vui lòng chọn căn hộ.',
-            'ngay_chuyen_di.after_or_equal' => 'Ngày chuyển đi phải sau hoặc bằng ngày chuyển đến.',
-        ]);
-
         $old = $cuDanCanHo->toArray();
         $cuDanCanHo->update([
             'cu_dan'          => $request->cu_dan,

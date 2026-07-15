@@ -7,9 +7,12 @@
     $trangThai = (int) $datLichTienIch->trang_thai;
     $CHO_DUYET = \App\Models\DatLichTienIch::TRANG_THAI_CHO_DUYET;
     $DA_DUYET = \App\Models\DatLichTienIch::TRANG_THAI_DA_DUYET;
-    $conThoiGianHuy = now()->addHours(2)->lte($datLichTienIch->thoi_gian_bat_dau);
+    // Quy tắc: booking Đã duyệt chỉ được hủy khi còn cách giờ bắt đầu ít nhất
+    // 2 giờ — Chờ duyệt hủy được bất kỳ lúc nào (Chờ duyệt quá hạn 2h đã có
+    // Scheduler tự động hủy riêng, xem BookingSchedulerService::tuDongHuyQuaHan()).
+    $conThoiGianHuy = $trangThai !== $DA_DUYET || now()->addHours(2)->lte($datLichTienIch->thoi_gian_bat_dau);
     $coTheHuy = in_array($trangThai, [$CHO_DUYET, $DA_DUYET], true) && $conThoiGianHuy;
-    $khongTheHuyDoQuaHan = in_array($trangThai, [$CHO_DUYET, $DA_DUYET], true) && !$conThoiGianHuy;
+    $khongTheHuyDoQuaHan = $trangThai === $DA_DUYET && !$conThoiGianHuy;
 
     $phut = $datLichTienIch->thoi_luong_phut;
     $thoiLuong = null;
@@ -63,7 +66,8 @@
                 </div>
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Thông tin đặt lịch</h2>
             </div>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $datLichTienIch->trang_thai_label['class'] }}">
+            <span id="dlti-status-badge" data-booking-id="{{ $datLichTienIch->id }}"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $datLichTienIch->trang_thai_label['class'] }}">
                 {{ $datLichTienIch->trang_thai_label['text'] }}
             </span>
         </div>
@@ -164,4 +168,16 @@
     </template>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.DatLichRealtime) return;
+    window.DatLichRealtime.subscribeCuDanBooking({{ (int) auth('cudan')->id() }}, (tenSuKien, payload) => {
+        const badge = document.getElementById('dlti-status-badge');
+        if (!badge || Number(badge.dataset.bookingId) !== payload.id) return;
+        badge.textContent = payload.trang_thai_label.text;
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ' + payload.trang_thai_label.class;
+    });
+});
+</script>
 @endsection

@@ -103,16 +103,7 @@
                     <span class="text-xs text-gray-500 dark:text-gray-400">Email đăng nhập</span>
                     <span class="text-xs font-medium text-gray-800 dark:text-gray-200 text-right">{{ $nhanVien->email }}</span>
                 </div>
-                <div class="flex justify-between gap-2">
-                    <span class="text-xs text-gray-500 dark:text-gray-400">Vai trò</span>
-                    <span class="text-xs">
-                        @if($nhanVien->isAdmin())
-                        <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">Admin</span>
-                        @else
-                        <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">Manager</span>
-                        @endif
-                    </span>
-                </div>
+                
                 <div class="flex justify-between gap-2">
                     <span class="text-xs text-gray-500 dark:text-gray-400">Trạng thái</span>
                     <span class="text-xs">

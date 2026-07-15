@@ -13,7 +13,7 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new BookingService();
+        $this->service = app(BookingService::class);
     }
 
     public function test_auto_cancel_huy_dung_booking_cho_duyet_trong_pham_vi_2_gio(): void
@@ -21,31 +21,38 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
 
-        // A: Cho duyet, con 1 gio nua bat dau (<=2h) -> phai bi huy
+        // A: vuot suc chua rieng no nen chac chan Cho duyet, con 1 gio nua bat
+        // dau (<=2h) -> phai bi huy
         $a = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 1,
+            'so_nguoi' => 90,
         ]);
         $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $a->trang_thai);
 
-        // B: Cho duyet, con 3 gio nua bat dau (>2h) -> khong duoc dong toi
+        // B: vuot suc chua rieng no nen chac chan Cho duyet, con 3 gio nua bat
+        // dau (>2h) -> khong duoc dong toi
         $b = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHours(3)->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(4)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 1,
+            'so_nguoi' => 90,
         ]);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $b->trang_thai);
 
-        // C: Da duyet (duyet tay), con 1 gio -> khong bi huy vi khac trang thai
+        // C: khac tien ich (doc lap hoan toan voi A, tranh bi gom chung cum
+        // FIFO do trung khung gio voi A) -> du cho rieng le -> Da duyet NGAY
+        // luc tao; con 1 gio -> khong bi huy vi khac trang thai (khong phai
+        // Cho duyet)
+        $tienIchKhac = $this->taoTienIch(['suc_chua' => 80]);
         $c = $this->service->taoDatLich([
-            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIchKhac->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
             'so_nguoi' => 1,
         ]);
-        $this->service->duyet($c);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $c->trang_thai);
 
         $soLuong = $this->service->tuDongHuyQuaHan();
 
@@ -89,13 +96,14 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
     public function test_scheduler_idempotent_khong_xu_ly_trung_lap(): void
     {
         $cuDan = $this->taoCuDan();
-        $tienIch = $this->taoTienIch();
+        $tienIch = $this->taoTienIch(['suc_chua' => 80]);
 
+        // Vuot suc chua rieng no nen chac chan Cho duyet (khong tu duyet ngay).
         $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 1,
+            'so_nguoi' => 90,
         ]);
 
         $lanMot = $this->service->tuDongHuyQuaHan();
@@ -114,8 +122,9 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
             'thoi_gian_bat_dau' => now()->addHour()->format('Y-m-d H:i:s'),
             'thoi_gian_ket_thuc' => now()->addHours(2)->format('Y-m-d H:i:s'),
-            'so_nguoi' => 1,
+            'so_nguoi' => 90,
         ]);
+        $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $datLich->trang_thai);
 
         $exitCode = Artisan::call('dat-lich-tien-ich:auto-cancel');
 
@@ -144,10 +153,26 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
         $this->assertSame(DatLichTienIch::TRANG_THAI_HOAN_THANH, $datLich->fresh()->trang_thai);
     }
 
+    /**
+     * auto-approve giờ chỉ còn là an toàn dự phòng (FIFO chính đã chạy đồng
+     * bộ ngay trong taoDatLich()/huy()/hoanThanh()) — để có kịch bản thật sự
+     * cần lệnh này xử lý, mô phỏng trường hợp hiếm: sức chứa vừa được giải
+     * phóng (cập nhật DB trực tiếp, bỏ qua service) nhưng FIFO đồng bộ chưa
+     * kịp chạy (vd. tiến trình bị gián đoạn) — lệnh phải bắt lại đúng.
+     */
     public function test_command_auto_approve_chay_dung_va_goi_service_fifo(): void
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['suc_chua' => 80]);
+
+        $chan = $this->service->taoDatLich([
+            'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
+            'thoi_gian_bat_dau' => now()->addHours(3)->format('Y-m-d H:i:s'),
+            'thoi_gian_ket_thuc' => now()->addHours(4)->format('Y-m-d H:i:s'),
+            'so_nguoi' => 80,
+        ]);
+        // Du cho rieng le (dung bang suc_chua), khong ai dung truoc -> Da duyet ngay.
+        $this->assertSame(DatLichTienIch::TRANG_THAI_DA_DUYET, $chan->trang_thai);
 
         $datLich = $this->service->taoDatLich([
             'cu_dan' => $cuDan->id, 'tien_ich' => $tienIch->id,
@@ -156,6 +181,11 @@ class BookingSchedulerTest extends DatLichTienIchTestCase
             'so_nguoi' => 10,
         ]);
         $this->assertSame(DatLichTienIch::TRANG_THAI_CHO_DUYET, $datLich->trang_thai);
+
+        // Mo phong "chan" da duoc duyet roi hoan thanh xong tu truoc (giai
+        // phong cho) nhung KHONG qua service — cap nhat DB truc tiep de bo
+        // qua trigger FIFO dong bo, dung de test rieng safety-net nay.
+        $chan->forceFill(['trang_thai' => DatLichTienIch::TRANG_THAI_HOAN_THANH])->save();
 
         $exitCode = Artisan::call('dat-lich-tien-ich:auto-approve');
 

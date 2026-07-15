@@ -12,8 +12,8 @@ class CanHoPhiDichVuSeeder extends Seeder
         $canHoIds    = DB::table('can_ho')->pluck('id')->toArray();
         $phiDichVuIds = DB::table('phi_dich_vu')->pluck('id', 'ten_phi_dich_vu')->toArray();
 
-        // Phí áp dụng cho tất cả căn hộ: quản lý, điện, nước, vệ sinh, bảo trì
-        $phiChung = ['Phí quản lý căn hộ', 'Tiền điện', 'Tiền nước', 'Phí vệ sinh', 'Phí bảo trì chung cư'];
+        // Phí áp dụng cho tất cả căn hộ: quản lý, nước, vệ sinh, bảo trì
+        $phiChung = ['Phí quản lý căn hộ', 'Tiền nước', 'Phí vệ sinh', 'Phí bảo trì chung cư'];
 
         foreach ($canHoIds as $canHoId) {
             foreach ($phiChung as $tenPhi) {

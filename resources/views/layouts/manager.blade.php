@@ -64,19 +64,20 @@
         <!-- User Profile -->
         <div class="flex-shrink-0 px-4 pb-2">
             <div class="flex items-center gap-3 rounded-2xl bg-slate-800/40 p-3 ring-1 ring-white/5">
-                <div class="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 text-sm font-bold text-white ring-2 ring-white/20">
+                <a href="{{ route('manager.profile.show') }}" title="Hồ sơ cá nhân" class="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 text-sm font-bold text-white ring-2 ring-white/20">
                     {{ strtoupper(substr(auth('nhanvien')->user()->name, 0, 1)) }}
-                </div>
-                <div x-show="sidebarOpen"
-                     x-transition:enter="transition ease-out duration-200 delay-100"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     class="min-w-0 flex-1 overflow-hidden">
+                </a>
+                <a href="{{ route('manager.profile.show') }}"
+                   x-show="sidebarOpen"
+                   x-transition:enter="transition ease-out duration-200 delay-100"
+                   x-transition:enter-start="opacity-0"
+                   x-transition:enter-end="opacity-100"
+                   class="min-w-0 flex-1 overflow-hidden">
                     <p class="truncate text-sm font-semibold text-white">{{ auth('nhanvien')->user()->name }}</p>
                     <span class="mt-0.5 inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-300 ring-1 ring-inset ring-blue-500/30">
                         Manager
                     </span>
-                </div>
+                </a>
                 <form method="POST" action="{{ route('logout') }}" x-show="sidebarOpen">
                     @csrf
                     <button type="submit" title="Đăng xuất" class="rounded-lg p-1.5 text-slate-400 transition-colors duration-200 hover:bg-white/10 hover:text-white">

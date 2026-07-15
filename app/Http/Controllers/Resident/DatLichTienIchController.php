@@ -74,8 +74,14 @@ class DatLichTienIchController extends Controller
 
         $datLich = $this->bookingService->taoDatLich($data);
 
+        // Đủ sức chứa và không ai đứng trước -> đã Đã duyệt ngay; ngược lại
+        // -> Chờ duyệt, xếp vào hàng đợi FIFO (xem BookingApprovalService::taoDatLich()).
+        $thongBao = (int) $datLich->trang_thai === DatLichTienIch::TRANG_THAI_DA_DUYET
+            ? "Đặt lịch «{$datLich->ma_dat_lich}» thành công."
+            : "Đặt lịch «{$datLich->ma_dat_lich}» đã được đưa vào hàng chờ.";
+
         return redirect()->route('resident.dat-lich-tien-ich.show', $datLich)
-            ->with('success', "Đặt lịch «{$datLich->ma_dat_lich}» thành công.");
+            ->with('success', $thongBao);
     }
 
     public function show(DatLichTienIch $datLichTienIch)
