@@ -27,7 +27,7 @@ class PhuongTienSeeder extends Seeder
 
             $data[] = [
                 'ten_phuong_tien' => $loai == 1 ? 'Toyota Vios' : ($loai == 2 ? 'Honda Wave' : 'VinFast Klara'),
-                'bien_so'         => $p . '-' . rand(100, 999) . '.' . rand(10, 99),
+                'bien_so'         => $p ."A". '-' . rand(100, 999) . '.' . rand(10, 99),
                 'loai_phuong_tien'=> $loai > 4 ? 2 : $loai,
                 'can_ho'          => $canHoId,
                 'ngay_dang_ky'    => date('Y-m-d', mktime(0, 0, 0, rand(1, 12), rand(1, 28), rand(2021, 2024))),

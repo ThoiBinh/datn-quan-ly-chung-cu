@@ -11,7 +11,7 @@ class LoaiPhiDichVuSeeder extends Seeder
     {
         $data = [
             ['ten_loai_phi_dich_vu' => 'Phí quản lý'],
-            ['ten_loai_phi_dich_vu' => 'Điện'],
+        
             ['ten_loai_phi_dich_vu' => 'Nước'],
             ['ten_loai_phi_dich_vu' => 'Gửi xe'],
             ['ten_loai_phi_dich_vu' => 'Internet'],

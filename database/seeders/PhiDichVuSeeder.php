@@ -11,7 +11,7 @@ class PhiDichVuSeeder extends Seeder
     {
         $data = [
             ['loai' => 'Phí quản lý',  'ten' => 'Phí quản lý căn hộ',        'don_gia' => 15000,   'don_vi' => 'm²',    'tinh_phi' => 'Theo diện tích'],
-            ['loai' => 'Điện',          'ten' => 'Tiền điện',                  'don_gia' => 3500,    'don_vi' => 'kWh',   'tinh_phi' => 'Theo chỉ số'],
+            
             ['loai' => 'Nước',          'ten' => 'Tiền nước',                  'don_gia' => 15000,   'don_vi' => 'm³',    'tinh_phi' => 'Theo chỉ số'],
             ['loai' => 'Gửi xe',        'ten' => 'Phí gửi xe ô tô',           'don_gia' => 1200000, 'don_vi' => 'Xe',    'tinh_phi' => 'Theo số lượng'],
             ['loai' => 'Gửi xe',        'ten' => 'Phí gửi xe máy',            'don_gia' => 200000,  'don_vi' => 'Xe',    'tinh_phi' => 'Theo số lượng'],
