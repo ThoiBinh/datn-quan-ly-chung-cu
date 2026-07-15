@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manager\StoreUserRequest;
+use App\Http\Requests\Manager\UpdateUserRequest;
 use App\Models\ChucVu;
 use App\Models\NhanVien;
 use App\Services\AuditLogService;
 use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -54,26 +55,8 @@ class UserController extends Controller
         return view('manager.users.create', compact('chucVu'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => [
-                'required', 'email',
-                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt'),
-            ],
-            'phone'    => 'nullable|string|max:20',
-            'password' => 'required|min:8|confirmed',
-            'status'   => 'required|in:active,inactive',
-        ], [
-            'name.required'      => 'Vui lòng nhập họ tên.',
-            'email.required'     => 'Vui lòng nhập email.',
-            'email.unique'       => 'Email đã tồn tại.',
-            'password.required'  => 'Vui lòng nhập mật khẩu.',
-            'password.min'       => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
-        ]);
-
         $adminId  = $this->adminChucVuId();
         $chucVuId = ChucVu::when($adminId, fn($q) => $q->where('id', '!=', $adminId))->value('id') ?? 1;
         $nextId   = (NhanVien::max('id') ?? 0) + 1;
@@ -116,21 +99,11 @@ class UserController extends Controller
         return view('manager.users.edit', compact('user', 'chucVu'));
     }
 
-    public function update(Request $request, NhanVien $user)
+    public function update(UpdateUserRequest $request, NhanVien $user)
     {
         if ($user->isAdmin()) {
             return back()->with('error', 'Không có quyền chỉnh sửa tài khoản Admin.');
         }
-
-        $request->validate([
-            'name'   => 'required|string|max:255',
-            'email'  => [
-                'required', 'email',
-                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt')->ignore($user->id),
-            ],
-            'phone'  => 'nullable|string|max:20',
-            'status' => 'required|in:active,inactive',
-        ]);
 
         $old  = $user->toArray();
         $data = [
@@ -146,7 +119,6 @@ class UserController extends Controller
         }
 
         if ($request->filled('password')) {
-            $request->validate(['password' => 'min:8|confirmed']);
             $data['mat_khau'] = Hash::make($request->password);
         }
 

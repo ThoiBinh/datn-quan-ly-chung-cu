@@ -208,6 +208,12 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::get('/dashboard', [\App\Http\Controllers\Manager\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/export/pdf',   [\App\Http\Controllers\Manager\DashboardController::class, 'exportPdf'])->name('dashboard.export.pdf');
     Route::get('/dashboard/export/excel', [\App\Http\Controllers\Manager\DashboardController::class, 'exportExcel'])->name('dashboard.export.excel');
+
+    // Hồ sơ cá nhân — luôn thao tác trên tài khoản đang đăng nhập, không nhận ID
+    Route::get('profile', [\App\Http\Controllers\Manager\ProfileController::class, 'show'])->name('profile.show');
+    Route::put('profile', [\App\Http\Controllers\Manager\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [\App\Http\Controllers\Manager\ProfileController::class, 'updatePassword'])->name('profile.password');
+
     Route::resource('toa-nha', \App\Http\Controllers\Manager\ToaNhaController::class);
     Route::resource('can-ho', \App\Http\Controllers\Manager\CanHoController::class);
     Route::resource('cu-dan', \App\Http\Controllers\Manager\CuDanController::class);

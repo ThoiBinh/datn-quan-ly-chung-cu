@@ -62,7 +62,27 @@ class NhanVien extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->chucVu?->chuc_vu === 'Admin';
+        return $this->chucVu?->chuc_vu === ChucVu::ROLE_ADMIN;
+    }
+
+    /**
+     * True nếu nhân viên này có chức vụ Admin hoặc Quản lý — tức là ngoài tầm
+     * xem/sửa/xóa của một Manager (chỉ được thao tác trên nhân viên cấp dưới).
+     */
+    public function isRestrictedForManager(): bool
+    {
+        return in_array($this->chucVu?->chuc_vu, ChucVu::restrictedRoleNames(), true);
+    }
+
+    /**
+     * Chỉ lấy các nhân viên mà Manager được phép nhìn thấy (loại Admin và Quản lý).
+     * Dùng chung cho index/search/filter/thống kê để đảm bảo số liệu luôn khớp nhau.
+     */
+    public function scopeVisibleToManager($query)
+    {
+        return $query->whereHas('chucVu', function ($q) {
+            $q->whereNotIn('chuc_vu', ChucVu::restrictedRoleNames());
+        });
     }
 
     // Accessor để view dùng $user->status hoạt động như với User model

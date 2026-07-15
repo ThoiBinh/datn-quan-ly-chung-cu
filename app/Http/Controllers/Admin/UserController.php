@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\ChucVu;
 use App\Models\CuDan;
 use App\Models\NhanVien;
@@ -11,7 +13,6 @@ use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -130,7 +131,7 @@ class UserController extends Controller
         return view('admin.users.create', compact('chucVu', 'typeTab'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
         if ($request->input('type') === 'cu_dan') {
             return $this->storeCuDan($request);
@@ -138,39 +139,8 @@ class UserController extends Controller
         return $this->storeNhanVien($request);
     }
 
-    private function storeNhanVien(Request $request)
+    private function storeNhanVien(StoreUserRequest $request)
     {
-        $request->validate([
-            'ho_ten'        => 'required|string|max:255',
-            'chuc_vu'       => 'required|exists:chuc_vu,id',
-            'sdt'           => 'nullable|string|max:20',
-            'email'         => [
-                'required', 'email',
-                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt'),
-            ],
-            'mat_khau'      => 'required|min:8|confirmed',
-            'ma_nhan_vien'  => 'nullable|string|max:50',
-            'cccd'          => [
-                'required', 'string', 'max:20',
-                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt'),
-            ],
-            'ngay_sinh'     => 'nullable|date',
-            'ngay_vao_lam'  => 'nullable|date',
-            'ngay_nghi_lam' => 'nullable|date',
-            'ghi_chu'       => 'nullable|string|max:1000',
-            'trang_thai'    => 'required|in:0,1',
-        ], [
-            'ho_ten.required'    => 'Vui lòng nhập họ tên.',
-            'chuc_vu.required'   => 'Vui lòng chọn chức vụ.',
-            'email.required'     => 'Vui lòng nhập email.',
-            'email.unique'       => 'Email đã tồn tại trong hệ thống.',
-            'mat_khau.required'  => 'Vui lòng nhập mật khẩu.',
-            'mat_khau.min'       => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            'mat_khau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-        ]);
-
-        
-
         $nv = NhanVien::create([
             'ho_ten'        => $request->ho_ten,
             'chuc_vu'       => $request->chuc_vu,
@@ -192,31 +162,8 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Thêm nhân viên thành công.');
     }
 
-    private function storeCuDan(Request $request)
+    private function storeCuDan(StoreUserRequest $request)
     {
-        $request->validate([
-            'ho_ten_dem' => 'required|string|max:255',
-            'ten'        => 'required|string|max:100',
-            'sdt'        => 'nullable|string|max:20',
-            'cccd'       => 'required|string|max:50|unique:cu_dan,cccd',
-            'email'      => 'nullable|email|unique:cu_dan,email',
-            'mat_khau'   => 'required|min:8|confirmed',
-            'ngay_sinh'  => 'nullable|date',
-            'gioi_tinh'  => 'nullable|in:0,1',
-            'tinh'       => 'nullable|string|max:100',
-            'xa'         => 'nullable|string|max:100',
-            'dia_chi'    => 'nullable|string|max:255',
-            'trang_thai' => 'required|in:0,1',
-        ], [
-            'ho_ten_dem.required' => 'Vui lòng nhập họ tên đệm.',
-            'ten.required'        => 'Vui lòng nhập tên.',
-            'email.unique'        => 'Email đã tồn tại trong hệ thống.',
-            'cccd.unique'         => 'CCCD đã tồn tại trong hệ thống.',
-            'mat_khau.required'   => 'Vui lòng nhập mật khẩu.',
-            'mat_khau.min'        => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            'mat_khau.confirmed'  => 'Xác nhận mật khẩu không khớp.',
-        ]);
-
         $cd = CuDan::create([
             'ho_ten_dem' => $request->ho_ten_dem,
             'ten'        => $request->ten,
@@ -259,7 +206,7 @@ class UserController extends Controller
         return view('admin.users.edit', ['user' => $user, 'type' => $type, 'chucVu' => $chucVu]);
     }
 
-    public function update(Request $request, string $type, int $id)
+    public function update(UpdateUserRequest $request, string $type, int $id)
     {
         if ($type === 'nhan-vien') {
             return $this->updateNhanVien($request, $id);
@@ -267,34 +214,9 @@ class UserController extends Controller
         return $this->updateCuDan($request, $id);
     }
 
-    private function updateNhanVien(Request $request, int $id)
+    private function updateNhanVien(UpdateUserRequest $request, int $id)
     {
         $user = NhanVien::findOrFail($id);
-
-        $request->validate([
-            'ho_ten'        => 'required|string|max:255',
-            'chuc_vu'       => 'required|exists:chuc_vu,id',
-            'sdt'           => 'nullable|string|max:20',
-            'email'         => [
-                'required', 'email',
-                Rule::unique('nhan_vien', 'email')->whereNull('deletedAt')->ignore($id),
-            ],
-            'ma_nhan_vien'  => 'nullable|string|max:50',
-            'cccd'          => [
-                'required', 'string', 'max:20',
-                Rule::unique('nhan_vien', 'cccd')->whereNull('deletedAt')->ignore($id),
-            ],
-            'ngay_sinh'     => 'nullable|date',
-            'ngay_vao_lam'  => 'nullable|date',
-            'ngay_nghi_lam' => 'nullable|date',
-            'ghi_chu'       => 'nullable|string|max:1000',
-            'trang_thai'    => 'required|in:0,1',
-        ], [
-            'ho_ten.required'  => 'Vui lòng nhập họ tên.',
-            'chuc_vu.required' => 'Vui lòng chọn chức vụ.',
-            'email.required'   => 'Vui lòng nhập email.',
-            'email.unique'     => 'Email đã được sử dụng.',
-        ]);
 
         $old  = $user->toArray();
         $data = [
@@ -313,12 +235,6 @@ class UserController extends Controller
         ];
 
         if ($request->filled('mat_khau')) {
-            $request->validate([
-                'mat_khau' => 'min:8|confirmed',
-            ], [
-                'mat_khau.min'       => 'Mật khẩu phải có ít nhất 8 ký tự.',
-                'mat_khau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-            ]);
             $data['mat_khau'] = Hash::make($request->mat_khau);
         }
 
@@ -330,28 +246,9 @@ class UserController extends Controller
             ->with('success', 'Cập nhật nhân viên thành công.');
     }
 
-    private function updateCuDan(Request $request, int $id)
+    private function updateCuDan(UpdateUserRequest $request, int $id)
     {
         $user = CuDan::findOrFail($id);
-
-        $request->validate([
-            'ho_ten_dem' => 'required|string|max:255',
-            'ten'        => 'required|string|max:100',
-            'sdt'        => 'nullable|string|max:20',
-            'cccd'       => 'required|string|max:50|unique:cu_dan,cccd,' . $id,
-            'email'      => 'nullable|email|unique:cu_dan,email,' . $id,
-            'ngay_sinh'  => 'nullable|date',
-            'gioi_tinh'  => 'nullable|in:0,1',
-            'tinh'       => 'nullable|string|max:100',
-            'xa'         => 'nullable|string|max:100',
-            'dia_chi'    => 'nullable|string|max:255',
-            'trang_thai' => 'required|in:0,1',
-        ], [
-            'ho_ten_dem.required' => 'Vui lòng nhập họ tên đệm.',
-            'ten.required'        => 'Vui lòng nhập tên.',
-            'email.unique'        => 'Email đã được sử dụng.',
-            'cccd.unique'         => 'CCCD đã được sử dụng.',
-        ]);
 
         $old  = $user->toArray();
         $data = [
@@ -370,12 +267,6 @@ class UserController extends Controller
         ];
 
         if ($request->filled('mat_khau')) {
-            $request->validate([
-                'mat_khau' => 'min:8|confirmed',
-            ], [
-                'mat_khau.min'       => 'Mật khẩu phải có ít nhất 8 ký tự.',
-                'mat_khau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-            ]);
             $data['mat_khau'] = Hash::make($request->mat_khau);
         }
 

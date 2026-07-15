@@ -23,7 +23,8 @@ class NhanVienController extends Controller
     {
         NhanVienTrangThaiService::syncExpired();
 
-        $query = NhanVien::with('chucVu')
+        $query = NhanVien::visibleToManager()
+            ->with('chucVu')
             ->withCount(['hoaDon', 'yeuCauXuLy', 'thongBao', 'bangTin']);
 
         if ($request->filled('search')) {
@@ -52,22 +53,22 @@ class NhanVienController extends Controller
         $nhanVienList = $query->paginate(15)->withQueryString();
 
         $stats = [
-            'tong'          => NhanVien::count(),
-            'dang_lam'      => NhanVien::where('trang_thai', 1)->count(),
-            'da_nghi'       => NhanVien::where('trang_thai', 0)->count(),
+            'tong'          => NhanVien::visibleToManager()->count(),
+            'dang_lam'      => NhanVien::visibleToManager()->where('trang_thai', 1)->count(),
+            'da_nghi'       => NhanVien::visibleToManager()->where('trang_thai', 0)->count(),
             'tong_hoa_don'  => HoaDon::whereNotNull('nguoi_cap_nhat')->count(),
             'tong_thanh_toan' => LichSuThanhToan::count(),
             'tong_yeu_cau'  => YeuCauCuDan::whereNotNull('nhan_vien_xu_ly')->count(),
         ];
 
-        $dsChucVu = ChucVu::orderBy('chuc_vu')->get();
+        $dsChucVu = ChucVu::selectableByManager()->orderBy('chuc_vu')->get();
 
         return view('manager.nhan-vien.index', compact('nhanVienList', 'stats', 'dsChucVu', 'sort', 'direction'));
     }
 
     public function create()
     {
-        $dsChucVu = ChucVu::orderBy('chuc_vu')->get();
+        $dsChucVu = ChucVu::selectableByManager()->orderBy('chuc_vu')->get();
         return view('manager.nhan-vien.create', compact('dsChucVu'));
     }
 
@@ -93,6 +94,8 @@ class NhanVienController extends Controller
 
     public function show(NhanVien $nhanVien)
     {
+        $this->ensureManagerCanAccess($nhanVien);
+
         NhanVienTrangThaiService::syncOne($nhanVien);
 
         $nhanVien->load([
@@ -114,10 +117,12 @@ class NhanVienController extends Controller
 
     public function edit(NhanVien $nhanVien)
     {
+        $this->ensureManagerCanAccess($nhanVien);
+
         NhanVienTrangThaiService::syncOne($nhanVien);
 
         $nhanVien->load('chucVu');
-        $dsChucVu = ChucVu::orderBy('chuc_vu')->get();
+        $dsChucVu = ChucVu::selectableByManager()->orderBy('chuc_vu')->get();
         return view('manager.nhan-vien.edit', compact('nhanVien', 'dsChucVu'));
     }
 
@@ -145,6 +150,8 @@ class NhanVienController extends Controller
 
     public function destroy(NhanVien $nhanVien)
     {
+        $this->ensureManagerCanAccess($nhanVien);
+
         if ($nhanVien->id === auth('nhanvien')->id()) {
             return back()->with('error', 'Không thể xóa tài khoản của chính mình.');
         }
@@ -180,5 +187,24 @@ class NhanVienController extends Controller
         }
 
         return (int) ($data['trang_thai'] ?? 1);
+    }
+
+    /**
+     * Chặn Manager truy cập nhân viên có chức vụ Admin/Quản lý (xem/sửa/xóa),
+     * kể cả khi gọi thẳng route bằng Postman/URL. Có ghi audit log lần cố truy cập.
+     */
+    private function ensureManagerCanAccess(NhanVien $nhanVien): void
+    {
+        if ($nhanVien->isRestrictedForManager()) {
+            AuditLogService::log(
+                'ACCESS_DENIED',
+                'nhan_vien',
+                $nhanVien->id,
+                null,
+                ['ly_do' => 'Manager cố truy cập nhân viên có chức vụ Admin/Quản lý']
+            );
+
+            abort(403);
+        }
     }
 }

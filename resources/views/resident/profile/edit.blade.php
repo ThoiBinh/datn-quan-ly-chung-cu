@@ -124,7 +124,7 @@
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Thông tin không thể chỉnh sửa</p>
                 <div class="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                        <p class="text-xs text-gray-400">CCCD/CMND</p>
+                        <p class="text-xs text-gray-400">CCCD</p>
                         <p class="text-gray-600 font-medium">{{ $cuDan->cccd ?: '—' }}</p>
                     </div>
                     <div>

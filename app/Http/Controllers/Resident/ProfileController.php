@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Resident\UpdateProfileRequest;
 use App\Models\HoaDon;
 use App\Models\ThongBao;
 use Illuminate\Http\Request;
@@ -75,29 +76,11 @@ class ProfileController extends Controller
         return view('resident.profile.edit', compact('cuDan'));
     }
 
-    public function update(Request $request)
+    public function update(UpdateProfileRequest $request)
     {
         $cuDan = auth('cudan')->user();
 
-        $validated = $request->validate([
-            'ho_ten_dem' => 'nullable|string|max:150',
-            'ten'        => 'required|string|max:50',
-            'email'      => 'nullable|email|max:150|unique:cu_dan,email,' . $cuDan->id,
-            'sdt'        => 'nullable|string|max:15',
-            'ngay_sinh'  => 'nullable|date',
-            'gioi_tinh'  => 'nullable|integer|in:0,1,2',
-            'tinh'       => 'nullable|string|max:100',
-            'xa'         => 'nullable|string|max:100',
-            'dia_chi'    => 'nullable|string|max:255',
-        ], [
-            'ten.required'        => 'Vui lòng nhập tên.',
-            'ten.max'             => 'Tên không được vượt quá 50 ký tự.',
-            'email.email'         => 'Địa chỉ email không hợp lệ.',
-            'email.unique'        => 'Email này đã được sử dụng.',
-            'sdt.max'             => 'Số điện thoại không được vượt quá 15 ký tự.',
-            'ngay_sinh.date'      => 'Ngày sinh không hợp lệ.',
-            'gioi_tinh.in'        => 'Giới tính không hợp lệ.',
-        ]);
+        $validated = $request->validated();
 
         $cuDan->update(array_filter($validated, fn($v) => $v !== null));
 

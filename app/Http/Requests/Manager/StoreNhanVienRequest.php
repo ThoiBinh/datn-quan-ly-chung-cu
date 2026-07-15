@@ -2,22 +2,37 @@
 
 namespace App\Http\Requests\Manager;
 
+use App\Http\Requests\Concerns\ValidatesCccd;
+use App\Models\ChucVu;
+use App\Rules\SoDienThoaiVietNam;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreNhanVienRequest extends FormRequest
 {
+    use ValidatesCccd;
+
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->prepareCccdForValidation();
     }
 
     public function rules(): array
     {
         return [
             'ho_ten'        => 'required|string|max:150',
-            'chuc_vu'       => 'required|integer|exists:chuc_vu,id',
-            'sdt'           => 'nullable|string|max:15',
+            'chuc_vu'       => [
+                'required', 'integer',
+                Rule::exists('chuc_vu', 'id')->where(
+                    fn ($query) => $query->whereNotIn('chuc_vu', ChucVu::restrictedRoleNames())
+                ),
+            ],
+            'sdt'           => ['nullable', 'string', new SoDienThoaiVietNam()],
             'email'         => [
                 'required', 'email', 'max:150',
                 Rule::unique('nhan_vien', 'email'),
@@ -28,10 +43,7 @@ class StoreNhanVienRequest extends FormRequest
                 'nullable', 'string', 'max:50',
                 Rule::unique('nhan_vien', 'ma_nhan_vien'),
             ],
-            'cccd'          => [
-                'required', 'string', 'max:20',
-                Rule::unique('nhan_vien', 'cccd'),
-            ],
+            'cccd'          => $this->cccdRules(true, 'nhan_vien'),
             'ngay_sinh'     => 'nullable|date',
             'ngay_vao_lam'  => 'nullable|date',
             'ngay_nghi_lam' => 'nullable|date',
@@ -41,7 +53,7 @@ class StoreNhanVienRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return array_merge($this->cccdMessages(), [
             'ho_ten.required'      => 'Vui lòng nhập họ tên.',
             'chuc_vu.required'     => 'Vui lòng chọn chức vụ.',
             'chuc_vu.exists'       => 'Chức vụ không tồn tại.',
@@ -52,8 +64,6 @@ class StoreNhanVienRequest extends FormRequest
             'mat_khau.min'         => 'Mật khẩu phải có ít nhất 8 ký tự.',
             'mat_khau.confirmed'   => 'Xác nhận mật khẩu không khớp.',
             'ma_nhan_vien.unique'  => 'Mã nhân viên đã tồn tại.',
-            'cccd.required'        => 'Vui lòng nhập CCCD.',
-            'cccd.unique'          => 'CCCD đã được sử dụng.',
-        ];
+        ]);
     }
 }
