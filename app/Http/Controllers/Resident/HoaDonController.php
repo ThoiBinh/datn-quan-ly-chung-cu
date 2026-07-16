@@ -23,13 +23,13 @@ class HoaDonController extends Controller
     public function index(Request $request)
     {
         $cuDan = auth('cudan')->user();
+        $canHoIds = $cuDan?->canHoIdsHienTai() ?? collect();
 
-        if (!$cuDan || !$cuDan->canHoHienTai) {
+        if ($canHoIds->isEmpty()) {
             return view('resident.hoa-don.index', ['hoaDon' => collect()]);
         }
 
-        $canHoId = $cuDan->canHoHienTai->can_ho;
-        $query   = HoaDon::where('can_ho', $canHoId)->with('canHo');
+        $query = HoaDon::whereIn('can_ho', $canHoIds)->with('canHo.toaNha');
 
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', (int) $request->trang_thai);
@@ -43,7 +43,7 @@ class HoaDonController extends Controller
     public function show(HoaDon $hoaDon)
     {
         $this->authorize_canho($hoaDon);
-        $hoaDon->load(['chiTiet', 'lichSuThanhToan.nguonTao', 'canHo']);
+        $hoaDon->load(['chiTiet', 'lichSuThanhToan.nguonTao', 'canHo.toaNha']);
         $conNo = max(0, (float) $hoaDon->tong_tien - (float) $hoaDon->so_tien_da_thanh_toan);
 
         return view('resident.hoa-don.show', compact('hoaDon', 'conNo'));
@@ -146,7 +146,8 @@ class HoaDonController extends Controller
     private function authorize_canho(HoaDon $hoaDon): void
     {
         $cuDan = auth('cudan')->user();
-        if (!$cuDan || !$cuDan->canHoHienTai || $cuDan->canHoHienTai->can_ho != $hoaDon->can_ho) {
+        $canHoIds = $cuDan?->canHoIdsHienTai() ?? collect();
+        if (!$cuDan || !$canHoIds->contains($hoaDon->can_ho)) {
             abort(403, 'Bạn không có quyền xem hóa đơn này.');
         }
     }

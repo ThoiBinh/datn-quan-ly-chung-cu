@@ -307,10 +307,10 @@ class HoaDonController extends Controller
 
     private function layThongKe(): array
     {
-        $row = HoaDon::whereIn('trang_thai', [
+        $congNo = HoaDon::whereIn('trang_thai', [
             HoaDon::TRANG_THAI_CHUA_THANH_TOAN,
             HoaDon::TRANG_THAI_QUA_HAN,
-        ])->selectRaw('COALESCE(SUM(tong_tien - so_tien_da_thanh_toan), 0) as cong_no')->first();
+        ])->selectSumDuNo('cong_no')->value('cong_no');
 
         return [
             'tong'      => HoaDon::count(),
@@ -318,7 +318,7 @@ class HoaDonController extends Controller
             'da_tt'     => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->count(),
             'qua_han'   => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_QUA_HAN)->count(),
             'doanh_thu' => (float) HoaDon::where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->sum('so_tien_da_thanh_toan'),
-            'cong_no'   => (float) ($row?->cong_no ?? 0),
+            'cong_no'   => (float) ($congNo ?? 0),
         ];
     }
 }

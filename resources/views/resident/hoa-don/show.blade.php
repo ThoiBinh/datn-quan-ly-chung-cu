@@ -56,6 +56,11 @@
             <div>
                 <h2 class="font-bold text-gray-900">Hóa đơn tháng {{ $hoaDon->thang }}/{{ $hoaDon->nam }}</h2>
                 <p class="text-sm text-gray-500 mt-0.5 font-mono">{{ $hoaDon->ma_thanh_toan }}</p>
+                @if($hoaDon->canHo)
+                <p class="text-xs text-gray-400 mt-0.5">
+                    Căn hộ {{ $hoaDon->canHo->so_can_ho }}{{ $hoaDon->canHo->toaNha ? ' — '.$hoaDon->canHo->toaNha->ten_toa_nha : '' }}
+                </p>
+                @endif
             </div>
             @php
                 $badge = match($hoaDon->trang_thai) {

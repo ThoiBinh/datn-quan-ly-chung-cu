@@ -48,7 +48,7 @@
                 <div class="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors duration-200">
                     <div>
                         <p class="text-sm font-medium text-gray-800">Tháng {{ $hd->thang }}/{{ $hd->nam }}</p>
-                        <p class="text-xs text-gray-500">HĐ #{{ $hd->id }}</p>
+                        <p class="text-xs text-gray-500">HĐ #{{ $hd->id }} @if($hd->canHo)&middot; Căn hộ {{ $hd->canHo->so_can_ho }}@endif</p>
                     </div>
                     <div class="text-right">
                         <p class="text-sm font-bold text-red-600">{{ number_format($hd->tong_tien-$hd->so_tien_da_thanh_toan) }}đ</p>

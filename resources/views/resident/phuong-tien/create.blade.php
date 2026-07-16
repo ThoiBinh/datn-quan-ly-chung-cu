@@ -12,6 +12,21 @@
                 <div class="bg-red-50 border border-red-200 rounded-lg p-3">@foreach($errors->all() as $e)<p class="text-red-700 text-sm">{{ $e }}</p>@endforeach</div>
             @endif
             <div class="grid grid-cols-2 gap-4">
+                @if($dsCanHo->count() > 1)
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Căn hộ <span class="text-red-500">*</span></label>
+                    <select name="can_ho" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">-- Chọn căn hộ --</option>
+                        @foreach($dsCanHo as $ch)
+                        <option value="{{ $ch->id }}" {{ (string) old('can_ho') === (string) $ch->id ? 'selected' : '' }}>
+                            {{ $ch->so_can_ho }} — {{ $ch->toaNha?->ten_toa_nha }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                @else
+                <input type="hidden" name="can_ho" value="{{ $dsCanHo->first()->id }}">
+                @endif
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Biển số xe <span class="text-red-500">*</span></label>
                     <input type="text" name="bien_so" value="{{ old('bien_so') }}" required placeholder="51A-12345"
