@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Manager;
 
 use App\Rules\ChuHoDuyNhat;
+use App\Rules\CuDanCanHoDuyNhat;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCuDanCanHoRequest extends FormRequest
@@ -20,7 +21,7 @@ class UpdateCuDanCanHoRequest extends FormRequest
         $ignoreId     = $this->route('cuDanCanHo')?->id;
 
         return [
-            'cu_dan'          => 'required|integer|exists:cu_dan,id',
+            'cu_dan'          => ['required', 'integer', 'exists:cu_dan,id', new CuDanCanHoDuyNhat($this->can_ho, $ignoreId)],
             'can_ho'          => 'required|integer|exists:can_ho,id',
             'vai_tro'         => ['nullable', 'integer', 'exists:vai_tro,id', new ChuHoDuyNhat($this->can_ho, $dangHoatDong, $ignoreId)],
             'ngay_chuyen_den' => 'nullable|date',

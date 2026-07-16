@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Manager;
 
 use App\Rules\ChuHoDuyNhat;
+use App\Rules\CuDanCanHoDuyNhat;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCuDanCanHoRequest extends FormRequest
@@ -19,7 +20,7 @@ class StoreCuDanCanHoRequest extends FormRequest
         $dangHoatDong = ChuHoDuyNhat::conCuTru($this->ngay_chuyen_di);
 
         return [
-            'cu_dan'          => 'required|integer|exists:cu_dan,id',
+            'cu_dan'          => ['required', 'integer', 'exists:cu_dan,id', new CuDanCanHoDuyNhat($this->can_ho)],
             'can_ho'          => 'required|integer|exists:can_ho,id',
             'vai_tro'         => ['nullable', 'integer', 'exists:vai_tro,id', new ChuHoDuyNhat($this->can_ho, $dangHoatDong)],
             'ngay_chuyen_den' => 'nullable|date',

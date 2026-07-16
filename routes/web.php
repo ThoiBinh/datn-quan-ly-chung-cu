@@ -327,6 +327,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
     // Quản lý cư dân căn hộ
+    // Lưu ý: route kiem-tra-chu-ho phải đăng ký TRƯỚC resource() để không bị
+    // route show ('{cuDanCanHo}') nuốt mất chuỗi "kiem-tra-chu-ho" như một ID.
+    Route::get('cu-dan-can-ho/kiem-tra-chu-ho', [\App\Http\Controllers\Manager\CuDanCanHoController::class, 'kiemTraChuHo'])
+        ->name('cu-dan-can-ho.kiem-tra-chu-ho');
     Route::resource('cu-dan-can-ho', \App\Http\Controllers\Manager\CuDanCanHoController::class)
         ->except(['destroy'])
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
