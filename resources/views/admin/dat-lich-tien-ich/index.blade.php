@@ -219,7 +219,7 @@ $sortIcon = function($col) {
                                 @if((int) $item->trang_thai === \App\Models\DatLichTienIch::TRANG_THAI_CHO_DUYET)
                                 <form action="{{ route('admin.dat-lich-tien-ich.approve', $item) }}" method="POST">
                                     @csrf @method('PATCH')
-                                    <button type="submit" title="Duyệt nhanh" hidden
+                                    <button type="submit" title="Duyệt nhanh" 
                                             class="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                     </button>

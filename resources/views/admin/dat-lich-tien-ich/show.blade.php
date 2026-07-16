@@ -41,7 +41,7 @@
             </a>
 
             @if($coTheDuyetTuChoi)
-            <button @click="confirmApprove = true" type="button" hidden
+            <button @click="confirmApprove = true" type="button" 
                     class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Duyệt

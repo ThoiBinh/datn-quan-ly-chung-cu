@@ -30,6 +30,7 @@
              batDau: '{{ old('thoi_gian_bat_dau') }}',
              ketThuc: '{{ old('thoi_gian_ket_thuc') }}',
              soNguoi: {{ (int) old('so_nguoi', 1) }},
+             sucChuaUrlTemplate: {{ \Illuminate\Support\Js::from(route('manager.dat-lich-tien-ich.suc-chua', ['tienIch' => '__TIEN_ICH__'])) }},
          })" x-init="initRealtime()">
         <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -113,15 +114,6 @@
                             · Đơn giá: <span x-text="formatTien(tienIchDaChon.phi)" class="font-medium"></span>/giờ/người
                         </p>
                     </template>
-                    <!-- Cập nhật real-time qua Reverb/Echo (kênh public tien-ich.{id}): không cần refresh -->
-                    <template x-if="conLaiRealtime !== null">
-                        <p class="mt-1 text-xs flex items-center gap-1"
-                           :class="hetChoNgay ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'">
-                            <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
-                            <span x-show="!hetChoNgay">Còn <span x-text="conLaiRealtime" class="font-semibold"></span> chỗ cho khung giờ này (cập nhật trực tiếp)</span>
-                            <span x-show="hetChoNgay">Vừa hết chỗ cho khung giờ này — lượt đặt sẽ vào hàng chờ</span>
-                        </p>
-                    </template>
                 </div>
 
                 <div class="sm:col-span-2">
@@ -184,6 +176,65 @@
                     <template x-if="loiKetThuc"><p class="mt-1.5 text-xs text-red-500" x-text="loiKetThuc"></p></template>
                 </div>
 
+                <!-- Card sức chứa: cập nhật AJAX ngay khi đổi tiện ích/ngày/giờ, và real-time qua Reverb/Echo khi người khác đặt/hủy/duyệt/từ chối/hoàn thành -->
+                <template x-if="tienIch && batDau && ketThuc">
+                <div class="sm:col-span-2 rounded-xl border shadow-md p-4 transition-colors"
+                     :class="{
+                        'border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800': capacity && (capacityTrangThai === 'con-cho' || capacityTrangThai === 'khong-gioi-han'),
+                        'border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800': capacity && capacityTrangThai === 'gan-day',
+                        'border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800': capacity && capacityTrangThai === 'day',
+                        'border-gray-200 bg-gray-50 dark:bg-slate-700/30 dark:border-slate-600': !capacity,
+                     }">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-8a4 4 0 110 8 4 4 0 010-8zm-6 8a4 4 0 118 0v2H7v-2z"/></svg>
+                        <h3 class="text-sm font-semibold text-gray-800 dark:text-white">Sức chứa tiện ích</h3>
+                        <svg x-show="capacityLoading" class="w-3.5 h-3.5 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                    </div>
+
+                    <template x-if="!capacity">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Đang tải thông tin sức chứa...</p>
+                    </template>
+
+                    <template x-if="capacity && capacityTrangThai === 'khong-gioi-han'">
+                        <p class="text-sm text-gray-600 dark:text-slate-300">Tiện ích này không giới hạn sức chứa.</p>
+                    </template>
+
+                    <template x-if="capacity && capacityTrangThai !== 'khong-gioi-han'">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm text-gray-700 dark:text-slate-200">
+                                <span>Đã đặt: <span class="font-semibold" x-text="capacity.daDuyet"></span> / <span class="font-semibold" x-text="capacity.sucChua"></span> người</span>
+                                <span>Còn lại: <span class="font-semibold" x-text="Math.max(0, capacity.conLai)"></span> người</span>
+                            </div>
+
+                            <!-- Progress bar -->
+                            <div class="w-full h-2.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-300"
+                                     :class="{
+                                        'bg-emerald-500': capacityTrangThai === 'con-cho',
+                                        'bg-amber-500': capacityTrangThai === 'gan-day',
+                                        'bg-red-500': capacityTrangThai === 'day',
+                                     }"
+                                     :style="`width: ${Math.min(100, Math.round((capacity.daDuyet / capacity.sucChua) * 100))}%`"></div>
+                            </div>
+
+                            <p class="text-xs font-medium flex items-center gap-1"
+                               :class="{
+                                  'text-emerald-600 dark:text-emerald-400': capacityTrangThai === 'con-cho',
+                                  'text-amber-600 dark:text-amber-400': capacityTrangThai === 'gan-day',
+                                  'text-red-600 dark:text-red-400': capacityTrangThai === 'day',
+                               }">
+                                <span x-show="capacityTrangThai === 'con-cho'">🟢 Còn chỗ</span>
+                                <span x-show="capacityTrangThai === 'gan-day'">🟡 Còn <span x-text="Math.max(0, capacity.conLai)"></span> chỗ</span>
+                                <span x-show="capacityTrangThai === 'day'">🔴 Đã đầy — lượt đặt sẽ được xếp vào hàng chờ</span>
+                            </p>
+                        </div>
+                    </template>
+                </div>
+                </template>
+
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
                         Số người <span class="text-red-500">*</span>
@@ -223,7 +274,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    <span x-text="submitting ? 'Đang lưu...' : 'Thêm đặt lịch'"></span>
+                    <span x-text="submitting ? 'Đang lưu...' : (capacityTrangThai === 'day' ? 'Vào hàng chờ' : 'Thêm đặt lịch')"></span>
                 </button>
             </div>
         </form>
@@ -233,10 +284,11 @@
 
 @push('scripts')
 <script>
-function datLichForm({ tienIchInfo, tienIch, batDau: batDauInit, ketThuc: ketThucInit, soNguoi }) {
+function datLichForm({ tienIchInfo, tienIch, batDau: batDauInit, ketThuc: ketThucInit, soNguoi, sucChuaUrlTemplate }) {
     return {
         tienIchInfo,
         tienIch,
+        sucChuaUrlTemplate,
         ngay: batDauInit ? batDauInit.slice(0, 10) : (ketThucInit ? ketThucInit.slice(0, 10) : ''),
         batDauGio: batDauInit ? batDauInit.slice(11, 16) : '',
         ketThucGio: ketThucInit ? ketThucInit.slice(11, 16) : '',
@@ -307,11 +359,56 @@ function datLichForm({ tienIchInfo, tienIch, batDau: batDauInit, ketThuc: ketThu
             return this.loiKhungGio.ketThuc;
         },
 
-        // ── Realtime (Reverb/Echo, kênh public "tien-ich.{id}") ──
-        // Không polling: chỉ cập nhật khi server thật sự broadcast lúc có
-        // booking khác vừa được duyệt/hủy/từ chối/hoàn thành ảnh hưởng sức chứa.
+        // ── Card sức chứa: baseline lấy qua AJAX ngay khi đổi tiện ích/ngày/giờ,
+        // sau đó cập nhật tiếp real-time qua Reverb/Echo (kênh public "tien-ich.{id}")
+        // khi người khác đặt/hủy/duyệt/từ chối/hoàn thành ảnh hưởng đúng khung giờ này.
+        // Không polling — chỉ fetch khi người dùng đổi lựa chọn, và chỉ nhận thêm
+        // cập nhật khi server thật sự broadcast.
+        capacity: null,
+        capacityLoading: false,
+        capacityDebounceTimer: null,
+        capacityFetchToken: 0,
         realtimeChannelId: null,
-        realtimeSlot: null,
+        get capacityTrangThai() {
+            if (!this.capacity) return null;
+            if (!this.capacity.sucChua) return 'khong-gioi-han';
+            if (this.capacity.day || this.capacity.conLai <= 0) return 'day';
+            const nguong = Math.max(1, Math.ceil(this.capacity.sucChua * 0.2));
+            return this.capacity.conLai <= nguong ? 'gan-day' : 'con-cho';
+        },
+        applyCapacity(payload) {
+            this.capacity = {
+                sucChua: payload.suc_chua,
+                daDuyet: payload.da_duyet,
+                conLai: payload.suc_chua ? Math.max(0, payload.con_lai) : null,
+                day: !!payload.day,
+            };
+        },
+        requestCapacity() {
+            clearTimeout(this.capacityDebounceTimer);
+            if (!this.tienIch || !this.batDau || !this.ketThuc) {
+                this.capacity = null;
+                return;
+            }
+            this.capacityDebounceTimer = setTimeout(() => this.fetchCapacity(), 300);
+        },
+        async fetchCapacity() {
+            const tienIchId = this.tienIch, batDau = this.batDau, ketThuc = this.ketThuc;
+            const token = ++this.capacityFetchToken;
+            this.capacityLoading = true;
+            try {
+                const url = new URL(this.sucChuaUrlTemplate.replace('__TIEN_ICH__', tienIchId), window.location.origin);
+                url.searchParams.set('thoi_gian_bat_dau', batDau);
+                url.searchParams.set('thoi_gian_ket_thuc', ketThuc);
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok || token !== this.capacityFetchToken) return;
+                this.applyCapacity(await res.json());
+            } catch (e) {
+                // Im lặng bỏ qua lỗi mạng — không chặn người dùng tiếp tục điền form.
+            } finally {
+                if (token === this.capacityFetchToken) this.capacityLoading = false;
+            }
+        },
         initRealtime() {
             this.$watch('tienIch', (value) => {
                 this.subscribeTienIch(value);
@@ -319,29 +416,29 @@ function datLichForm({ tienIchInfo, tienIch, batDau: batDauInit, ketThuc: ketThu
                     this.batDauGio = '';
                     this.ketThucGio = '';
                 }
+                this.requestCapacity();
             });
+            this.$watch('ngay', () => this.requestCapacity());
+            this.$watch('batDauGio', () => this.requestCapacity());
+            this.$watch('ketThucGio', () => this.requestCapacity());
             if (this.tienIch) this.subscribeTienIch(this.tienIch);
+            this.requestCapacity();
         },
         subscribeTienIch(tienIchId) {
             if (this.realtimeChannelId && window.Echo) {
                 window.Echo.leaveChannel('tien-ich.' + this.realtimeChannelId);
             }
-            this.realtimeSlot = null;
             this.realtimeChannelId = tienIchId || null;
             if (!tienIchId || !window.Echo) return;
             window.Echo.channel('tien-ich.' + tienIchId)
-                .listen('.booking.slot-updated', (e) => { this.realtimeSlot = e; });
-        },
-        get conLaiRealtime() {
-            if (!this.realtimeSlot || !this.batDau || !this.ketThuc) return null;
-            const s1 = new Date(this.batDau), e1 = new Date(this.ketThuc);
-            const s2 = new Date(this.realtimeSlot.thoi_gian_bat_dau), e2 = new Date(this.realtimeSlot.thoi_gian_ket_thuc);
-            const giaoNhau = s1 < e2 && e1 > s2; // cùng công thức giao nhau dùng ở BookingCapacityService
-            if (!giaoNhau || this.realtimeSlot.con_lai === null) return null;
-            return this.realtimeSlot.con_lai;
-        },
-        get hetChoNgay() {
-            return this.conLaiRealtime !== null && this.conLaiRealtime <= 0;
+                .listen('.booking.slot-updated', (e) => {
+                    if (!this.batDau || !this.ketThuc) return;
+                    const s1 = new Date(this.batDau), e1 = new Date(this.ketThuc);
+                    const s2 = new Date(e.thoi_gian_bat_dau), e2 = new Date(e.thoi_gian_ket_thuc);
+                    const giaoNhau = s1 < e2 && e1 > s2; // cùng công thức giao nhau dùng ở BookingCapacityService
+                    if (!giaoNhau) return;
+                    this.applyCapacity(e);
+                });
         },
     };
 }
