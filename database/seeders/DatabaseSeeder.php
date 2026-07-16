@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
             BangTinSeeder::class,
             TienIchSeeder::class,
             DatLichTienIchSeeder::class,
+            ThongBaoSeeder::class,
         ]);
     }
 }

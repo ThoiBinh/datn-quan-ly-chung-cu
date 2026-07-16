@@ -65,7 +65,7 @@
                 {{-- Mã nhân viên --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Mã nhân viên</label>
-                    <input type="text" name="ma_nhan_vien" value="{{ old('ma_nhan_vien', $nhanVien->ma_nhan_vien) }}"
+                    <input readonly type="text" name="ma_nhan_vien" value="{{ old('ma_nhan_vien', $nhanVien->ma_nhan_vien) }}"
                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500
                                   @error('ma_nhan_vien') border-red-400 @enderror">
                     @error('ma_nhan_vien')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror

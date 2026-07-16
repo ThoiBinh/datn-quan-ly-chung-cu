@@ -50,7 +50,7 @@ class UpdateDatLichTienIchRequest extends FormRequest
             'thoi_gian_bat_dau.date' => 'Thời gian bắt đầu không hợp lệ.',
             'thoi_gian_ket_thuc.required' => 'Vui lòng chọn thời gian kết thúc.',
             'thoi_gian_ket_thuc.date' => 'Thời gian kết thúc không hợp lệ.',
-            'thoi_gian_ket_thuc.after' => 'Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.',
+            'thoi_gian_ket_thuc.after' => 'Thời gian kết thúc phải sau thời gian bắt đầu.',
             'so_nguoi.required' => 'Vui lòng nhập số người.',
             'so_nguoi.min' => 'Số người phải lớn hơn 0.',
             'ghi_chu.max' => 'Ghi chú không quá 500 ký tự.',
@@ -60,6 +60,7 @@ class UpdateDatLichTienIchRequest extends FormRequest
     public function withValidator(ValidatorContract $validator): void
     {
         $validator->after(function (ValidatorContract $validator) {
+            $this->validatePhutHopLe($validator);
             $this->validateKhongQuaKhu($validator);
             $this->validateCungNgay($validator);
             $this->validateThoiLuong($validator);

@@ -10,6 +10,12 @@ import './charts/dat-lich-dashboard.js';
 import './echo';
 
 import { subscribeNhanVienBooking, subscribeCuDanBooking } from './dat-lich-realtime';
+import { validateKhungGioTienIch } from './dat-lich-time-validation';
+import { taoDanhSachGio, coTheLaGioBatDau, locDanhSachGioKetThuc } from './dat-lich-time-slots';
+import { initChuHoCheck } from './cu-dan-can-ho-chu-ho-check';
 // Blade dùng <script> thường (không phải ES module) nên phải lộ ra qua window
 // để các view dat-lich-tien-ich gọi được.
 window.DatLichRealtime = { subscribeNhanVienBooking, subscribeCuDanBooking };
+window.DatLichTimeValidation = { validate: validateKhungGioTienIch };
+window.DatLichTimeSlots = { taoDanhSachGio, coTheLaGioBatDau, locDanhSachGioKetThuc };
+window.ChuHoCheck = { init: initChuHoCheck };

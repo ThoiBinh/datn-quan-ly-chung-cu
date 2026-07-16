@@ -29,14 +29,21 @@
          x-data="datLichForm({
              tienIchInfo: {
                 @foreach($dsTienIch as $ti)
-                {{ $ti->id }}: { phi: {{ (float) $ti->phi_su_dung }}, sucChua: {{ (int) ($ti->suc_chua ?? 0) }}, gioHoatDong: '{{ $ti->gio_hoat_dong ?? '' }}', canDatTruoc: {{ $ti->can_dat_truoc ? 'true' : 'false' }} },
+                {{ $ti->id }}: {
+                    phi: {{ (float) $ti->phi_su_dung }},
+                    sucChua: {{ (int) ($ti->suc_chua ?? 0) }},
+                    gioHoatDong: '{{ $ti->gio_hoat_dong ?? '' }}',
+                    gioMoCua: '{{ $ti->gio_mo_cua ? substr($ti->gio_mo_cua, 0, 5) : '' }}',
+                    gioDongCua: '{{ $ti->gio_dong_cua ? substr($ti->gio_dong_cua, 0, 5) : '' }}',
+                    canDatTruoc: {{ $ti->can_dat_truoc ? 'true' : 'false' }},
+                },
                 @endforeach
              },
              tienIch: '{{ old('tien_ich', $datLichTienIch->tien_ich) }}',
              batDau: '{{ old('thoi_gian_bat_dau', $datLichTienIch->thoi_gian_bat_dau?->format('Y-m-d\TH:i')) }}',
              ketThuc: '{{ old('thoi_gian_ket_thuc', $datLichTienIch->thoi_gian_ket_thuc?->format('Y-m-d\TH:i')) }}',
              soNguoi: {{ (int) old('so_nguoi', $datLichTienIch->so_nguoi) }},
-         })">
+         })" x-init="initSlotWatch()">
         <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                 <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -105,22 +112,64 @@
                     </template>
                 </div>
 
-                <div>
+                <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
-                        Thời gian bắt đầu <span class="text-red-500">*</span>
+                        Ngày sử dụng <span class="text-red-500">*</span>
                     </label>
-                    <input type="datetime-local" name="thoi_gian_bat_dau" x-model="batDau"
-                           class="w-full px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ $errors->has('thoi_gian_bat_dau') ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600' }}">
-                    @error('thoi_gian_bat_dau')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <input type="date" x-model="ngay"
+                           class="w-full sm:w-56 px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ ($errors->has('thoi_gian_bat_dau') || $errors->has('thoi_gian_ket_thuc')) ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600' }}">
                 </div>
 
-                <div>
+                <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
-                        Thời gian kết thúc <span class="text-red-500">*</span>
+                        Giờ bắt đầu <span class="text-red-500">*</span>
                     </label>
-                    <input type="datetime-local" name="thoi_gian_ket_thuc" x-model="ketThuc"
-                           class="w-full px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ $errors->has('thoi_gian_ket_thuc') ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600' }}">
-                    @error('thoi_gian_ket_thuc')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+
+                    <template x-if="!tienIch">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Vui lòng chọn tiện ích để xem khung giờ khả dụng.</p>
+                    </template>
+                    <template x-if="tienIch && !ngay">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Vui lòng chọn ngày sử dụng trước.</p>
+                    </template>
+                    <template x-if="tienIch && ngay">
+                        <select x-model="batDauGio" @change="onGioBatDauChange()"
+                                class="w-full sm:w-56 px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl shadow-sm text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            <option value="">-- Chọn thời gian bắt đầu --</option>
+                            <template x-for="slot in danhSachGioBatDauKhaDung" :key="slot">
+                                <option :value="slot" x-text="slot"></option>
+                            </template>
+                        </select>
+                    </template>
+
+                    <input type="hidden" name="thoi_gian_bat_dau" :value="batDau">
+                    @error('thoi_gian_bat_dau')<p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <template x-if="loiBatDau"><p class="mt-1.5 text-xs text-red-500" x-text="loiBatDau"></p></template>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Giờ kết thúc <span class="text-red-500">*</span>
+                    </label>
+
+                    <template x-if="!batDauGio">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Vui lòng chọn giờ bắt đầu trước.</p>
+                    </template>
+                    <template x-if="batDauGio && danhSachGioKetThuc.length === 0">
+                        <p class="text-xs text-amber-600 dark:text-amber-400 italic">Không còn khung giờ kết thúc phù hợp, vui lòng chọn giờ bắt đầu sớm hơn.</p>
+                    </template>
+                    <template x-if="batDauGio && danhSachGioKetThuc.length > 0">
+                        <select x-model="ketThucGio"
+                                class="w-full sm:w-56 px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl shadow-sm text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            <option value="">-- Chọn thời gian kết thúc --</option>
+                            <template x-for="slot in danhSachGioKetThuc" :key="slot">
+                                <option :value="slot" x-text="slot"></option>
+                            </template>
+                        </select>
+                    </template>
+
+                    <input type="hidden" name="thoi_gian_ket_thuc" :value="ketThuc">
+                    @error('thoi_gian_ket_thuc')<p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <template x-if="loiKetThuc"><p class="mt-1.5 text-xs text-red-500" x-text="loiKetThuc"></p></template>
                 </div>
 
                 <div>
@@ -155,7 +204,7 @@
                    class="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                     Hủy
                 </a>
-                <button type="submit" :disabled="submitting"
+                <button type="submit" :disabled="submitting || !!loiBatDau || !!loiKetThuc"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors">
                     <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -172,17 +221,59 @@
 
 @push('scripts')
 <script>
-function datLichForm({ tienIchInfo, tienIch, batDau, ketThuc, soNguoi }) {
+function datLichForm({ tienIchInfo, tienIch, batDau: batDauInit, ketThuc: ketThucInit, soNguoi }) {
     return {
         tienIchInfo,
         tienIch,
-        batDau,
-        ketThuc,
+        ngay: batDauInit ? batDauInit.slice(0, 10) : (ketThucInit ? ketThucInit.slice(0, 10) : ''),
+        batDauGio: batDauInit ? batDauInit.slice(11, 16) : '',
+        ketThucGio: ketThucInit ? ketThucInit.slice(11, 16) : '',
         soNguoi,
         submitting: false,
         get tienIchDaChon() {
             return this.tienIchInfo[this.tienIch] ?? null;
         },
+        get batDau() {
+            return this.ngay && this.batDauGio ? `${this.ngay}T${this.batDauGio}` : '';
+        },
+        get ketThuc() {
+            return this.ngay && this.ketThucGio ? `${this.ngay}T${this.ketThucGio}` : '';
+        },
+
+        // ── Danh sách mốc giờ 00/30 phút sinh động từ giờ mở/đóng cửa tiện ích ──
+        get danhSachGio() {
+            const info = this.tienIchDaChon;
+            if (!info || !window.DatLichTimeSlots) return [];
+            return window.DatLichTimeSlots.taoDanhSachGio(info.gioMoCua, info.gioDongCua);
+        },
+        get danhSachGioKetThuc() {
+            if (!window.DatLichTimeSlots) return [];
+            return window.DatLichTimeSlots.locDanhSachGioKetThuc(this.danhSachGio, this.batDauGio);
+        },
+        coTheChonLamBatDau(slot) {
+            const info = this.tienIchDaChon;
+            if (!info || !window.DatLichTimeSlots) return true;
+            return window.DatLichTimeSlots.coTheLaGioBatDau(slot, info.gioDongCua);
+        },
+        // Chỉ hiển thị các mốc bắt đầu còn đủ thời lượng tối thiểu trước giờ đóng cửa.
+        get danhSachGioBatDauKhaDung() {
+            return this.danhSachGio.filter((slot) => this.coTheChonLamBatDau(slot));
+        },
+        // Khi đổi giờ bắt đầu: danh sách kết thúc tự sinh lại (reactive getter),
+        // tự động chọn Option đầu tiên nếu có.
+        onGioBatDauChange() {
+            const list = this.danhSachGioKetThuc;
+            this.ketThucGio = list.length > 0 ? list[0] : '';
+        },
+        initSlotWatch() {
+            this.$watch('tienIch', () => {
+                if (this.batDauGio && !this.danhSachGioBatDauKhaDung.includes(this.batDauGio)) {
+                    this.batDauGio = '';
+                    this.ketThucGio = '';
+                }
+            });
+        },
+
         get soGioUocTinh() {
             if (!this.batDau || !this.ketThuc) return 0;
             const start = new Date(this.batDau);
@@ -197,6 +288,19 @@ function datLichForm({ tienIchInfo, tienIch, batDau, ketThuc, soNguoi }) {
         },
         formatTien(value) {
             return new Intl.NumberFormat('vi-VN').format(Math.round(value || 0)) + ' đ';
+        },
+
+        // ── Validate khung giờ tức thời (gương với ValidatesKhungGioTienIch backend) ──
+        get loiKhungGio() {
+            return window.DatLichTimeValidation
+                ? window.DatLichTimeValidation.validate(this.batDau, this.ketThuc)
+                : { batDau: '', ketThuc: '' };
+        },
+        get loiBatDau() {
+            return this.loiKhungGio.batDau;
+        },
+        get loiKetThuc() {
+            return this.loiKhungGio.ketThuc;
         },
     };
 }

@@ -95,7 +95,7 @@ class CanHo extends Model
     public function chuHo()
     {
         return $this->hasOne(CuDanCanHo::class, 'can_ho')
-            ->whereHas('vaiTro', fn($q) => $q->where('vai_tro', 'Chủ hộ'))
+            ->whereHas('vaiTro', fn($q) => $q->where('vai_tro', 'Chủ sở hữu'))
             ->where('cu_dan_can_ho.trang_thai', 1)
             ->with(['cuDan', 'vaiTro']);
     }

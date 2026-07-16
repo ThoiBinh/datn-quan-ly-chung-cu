@@ -8,12 +8,43 @@ use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 
 /**
  * Validation cross-field dùng chung cho mọi FormRequest đặt lịch tiện ích:
- * không được ở quá khứ, phải cùng ngày, phải nằm trong giờ mở cửa, và phải
- * có thời lượng hợp lệ (tối thiểu 30 phút, tối đa 8 giờ). Trait để tránh
- * lặp lại giữa Resident/Admin/Manager.
+ * phút bắt đầu/kết thúc chỉ được 00 hoặc 30, không được ở quá khứ, phải
+ * cùng ngày, phải nằm trong giờ mở cửa, và phải có thời lượng hợp lệ (tối
+ * thiểu 01 giờ, tối đa 8 giờ). Trait để tránh lặp lại giữa Resident/Admin/Manager.
  */
 trait ValidatesKhungGioTienIch
 {
+    /**
+     * Phút của thời gian bắt đầu/kết thúc chỉ được phép là 00 hoặc 30.
+     */
+    private function validatePhutHopLe(
+        ValidatorContract $validator,
+        string $fieldBatDau = 'thoi_gian_bat_dau',
+        string $fieldKetThuc = 'thoi_gian_ket_thuc'
+    ): void {
+        if ($validator->errors()->hasAny([$fieldBatDau, $fieldKetThuc])) {
+            return;
+        }
+
+        foreach ([$fieldBatDau, $fieldKetThuc] as $field) {
+            $gioTri = $this->input($field);
+
+            if (!$gioTri) {
+                continue;
+            }
+
+            try {
+                $phut = Carbon::parse($gioTri)->minute;
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if (!in_array($phut, [0, 30], true)) {
+                $validator->errors()->add($field, 'Chỉ được chọn giờ tròn hoặc giờ rưỡi (00 hoặc 30 phút).');
+            }
+        }
+    }
+
     /**
      * Không được đặt lịch trong quá khứ: thời gian bắt đầu phải lớn hơn
      * thời điểm hiện tại.
@@ -73,7 +104,7 @@ trait ValidatesKhungGioTienIch
     }
 
     /**
-     * Thời lượng sử dụng phải từ 30 phút đến 8 giờ.
+     * Thời lượng sử dụng phải từ 01 giờ đến 8 giờ.
      */
     private function validateThoiLuong(
         ValidatorContract $validator,
@@ -97,8 +128,8 @@ trait ValidatesKhungGioTienIch
             return;
         }
 
-        if ($soPhut < 30) {
-            $validator->errors()->add($fieldKetThuc, 'Thời gian sử dụng tối thiểu là 30 phút.');
+        if ($soPhut < 60) {
+            $validator->errors()->add($fieldKetThuc, 'Thời gian sử dụng phải tối thiểu 01 giờ.');
 
             return;
         }

@@ -51,7 +51,7 @@
                         <p class="text-xs text-gray-500">HĐ #{{ $hd->id }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-bold text-red-600">{{ number_format($hd->tong_tien) }}đ</p>
+                        <p class="text-sm font-bold text-red-600">{{ number_format($hd->tong_tien-$hd->so_tien_da_thanh_toan) }}đ</p>
                         <a href="{{ route('resident.hoa-don.show', $hd) }}" class="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Thanh toán</a>
                     </div>
                 </div>

@@ -172,6 +172,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'reject'])->name('yeu-cau.reject');
 
     // Quản lý cư dân căn hộ
+    // Lưu ý: route kiem-tra-chu-ho phải đăng ký TRƯỚC resource() để không bị
+    // route show ('{cuDanCanHo}') nuốt mất chuỗi "kiem-tra-chu-ho" như một ID.
+    Route::get('cu-dan-can-ho/kiem-tra-chu-ho', [\App\Http\Controllers\Admin\CuDanCanHoController::class, 'kiemTraChuHo'])
+        ->name('cu-dan-can-ho.kiem-tra-chu-ho');
     Route::resource('cu-dan-can-ho', \App\Http\Controllers\Admin\CuDanCanHoController::class)
         ->except(['destroy'])
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);

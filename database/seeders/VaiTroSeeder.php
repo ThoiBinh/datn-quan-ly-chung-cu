@@ -9,7 +9,7 @@ class VaiTroSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = ['Chủ hộ', 'Thành viên'];
+        $data = ['Chủ sở hữu', 'Thành viên'];
 
         foreach ($data as $item) {
         if (!DB::table('vai_tro')

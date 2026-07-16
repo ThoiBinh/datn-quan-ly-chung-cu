@@ -10,6 +10,7 @@ use App\Models\CuDan;
 use App\Models\CuDanCanHo;
 use App\Models\ToaNha;
 use App\Models\VaiTro;
+use App\Rules\ChuHoDuyNhat;
 use App\Services\AuditLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -82,6 +83,21 @@ class CuDanCanHoController extends Controller
         $dsVaiTro    = VaiTro::orderBy('vai_tro')->get();
         $dsTrangThai = $this->dsTrangThai();
         return view('admin.cu-dan-can-ho.create', compact('dsCuDan', 'dsCanHo', 'dsVaiTro', 'dsTrangThai'));
+    }
+
+    /**
+     * Kiểm tra tức thời (AJAX) căn hộ đã có Chủ hộ đang cư trú hay chưa, dùng để
+     * chặn sớm ở frontend trước khi Submit. Backend (ChuHoDuyNhat rule) vẫn là
+     * nguồn kiểm tra cuối cùng khi lưu dữ liệu.
+     */
+    public function kiemTraChuHo(Request $request)
+    {
+        $canHoId  = $request->integer('can_ho');
+        $ignoreId = $request->integer('ignore_id') ?: null;
+
+        return response()->json([
+            'has_owner' => ChuHoDuyNhat::daCoChuHo($canHoId, null, $ignoreId),
+        ]);
     }
 
     public function store(StoreCuDanCanHoRequest $request)
