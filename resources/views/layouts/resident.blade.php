@@ -16,6 +16,15 @@
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Đọc bởi resources/js/booking-toast.js (Toast Notification realtime) —
+        // đặt TRƯỚC thẻ Vite vì module app.js chạy deferred, còn script thường này
+        // chạy ngay khi parse tới, đảm bảo window.AppUser luôn sẵn sàng trước.
+        window.AppUser = { loai: 'cudan', id: {{ (int) auth('cudan')->id() }} };
+        window.DatLichTienIchRoutes = {
+            index: {!! \Illuminate\Support\Js::from(route('resident.dat-lich-tien-ich.index')) !!},
+        };
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak]{display:none!important}</style>

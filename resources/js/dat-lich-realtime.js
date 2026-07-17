@@ -12,6 +12,7 @@ const CAC_EVENT_BOOKING = [
     '.booking.rejected',
     '.booking.cancelled',
     '.booking.completed',
+    '.booking.rescheduled',
     '.booking.waiting-changed',
     '.booking.slot-updated',
 ];
@@ -21,6 +22,7 @@ const CAC_EVENT_BOOKING_CA_NHAN = [
     '.booking.rejected',
     '.booking.cancelled',
     '.booking.completed',
+    '.booking.rescheduled',
 ];
 
 function tenSuKien(tenCoDau) {
