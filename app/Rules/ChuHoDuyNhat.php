@@ -28,22 +28,48 @@ class ChuHoDuyNhat implements ValidationRule
             return;
         }
 
-        $chuHoId = VaiTro::where('vai_tro', 'Chủ hộ')->value('id');
+        $chuHoId = self::chuHoVaiTroId();
 
         if ($chuHoId === null || (int) $value !== (int) $chuHoId) {
             return;
         }
 
-        $daCoChuHo = CuDanCanHo::where('can_ho', $this->canHoId)
-            ->where('vai_tro', $chuHoId)
-            ->where('trang_thai', 1)
-            ->when($this->ignoreRecordId, fn ($q) => $q->where('id', '!=', $this->ignoreRecordId))
-            ->when($this->ignoreCuDanId, fn ($q) => $q->where('cu_dan', '!=', $this->ignoreCuDanId))
-            ->exists();
-
-        if ($daCoChuHo) {
+        if (self::daCoChuHo($this->canHoId, $chuHoId, $this->ignoreRecordId, $this->ignoreCuDanId)) {
             $fail('Căn hộ này đã có Chủ hộ. Mỗi căn hộ chỉ được phép có một Chủ hộ.');
         }
+    }
+
+    /**
+     * Id của vai trò Chủ hộ (Chủ sở hữu), tra từ dữ liệu hệ thống (không hard
+     * code id). Giá trị lưu trong bảng vai_tro là "Chủ sở hữu" (xem VaiTroSeeder).
+     */
+    public static function chuHoVaiTroId(): ?int
+    {
+        return VaiTro::where('vai_tro', 'Chủ sở hữu')->value('id');
+    }
+
+    /**
+     * Căn hộ đã có Chủ hộ đang cư trú (trang_thai=1) hay chưa.
+     * Dùng chung cho validation rule và endpoint kiểm tra AJAX phía frontend.
+     */
+    public static function daCoChuHo(
+        mixed $canHoId,
+        ?int $chuHoId = null,
+        ?int $ignoreRecordId = null,
+        ?int $ignoreCuDanId = null
+    ): bool {
+        $chuHoId ??= self::chuHoVaiTroId();
+
+        if (empty($canHoId) || $chuHoId === null) {
+            return false;
+        }
+
+        return CuDanCanHo::where('can_ho', $canHoId)
+            ->where('vai_tro', $chuHoId)
+            ->where('trang_thai', 1)
+            ->when($ignoreRecordId, fn ($q) => $q->where('id', '!=', $ignoreRecordId))
+            ->when($ignoreCuDanId, fn ($q) => $q->where('cu_dan', '!=', $ignoreCuDanId))
+            ->exists();
     }
 
     public static function conCuTru(?string $ngayChuyenDi): bool

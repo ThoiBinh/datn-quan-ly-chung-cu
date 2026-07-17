@@ -75,6 +75,24 @@ class CuDan extends Authenticatable
         return $this->hasOne(CuDanCanHo::class, 'cu_dan')->where('trang_thai', 1);
     }
 
+    // Tất cả căn hộ mà cư dân có mặt trong cu_dan_can_ho (kể cả đã chuyển đi).
+    public function canHos()
+    {
+        return $this->belongsToMany(CanHo::class, 'cu_dan_can_ho', 'cu_dan', 'can_ho')
+            ->withPivot('vai_tro', 'trang_thai', 'ngay_chuyen_den', 'ngay_chuyen_di', 'nguoi_cap_nhat')
+            ->withTimestamps('createdAt', 'updatedAt');
+    }
+
+    /**
+     * Id của các căn hộ mà cư dân đang cư trú (trang_thai = 1 trên cu_dan_can_ho).
+     * Dùng chung cho mọi truy vấn hóa đơn/phương tiện/thanh toán của cư dân —
+     * một cư dân có thể đang thuộc nhiều căn hộ cùng lúc, không chỉ một.
+     */
+    public function canHoIdsHienTai()
+    {
+        return $this->canHos()->wherePivot('trang_thai', 1)->pluck('can_ho.id');
+    }
+
     // Phương tiện của cư dân = phương tiện thuộc các căn hộ mà cư dân có mặt trong cu_dan_can_ho.
     // Không có FK trực tiếp cu_dan -> phuong_tien nên phải qua bảng trung gian cu_dan_can_ho.
     public function phuongTien()

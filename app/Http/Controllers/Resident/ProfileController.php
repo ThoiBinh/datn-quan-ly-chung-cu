@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Resident\UpdateProfileRequest;
 use App\Models\HoaDon;
+use App\Models\PhuongTien;
 use App\Models\ThongBao;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -23,24 +24,24 @@ class ProfileController extends Controller
             'cuDanCanHo.vaiTro',
         ]);
 
-        // Căn hộ hiện tại (trang_thai = 1)
+        // Căn hộ hiện tại (trang_thai = 1) — dùng cho hiển thị đại diện trên UI.
         $cuDanCanHoHienTai = $cuDan->cuDanCanHo->where('trang_thai', 1)->first();
         $canHo = $cuDanCanHoHienTai?->canHo;
 
-        // PhuongTien & HoaDon qua CanHo
+        // PhuongTien & HoaDon của TẤT CẢ căn hộ mà cư dân đang cư trú, không chỉ căn hộ đại diện.
+        $canHoIds = $cuDan->canHoIdsHienTai();
         $phuongTiens = collect();
         $hoaDonStats = ['tong' => 0, 'chua_thanh_toan' => 0, 'da_thanh_toan' => 0, 'qua_han' => 0];
 
-        if ($canHo) {
-            $canHo->load(['phuongTien.loaiPhuongTien', 'hoaDon']);
-            $phuongTiens = $canHo->phuongTien;
+        if ($canHoIds->isNotEmpty()) {
+            $phuongTiens = PhuongTien::with('loaiPhuongTien')->whereIn('can_ho', $canHoIds)->get();
 
-            $hoaDons = $canHo->hoaDon;
+            $hoaDonQuery = HoaDon::whereIn('can_ho', $canHoIds);
             $hoaDonStats = [
-                'tong'            => $hoaDons->count(),
-                'chua_thanh_toan' => $hoaDons->where('trang_thai', HoaDon::TRANG_THAI_CHUA_THANH_TOAN)->count(),
-                'da_thanh_toan'   => $hoaDons->where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->count(),
-                'qua_han'         => $hoaDons->where('trang_thai', HoaDon::TRANG_THAI_QUA_HAN)->count(),
+                'tong'            => (clone $hoaDonQuery)->count(),
+                'chua_thanh_toan' => (clone $hoaDonQuery)->where('trang_thai', HoaDon::TRANG_THAI_CHUA_THANH_TOAN)->count(),
+                'da_thanh_toan'   => (clone $hoaDonQuery)->where('trang_thai', HoaDon::TRANG_THAI_DA_THANH_TOAN)->count(),
+                'qua_han'         => (clone $hoaDonQuery)->where('trang_thai', HoaDon::TRANG_THAI_QUA_HAN)->count(),
             ];
         }
 

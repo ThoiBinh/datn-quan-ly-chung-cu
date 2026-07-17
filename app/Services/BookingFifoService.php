@@ -155,10 +155,14 @@ class BookingFifoService
      * dùng xuyên suốt Service này — hai booking nối đuôi chạm đúng mốc giờ
      * KHÔNG được coi là giao nhau, sẽ tách thành 2 cụm riêng).
      *
+     * Public vì BookingSchedulerService::tuDongHuyQuaHan() cũng cần gom cụm y
+     * hệt để xét FIFO (duyệt/hủy xen kẽ, tính lại sức chứa sau mỗi bước) —
+     * tránh chép lại thuật toán gom cụm ở hai nơi.
+     *
      * @param  \Illuminate\Support\Collection<int, DatLichTienIch>  $danhSach
      * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, DatLichTienIch>>
      */
-    private function gomNhomGiaoNhau($danhSach)
+    public function gomNhomGiaoNhau($danhSach)
     {
         $daSapXep = $danhSach
             ->sortBy(fn (DatLichTienIch $dl) => [

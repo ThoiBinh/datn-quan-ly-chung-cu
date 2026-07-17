@@ -55,7 +55,7 @@ class HoaDon extends Model
 
     public function conNo(): float
     {
-        return (float)$this->tong_tien - (float)$this->so_tien_da_thanh_toan;
+        return max(0, (float)$this->tong_tien - (float)$this->so_tien_da_thanh_toan);
     }
 
     public function scopeChuaHuy($query)

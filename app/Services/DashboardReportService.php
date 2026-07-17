@@ -128,6 +128,11 @@ class DashboardReportService
             $query->where('trang_thai', (int) $filters['trang_thai_hoa_don']);
         }
 
+        // Công nợ phải tính SUM theo từng hóa đơn (mỗi hóa đơn clamp về 0, không âm)
+        // trước khi cộng dồn — không được lấy SUM(tong_tien) - SUM(da_tt) ở mức tổng,
+        // vì một hóa đơn thanh toán dư có thể bù trừ sai lệch nợ của hóa đơn khác.
+        $tongTienConNo = (float) ((clone $query)->selectSumDuNo('con_no')->value('con_no') ?? 0);
+
         $rows = $query->get(['trang_thai', 'tong_tien', 'so_tien_da_thanh_toan']);
 
         $tongTien   = $rows->sum('tong_tien');
@@ -141,7 +146,7 @@ class DashboardReportService
             'da_huy'          => $rows->where('trang_thai', HoaDon::TRANG_THAI_DA_HUY)->count(),
             'tong_tien'       => (float) $tongTien,
             'tong_tien_da_tt' => (float) $tongDaTT,
-            'tong_tien_con_no'=> (float) max(0, $tongTien - $tongDaTT),
+            'tong_tien_con_no'=> $tongTienConNo,
         ];
     }
 
@@ -279,7 +284,7 @@ class DashboardReportService
     {
         // Top 10 căn hộ nợ nhiều nhất
         $noQuery = DB::table('hoa_don as hd')
-            ->select('hd.can_ho', DB::raw('SUM(hd.tong_tien - hd.so_tien_da_thanh_toan) as tong_no'))
+            ->select('hd.can_ho', DB::raw('SUM(CASE WHEN hd.tong_tien > hd.so_tien_da_thanh_toan THEN hd.tong_tien - hd.so_tien_da_thanh_toan ELSE 0 END) as tong_no'))
             ->whereIn('hd.trang_thai', [HoaDon::TRANG_THAI_CHUA_THANH_TOAN, HoaDon::TRANG_THAI_QUA_HAN])
             ->whereBetween('hd.createdAt', [$dateFrom, $dateTo])
             ->whereNull('hd.deletedAt');

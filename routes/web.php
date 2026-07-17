@@ -172,6 +172,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('yeu-cau/{yeuCau}/tu-choi', [\App\Http\Controllers\Admin\YeuCauCuDanController::class, 'reject'])->name('yeu-cau.reject');
 
     // Quản lý cư dân căn hộ
+    // Lưu ý: route kiem-tra-chu-ho phải đăng ký TRƯỚC resource() để không bị
+    // route show ('{cuDanCanHo}') nuốt mất chuỗi "kiem-tra-chu-ho" như một ID.
+    Route::get('cu-dan-can-ho/kiem-tra-chu-ho', [\App\Http\Controllers\Admin\CuDanCanHoController::class, 'kiemTraChuHo'])
+        ->name('cu-dan-can-ho.kiem-tra-chu-ho');
     Route::resource('cu-dan-can-ho', \App\Http\Controllers\Admin\CuDanCanHoController::class)
         ->except(['destroy'])
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
@@ -183,6 +187,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     // show ('{datLichTienIch}') nuốt mất chuỗi "dashboard" như một ID.
     Route::get('dat-lich-tien-ich/dashboard', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'dashboard'])
         ->name('dat-lich-tien-ich.dashboard');
+    // API đọc: sức chứa còn lại của 1 khung giờ, dùng cho AJAX cập nhật Card sức chứa real-time (không reload).
+    Route::get('dat-lich-tien-ich/tien-ich/{tienIch}/suc-chua', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'sucChua'])
+        ->name('dat-lich-tien-ich.suc-chua');
     Route::resource('dat-lich-tien-ich', \App\Http\Controllers\Admin\DatLichTienIchController::class)
         ->parameters(['dat-lich-tien-ich' => 'datLichTienIch']);
     Route::patch('dat-lich-tien-ich/{id}/restore', [\App\Http\Controllers\Admin\DatLichTienIchController::class, 'restore'])
@@ -320,6 +327,10 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Manager\UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
     // Quản lý cư dân căn hộ
+    // Lưu ý: route kiem-tra-chu-ho phải đăng ký TRƯỚC resource() để không bị
+    // route show ('{cuDanCanHo}') nuốt mất chuỗi "kiem-tra-chu-ho" như một ID.
+    Route::get('cu-dan-can-ho/kiem-tra-chu-ho', [\App\Http\Controllers\Manager\CuDanCanHoController::class, 'kiemTraChuHo'])
+        ->name('cu-dan-can-ho.kiem-tra-chu-ho');
     Route::resource('cu-dan-can-ho', \App\Http\Controllers\Manager\CuDanCanHoController::class)
         ->except(['destroy'])
         ->parameters(['cu-dan-can-ho' => 'cuDanCanHo']);
@@ -335,6 +346,9 @@ Route::prefix('manager')->name('manager.')->middleware('manager')->group(functio
     // show ('{datLichTienIch}') nuốt mất chuỗi "dashboard" như một ID.
     Route::get('dat-lich-tien-ich/dashboard', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'dashboard'])
         ->name('dat-lich-tien-ich.dashboard');
+    // API đọc: sức chứa còn lại của 1 khung giờ, dùng cho AJAX cập nhật Card sức chứa real-time (không reload).
+    Route::get('dat-lich-tien-ich/tien-ich/{tienIch}/suc-chua', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'sucChua'])
+        ->name('dat-lich-tien-ich.suc-chua');
     Route::resource('dat-lich-tien-ich', \App\Http\Controllers\Manager\DatLichTienIchController::class)
         ->parameters(['dat-lich-tien-ich' => 'datLichTienIch']);
     Route::patch('dat-lich-tien-ich/{id}/restore', [\App\Http\Controllers\Manager\DatLichTienIchController::class, 'restore'])
@@ -393,6 +407,8 @@ Route::prefix('resident')->name('resident.')->middleware('resident')->group(func
     // Lưu ý: route "dat-lich" (form tạo mới) phải đăng ký TRƯỚC route show
     // ('{datLichTienIch}') để không bị nuốt mất chuỗi "dat-lich" như một ID.
     Route::get('/dat-lich-tien-ich/dat-lich', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'create'])->name('dat-lich-tien-ich.create');
+    // API đọc: sức chứa còn lại của 1 khung giờ, dùng cho AJAX cập nhật Card sức chứa real-time (không reload).
+    Route::get('/dat-lich-tien-ich/tien-ich/{tienIch}/suc-chua', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'sucChua'])->name('dat-lich-tien-ich.suc-chua');
     Route::post('/dat-lich-tien-ich', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'store'])->name('dat-lich-tien-ich.store');
     Route::get('/dat-lich-tien-ich', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'index'])->name('dat-lich-tien-ich.index');
     Route::get('/dat-lich-tien-ich/{datLichTienIch}', [\App\Http\Controllers\Resident\DatLichTienIchController::class, 'show'])->name('dat-lich-tien-ich.show');

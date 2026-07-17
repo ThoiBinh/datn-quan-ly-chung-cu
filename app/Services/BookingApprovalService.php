@@ -178,6 +178,7 @@ class BookingApprovalService
             $soNguoi = (int) $data['so_nguoi'];
 
             $old = $datLich->toArray();
+            $gioDaDoi = !$datLich->thoi_gian_bat_dau->equalTo($batDau) || !$datLich->thoi_gian_ket_thuc->equalTo($ketThuc);
 
             $datLich->update([
                 'can_ho'             => $data['can_ho'] ?? null,
@@ -191,6 +192,12 @@ class BookingApprovalService
             ]);
 
             AuditLogService::log('UPDATE', 'dat_lich_tien_ich', $datLich->id, $old, $datLich->fresh()->toArray());
+
+            // Chỉ báo realtime khi GIỜ thực sự đổi (không báo khi chỉ sửa ghi
+            // chú/số người) — dùng cho Toast Notification "bên còn lại".
+            if ($gioDaDoi) {
+                $this->realtimeService->daCapNhatThoiGian($datLich->fresh());
+            }
 
             return $datLich->fresh();
         }, self::SO_LAN_THU_LAI);

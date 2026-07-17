@@ -19,7 +19,7 @@ class TienIchSeeder extends Seeder
                 'suc_chua'        => 50,
                 'gio_mo_cua'      => '06:00:00',
                 'gio_dong_cua'    => '21:00:00',
-                'phi_su_dung'     => 0,
+                'phi_su_dung'     => 20000,
                 'can_dat_truoc'   => false,
             ],
             [
@@ -30,7 +30,7 @@ class TienIchSeeder extends Seeder
                 'suc_chua'        => 30,
                 'gio_mo_cua'      => '05:00:00',
                 'gio_dong_cua'    => '22:00:00',
-                'phi_su_dung'     => 0,
+                'phi_su_dung'     => 20000,
                 'can_dat_truoc'   => false,
             ],
             [

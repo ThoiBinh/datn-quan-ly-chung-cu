@@ -132,7 +132,7 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
         $this->assertDatabaseCount('dat_lich_tien_ich', 0);
     }
 
-    public function test_store_bao_loi_khi_thoi_luong_duoi_30_phut(): void
+    public function test_store_bao_loi_khi_thoi_luong_duoi_1_gio(): void
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch();
@@ -170,7 +170,7 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
         $response->assertSessionHasErrors(['thoi_gian_ket_thuc']);
     }
 
-    public function test_store_hop_le_voi_thoi_luong_bien_30_phut_va_8_gio(): void
+    public function test_store_hop_le_voi_thoi_luong_bien_1_gio_va_8_gio(): void
     {
         $cuDan = $this->taoCuDan();
         $tienIch = $this->taoTienIch(['gio_mo_cua' => '00:00:00', 'gio_dong_cua' => '23:59:59']);
@@ -181,7 +181,7 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
                 'cu_dan' => $cuDan->id,
                 'tien_ich' => $tienIch->id,
                 'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
-                'thoi_gian_ket_thuc' => '2026-09-01 08:30:00', // dung 30 phut
+                'thoi_gian_ket_thuc' => '2026-09-01 09:00:00', // dung 1 gio (toi thieu)
                 'so_nguoi' => 1,
             ]
         )->assertSessionDoesntHaveErrors();
@@ -198,6 +198,66 @@ class DatLichTienIchControllerTest extends DatLichTienIchTestCase
         )->assertSessionDoesntHaveErrors();
 
         $this->assertDatabaseCount('dat_lich_tien_ich', 2);
+    }
+
+    public function test_store_bao_loi_khi_thoi_luong_dung_30_phut(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $response = $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-01 08:00:00',
+                'thoi_gian_ket_thuc' => '2026-09-01 08:30:00', // duoi 1 gio toi thieu
+                'so_nguoi' => 1,
+            ]
+        );
+
+        $response->assertSessionHasErrors(['thoi_gian_ket_thuc']);
+        $this->assertDatabaseCount('dat_lich_tien_ich', 0);
+    }
+
+    public function test_store_bao_loi_khi_phut_khong_phai_00_hoac_30(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $response = $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-01 08:05:00',
+                'thoi_gian_ket_thuc' => '2026-09-01 09:05:00',
+                'so_nguoi' => 1,
+            ]
+        );
+
+        $response->assertSessionHasErrors(['thoi_gian_bat_dau', 'thoi_gian_ket_thuc']);
+        $this->assertDatabaseCount('dat_lich_tien_ich', 0);
+    }
+
+    public function test_store_bao_loi_khi_ket_thuc_bang_bat_dau(): void
+    {
+        $cuDan = $this->taoCuDan();
+        $tienIch = $this->taoTienIch();
+
+        $response = $this->actingAs($this->admin, 'nhanvien')->post(
+            route('admin.dat-lich-tien-ich.store'),
+            [
+                'cu_dan' => $cuDan->id,
+                'tien_ich' => $tienIch->id,
+                'thoi_gian_bat_dau' => '2026-09-01 09:00:00',
+                'thoi_gian_ket_thuc' => '2026-09-01 09:00:00',
+                'so_nguoi' => 1,
+            ]
+        );
+
+        $response->assertSessionHasErrors(['thoi_gian_ket_thuc']);
+        $this->assertDatabaseCount('dat_lich_tien_ich', 0);
     }
 
     public function test_show_hien_thi_chi_tiet(): void

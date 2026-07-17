@@ -26,8 +26,18 @@ abstract class BookingStatusEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public readonly DatLichTienIch $datLich)
-    {
+    /**
+     * $actorLoai: 'nhanvien' | 'cudan' | 'system' (Scheduler/FIFO tự động, không
+     * gắn với request nào) — xác định BỞI BookingRealtimeService tại thời điểm
+     * broadcast (auth('nhanvien')/auth('cudan') của request hiện tại), dùng để
+     * Toast Notification ở front-end quyết định có hiển thị hay không (không
+     * hiển thị cho chính người vừa thao tác) và chọn đúng văn án thông báo.
+     */
+    public function __construct(
+        public readonly DatLichTienIch $datLich,
+        public readonly string $actorLoai = 'system',
+        public readonly ?int $actorId = null,
+    ) {
     }
 
     /**
@@ -65,6 +75,8 @@ abstract class BookingStatusEvent implements ShouldBroadcastNow
             'trang_thai'         => $b->trang_thai,
             'trang_thai_label'   => $b->trang_thai_label,
             'ly_do_huy'          => $b->ly_do_huy,
+            'actor_loai'         => $this->actorLoai,
+            'actor_id'           => $this->actorId,
         ];
     }
 }

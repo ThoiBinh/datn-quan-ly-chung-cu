@@ -21,6 +21,7 @@
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Biển số</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Căn hộ</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Loại xe</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tên xe</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Ngày đăng ký</th>
@@ -32,6 +33,12 @@
                     @forelse($phuongTien as $pt)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-4 font-semibold text-gray-800 font-mono">{{ $pt->bien_so }}</td>
+                        <td class="px-5 py-4 text-gray-600">
+                            {{ $pt->canHo?->so_can_ho ?? '—' }}
+                            @if($pt->canHo?->toaNha)
+                            <span class="text-xs text-gray-400">— {{ $pt->canHo->toaNha->ten_toa_nha }}</span>
+                            @endif
+                        </td>
                         <td class="px-5 py-4 text-gray-600">{{ $pt->loaiPhuongTien?->ten_loai_phuong_tien }}</td>
                         <td class="px-5 py-4 text-gray-600">{{ $pt->ten_phuong_tien ?? '-' }}</td>
                         <td class="px-5 py-4 text-xs text-gray-500">{{ $pt->ngay_dang_ky?->format('d/m/Y') }}</td>
@@ -50,7 +57,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="px-5 py-12 text-center text-gray-400">Chưa có phương tiện nào được đăng ký</td></tr>
+                    <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Chưa có phương tiện nào được đăng ký</td></tr>
                     @endforelse
                 </tbody>
             </table>

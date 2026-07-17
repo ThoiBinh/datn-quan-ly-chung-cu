@@ -59,15 +59,15 @@ $sortIcon = function($col) {
         </div>
     </div>
 
-    <!-- Realtime (Reverb/Echo): báo có cập nhật mới, không tự tải lại trang -->
-    <a id="dlti-realtime-banner" href="{{ request()->fullUrl() }}" style="display:none"
-       class="flex items-center gap-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
+    <!-- Realtime (Reverb/Echo): tự động làm mới danh sách + thống kê khi có cập nhật, không cần bấm -->
+    <div id="dlti-realtime-banner" style="display:none"
+       class="flex items-center gap-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2.5 text-sm font-medium text-indigo-700 dark:text-indigo-300">
         <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-        Có <span id="dlti-realtime-count">0</span> cập nhật mới — bấm để xem
-    </a>
+        Đang cập nhật dữ liệu mới...
+    </div>
 
     <!-- Dashboard: thống kê nhanh -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="dlti-stats-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between mb-3">
                 <p class="text-sm font-medium text-gray-500 dark:text-slate-400">Tổng lượt đặt</p>
@@ -156,7 +156,7 @@ $sortIcon = function($col) {
     </div>
 
     <!-- Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div id="dlti-table-wrapper" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -297,14 +297,36 @@ $sortIcon = function($col) {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     if (!window.DatLichRealtime) return;
-    let soCapNhat = 0;
-    window.DatLichRealtime.subscribeNhanVienBooking(() => {
-        soCapNhat++;
+
+    let refreshTimer = null;
+    // Gộp nhiều event bắn liên tiếp (VD FIFO tự duyệt hàng loạt) thành 1 lần fetch duy nhất.
+    const scheduleRefresh = () => {
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(refreshDanhSach, 400);
+    };
+
+    async function refreshDanhSach() {
         const banner = document.getElementById('dlti-realtime-banner');
-        const count = document.getElementById('dlti-realtime-count');
-        if (count) count.textContent = soCapNhat;
         if (banner) banner.style.display = 'flex';
-    });
+        try {
+            const res = await fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (!res.ok) return;
+            const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+            const newStats = doc.getElementById('dlti-stats-grid');
+            const newTable = doc.getElementById('dlti-table-wrapper');
+            const curStats = document.getElementById('dlti-stats-grid');
+            const curTable = document.getElementById('dlti-table-wrapper');
+            if (newStats && curStats) curStats.innerHTML = newStats.innerHTML;
+            if (newTable && curTable) curTable.innerHTML = newTable.innerHTML;
+        } finally {
+            if (banner) banner.style.display = 'none';
+        }
+    }
+
+    window.DatLichRealtime.subscribeNhanVienBooking(scheduleRefresh);
 });
 </script>
 @endpush

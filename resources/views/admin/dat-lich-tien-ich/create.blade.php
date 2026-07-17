@@ -16,13 +16,21 @@
          x-data="datLichForm({
              tienIchInfo: {
                 @foreach($dsTienIch as $ti)
-                {{ $ti->id }}: { phi: {{ (float) $ti->phi_su_dung }}, sucChua: {{ (int) ($ti->suc_chua ?? 0) }}, gioHoatDong: '{{ $ti->gio_hoat_dong ?? '' }}', canDatTruoc: {{ $ti->can_dat_truoc ? 'true' : 'false' }} },
+                {{ $ti->id }}: {
+                    phi: {{ (float) $ti->phi_su_dung }},
+                    sucChua: {{ (int) ($ti->suc_chua ?? 0) }},
+                    gioHoatDong: '{{ $ti->gio_hoat_dong ?? '' }}',
+                    gioMoCua: '{{ $ti->gio_mo_cua ? substr($ti->gio_mo_cua, 0, 5) : '' }}',
+                    gioDongCua: '{{ $ti->gio_dong_cua ? substr($ti->gio_dong_cua, 0, 5) : '' }}',
+                    canDatTruoc: {{ $ti->can_dat_truoc ? 'true' : 'false' }},
+                },
                 @endforeach
              },
              tienIch: '{{ old('tien_ich') }}',
              batDau: '{{ old('thoi_gian_bat_dau') }}',
              ketThuc: '{{ old('thoi_gian_ket_thuc') }}',
              soNguoi: {{ (int) old('so_nguoi', 1) }},
+             sucChuaUrlTemplate: {{ \Illuminate\Support\Js::from(route('admin.dat-lich-tien-ich.suc-chua', ['tienIch' => '__TIEN_ICH__'])) }},
          })" x-init="initRealtime()">
         <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -106,34 +114,126 @@
                             · Đơn giá: <span x-text="formatTien(tienIchDaChon.phi)" class="font-medium"></span>/giờ/người
                         </p>
                     </template>
-                    <!-- Cập nhật real-time qua Reverb/Echo (kênh public tien-ich.{id}): không cần refresh -->
-                    <template x-if="conLaiRealtime !== null">
-                        <p class="mt-1 text-xs flex items-center gap-1"
-                           :class="hetChoNgay ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'">
-                            <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
-                            <span x-show="!hetChoNgay">Còn <span x-text="conLaiRealtime" class="font-semibold"></span> chỗ cho khung giờ này (cập nhật trực tiếp)</span>
-                            <span x-show="hetChoNgay">Vừa hết chỗ cho khung giờ này — lượt đặt sẽ vào hàng chờ</span>
-                        </p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Ngày sử dụng <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" x-model="ngay" min="{{ now()->format('Y-m-d') }}"
+                           class="w-full sm:w-56 px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ ($errors->has('thoi_gian_bat_dau') || $errors->has('thoi_gian_ket_thuc')) ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600' }}">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Giờ bắt đầu <span class="text-red-500">*</span>
+                    </label>
+
+                    <template x-if="!tienIch">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Vui lòng chọn tiện ích để xem khung giờ khả dụng.</p>
+                    </template>
+                    <template x-if="tienIch && !ngay">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Vui lòng chọn ngày sử dụng trước.</p>
+                    </template>
+                    <template x-if="tienIch && ngay">
+                        <select x-model="batDauGio" @change="onGioBatDauChange()"
+                                class="w-full sm:w-56 px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl shadow-sm text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            <option value="">-- Chọn thời gian bắt đầu --</option>
+                            <template x-for="slot in danhSachGioBatDauKhaDung" :key="slot">
+                                <option :value="slot" x-text="slot"></option>
+                            </template>
+                        </select>
+                    </template>
+
+                    <input type="hidden" name="thoi_gian_bat_dau" :value="batDau">
+                    @error('thoi_gian_bat_dau')<p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <template x-if="loiBatDau"><p class="mt-1.5 text-xs text-red-500" x-text="loiBatDau"></p></template>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Giờ kết thúc <span class="text-red-500">*</span>
+                    </label>
+
+                    <template x-if="!batDauGio">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Vui lòng chọn giờ bắt đầu trước.</p>
+                    </template>
+                    <template x-if="batDauGio && danhSachGioKetThuc.length === 0">
+                        <p class="text-xs text-amber-600 dark:text-amber-400 italic">Không còn khung giờ kết thúc phù hợp, vui lòng chọn giờ bắt đầu sớm hơn.</p>
+                    </template>
+                    <template x-if="batDauGio && danhSachGioKetThuc.length > 0">
+                        <select x-model="ketThucGio"
+                                class="w-full sm:w-56 px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl shadow-sm text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            <option value="">-- Chọn thời gian kết thúc --</option>
+                            <template x-for="slot in danhSachGioKetThuc" :key="slot">
+                                <option :value="slot" x-text="slot"></option>
+                            </template>
+                        </select>
+                    </template>
+
+                    <input type="hidden" name="thoi_gian_ket_thuc" :value="ketThuc">
+                    @error('thoi_gian_ket_thuc')<p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <template x-if="loiKetThuc"><p class="mt-1.5 text-xs text-red-500" x-text="loiKetThuc"></p></template>
+                </div>
+
+                <!-- Card sức chứa: cập nhật AJAX ngay khi đổi tiện ích/ngày/giờ, và real-time qua Reverb/Echo khi người khác đặt/hủy/duyệt/từ chối/hoàn thành -->
+                <template x-if="tienIch && batDau && ketThuc">
+                <div class="sm:col-span-2 rounded-xl border shadow-md p-4 transition-colors"
+                     :class="{
+                        'border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800': capacity && (capacityTrangThai === 'con-cho' || capacityTrangThai === 'khong-gioi-han'),
+                        'border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800': capacity && capacityTrangThai === 'gan-day',
+                        'border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800': capacity && capacityTrangThai === 'day',
+                        'border-gray-200 bg-gray-50 dark:bg-slate-700/30 dark:border-slate-600': !capacity,
+                     }">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-8a4 4 0 110 8 4 4 0 010-8zm-6 8a4 4 0 118 0v2H7v-2z"/></svg>
+                        <h3 class="text-sm font-semibold text-gray-800 dark:text-white">Sức chứa tiện ích</h3>
+                        <svg x-show="capacityLoading" class="w-3.5 h-3.5 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                    </div>
+
+                    <template x-if="!capacity">
+                        <p class="text-xs text-gray-400 dark:text-slate-500 italic">Đang tải thông tin sức chứa...</p>
+                    </template>
+
+                    <template x-if="capacity && capacityTrangThai === 'khong-gioi-han'">
+                        <p class="text-sm text-gray-600 dark:text-slate-300">Tiện ích này không giới hạn sức chứa.</p>
+                    </template>
+
+                    <template x-if="capacity && capacityTrangThai !== 'khong-gioi-han'">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm text-gray-700 dark:text-slate-200">
+                                <span>Đã đặt: <span class="font-semibold" x-text="capacity.daDuyet"></span> / <span class="font-semibold" x-text="capacity.sucChua"></span> người</span>
+                                <span>Còn lại: <span class="font-semibold" x-text="Math.max(0, capacity.conLai)"></span> người</span>
+                            </div>
+
+                            <!-- Progress bar -->
+                            <div class="w-full h-2.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-300"
+                                     :class="{
+                                        'bg-emerald-500': capacityTrangThai === 'con-cho',
+                                        'bg-amber-500': capacityTrangThai === 'gan-day',
+                                        'bg-red-500': capacityTrangThai === 'day',
+                                     }"
+                                     :style="`width: ${Math.min(100, Math.round((capacity.daDuyet / capacity.sucChua) * 100))}%`"></div>
+                            </div>
+
+                            <p class="text-xs font-medium flex items-center gap-1"
+                               :class="{
+                                  'text-emerald-600 dark:text-emerald-400': capacityTrangThai === 'con-cho',
+                                  'text-amber-600 dark:text-amber-400': capacityTrangThai === 'gan-day',
+                                  'text-red-600 dark:text-red-400': capacityTrangThai === 'day',
+                               }">
+                                <span x-show="capacityTrangThai === 'con-cho'">🟢 Còn chỗ</span>
+                                <span x-show="capacityTrangThai === 'gan-day'">🟡 Còn <span x-text="Math.max(0, capacity.conLai)"></span> chỗ</span>
+                                <span x-show="capacityTrangThai === 'day'">🔴 Đã đầy — lượt đặt sẽ được xếp vào hàng chờ</span>
+                            </p>
+                        </div>
                     </template>
                 </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
-                        Thời gian bắt đầu <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="thoi_gian_bat_dau" x-model="batDau"
-                           class="w-full px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ $errors->has('thoi_gian_bat_dau') ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600' }}">
-                    @error('thoi_gian_bat_dau')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
-                        Thời gian kết thúc <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="thoi_gian_ket_thuc" x-model="ketThuc"
-                           class="w-full px-3 py-2.5 border rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 {{ $errors->has('thoi_gian_ket_thuc') ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600' }}">
-                    @error('thoi_gian_ket_thuc')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                </div>
+                </template>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1.5">
@@ -168,13 +268,13 @@
                    class="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                     Hủy
                 </a>
-                <button type="submit" :disabled="submitting"
+                <button type="submit" :disabled="submitting || !!loiBatDau || !!loiKetThuc"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors">
                     <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    <span x-text="submitting ? 'Đang lưu...' : 'Thêm đặt lịch'"></span>
+                    <span x-text="submitting ? 'Đang lưu...' : (capacityTrangThai === 'day' ? 'Vào hàng chờ' : 'Thêm đặt lịch')"></span>
                 </button>
             </div>
         </form>
@@ -184,17 +284,52 @@
 
 @push('scripts')
 <script>
-function datLichForm({ tienIchInfo, tienIch, batDau, ketThuc, soNguoi }) {
+function datLichForm({ tienIchInfo, tienIch, batDau: batDauInit, ketThuc: ketThucInit, soNguoi, sucChuaUrlTemplate }) {
     return {
         tienIchInfo,
         tienIch,
-        batDau,
-        ketThuc,
+        sucChuaUrlTemplate,
+        ngay: batDauInit ? batDauInit.slice(0, 10) : (ketThucInit ? ketThucInit.slice(0, 10) : ''),
+        batDauGio: batDauInit ? batDauInit.slice(11, 16) : '',
+        ketThucGio: ketThucInit ? ketThucInit.slice(11, 16) : '',
         soNguoi,
         submitting: false,
         get tienIchDaChon() {
             return this.tienIchInfo[this.tienIch] ?? null;
         },
+        get batDau() {
+            return this.ngay && this.batDauGio ? `${this.ngay}T${this.batDauGio}` : '';
+        },
+        get ketThuc() {
+            return this.ngay && this.ketThucGio ? `${this.ngay}T${this.ketThucGio}` : '';
+        },
+
+        // ── Danh sách mốc giờ 00/30 phút sinh động từ giờ mở/đóng cửa tiện ích ──
+        get danhSachGio() {
+            const info = this.tienIchDaChon;
+            if (!info || !window.DatLichTimeSlots) return [];
+            return window.DatLichTimeSlots.taoDanhSachGio(info.gioMoCua, info.gioDongCua);
+        },
+        get danhSachGioKetThuc() {
+            if (!window.DatLichTimeSlots) return [];
+            return window.DatLichTimeSlots.locDanhSachGioKetThuc(this.danhSachGio, this.batDauGio);
+        },
+        coTheChonLamBatDau(slot) {
+            const info = this.tienIchDaChon;
+            if (!info || !window.DatLichTimeSlots) return true;
+            return window.DatLichTimeSlots.coTheLaGioBatDau(slot, info.gioDongCua);
+        },
+        // Chỉ hiển thị các mốc bắt đầu còn đủ thời lượng tối thiểu trước giờ đóng cửa.
+        get danhSachGioBatDauKhaDung() {
+            return this.danhSachGio.filter((slot) => this.coTheChonLamBatDau(slot));
+        },
+        // Khi đổi giờ bắt đầu: danh sách kết thúc tự sinh lại (reactive getter),
+        // tự động chọn Option đầu tiên nếu có.
+        onGioBatDauChange() {
+            const list = this.danhSachGioKetThuc;
+            this.ketThucGio = list.length > 0 ? list[0] : '';
+        },
+
         get soGioUocTinh() {
             if (!this.batDau || !this.ketThuc) return 0;
             const start = new Date(this.batDau);
@@ -211,35 +346,99 @@ function datLichForm({ tienIchInfo, tienIch, batDau, ketThuc, soNguoi }) {
             return new Intl.NumberFormat('vi-VN').format(Math.round(value || 0)) + ' đ';
         },
 
-        // ── Realtime (Reverb/Echo, kênh public "tien-ich.{id}") ──
-        // Không polling: chỉ cập nhật khi server thật sự broadcast lúc có
-        // booking khác vừa được duyệt/hủy/từ chối/hoàn thành ảnh hưởng sức chứa.
+        // ── Validate khung giờ tức thời (gương với ValidatesKhungGioTienIch backend) ──
+        get loiKhungGio() {
+            return window.DatLichTimeValidation
+                ? window.DatLichTimeValidation.validate(this.batDau, this.ketThuc)
+                : { batDau: '', ketThuc: '' };
+        },
+        get loiBatDau() {
+            return this.loiKhungGio.batDau;
+        },
+        get loiKetThuc() {
+            return this.loiKhungGio.ketThuc;
+        },
+
+        // ── Card sức chứa: baseline lấy qua AJAX ngay khi đổi tiện ích/ngày/giờ,
+        // sau đó cập nhật tiếp real-time qua Reverb/Echo (kênh public "tien-ich.{id}")
+        // khi người khác đặt/hủy/duyệt/từ chối/hoàn thành ảnh hưởng đúng khung giờ này.
+        // Không polling — chỉ fetch khi người dùng đổi lựa chọn, và chỉ nhận thêm
+        // cập nhật khi server thật sự broadcast.
+        capacity: null,
+        capacityLoading: false,
+        capacityDebounceTimer: null,
+        capacityFetchToken: 0,
         realtimeChannelId: null,
-        realtimeSlot: null,
+        get capacityTrangThai() {
+            if (!this.capacity) return null;
+            if (!this.capacity.sucChua) return 'khong-gioi-han';
+            if (this.capacity.day || this.capacity.conLai <= 0) return 'day';
+            const nguong = Math.max(1, Math.ceil(this.capacity.sucChua * 0.2));
+            return this.capacity.conLai <= nguong ? 'gan-day' : 'con-cho';
+        },
+        applyCapacity(payload) {
+            this.capacity = {
+                sucChua: payload.suc_chua,
+                daDuyet: payload.da_duyet,
+                conLai: payload.suc_chua ? Math.max(0, payload.con_lai) : null,
+                day: !!payload.day,
+            };
+        },
+        requestCapacity() {
+            clearTimeout(this.capacityDebounceTimer);
+            if (!this.tienIch || !this.batDau || !this.ketThuc) {
+                this.capacity = null;
+                return;
+            }
+            this.capacityDebounceTimer = setTimeout(() => this.fetchCapacity(), 300);
+        },
+        async fetchCapacity() {
+            const tienIchId = this.tienIch, batDau = this.batDau, ketThuc = this.ketThuc;
+            const token = ++this.capacityFetchToken;
+            this.capacityLoading = true;
+            try {
+                const url = new URL(this.sucChuaUrlTemplate.replace('__TIEN_ICH__', tienIchId), window.location.origin);
+                url.searchParams.set('thoi_gian_bat_dau', batDau);
+                url.searchParams.set('thoi_gian_ket_thuc', ketThuc);
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok || token !== this.capacityFetchToken) return;
+                this.applyCapacity(await res.json());
+            } catch (e) {
+                // Im lặng bỏ qua lỗi mạng — không chặn người dùng tiếp tục điền form.
+            } finally {
+                if (token === this.capacityFetchToken) this.capacityLoading = false;
+            }
+        },
         initRealtime() {
-            this.$watch('tienIch', (value) => this.subscribeTienIch(value));
+            this.$watch('tienIch', (value) => {
+                this.subscribeTienIch(value);
+                if (this.batDauGio && !this.danhSachGioBatDauKhaDung.includes(this.batDauGio)) {
+                    this.batDauGio = '';
+                    this.ketThucGio = '';
+                }
+                this.requestCapacity();
+            });
+            this.$watch('ngay', () => this.requestCapacity());
+            this.$watch('batDauGio', () => this.requestCapacity());
+            this.$watch('ketThucGio', () => this.requestCapacity());
             if (this.tienIch) this.subscribeTienIch(this.tienIch);
+            this.requestCapacity();
         },
         subscribeTienIch(tienIchId) {
             if (this.realtimeChannelId && window.Echo) {
                 window.Echo.leaveChannel('tien-ich.' + this.realtimeChannelId);
             }
-            this.realtimeSlot = null;
             this.realtimeChannelId = tienIchId || null;
             if (!tienIchId || !window.Echo) return;
             window.Echo.channel('tien-ich.' + tienIchId)
-                .listen('.booking.slot-updated', (e) => { this.realtimeSlot = e; });
-        },
-        get conLaiRealtime() {
-            if (!this.realtimeSlot || !this.batDau || !this.ketThuc) return null;
-            const s1 = new Date(this.batDau), e1 = new Date(this.ketThuc);
-            const s2 = new Date(this.realtimeSlot.thoi_gian_bat_dau), e2 = new Date(this.realtimeSlot.thoi_gian_ket_thuc);
-            const giaoNhau = s1 < e2 && e1 > s2; // cùng công thức giao nhau dùng ở BookingCapacityService
-            if (!giaoNhau || this.realtimeSlot.con_lai === null) return null;
-            return this.realtimeSlot.con_lai;
-        },
-        get hetChoNgay() {
-            return this.conLaiRealtime !== null && this.conLaiRealtime <= 0;
+                .listen('.booking.slot-updated', (e) => {
+                    if (!this.batDau || !this.ketThuc) return;
+                    const s1 = new Date(this.batDau), e1 = new Date(this.ketThuc);
+                    const s2 = new Date(e.thoi_gian_bat_dau), e2 = new Date(e.thoi_gian_ket_thuc);
+                    const giaoNhau = s1 < e2 && e1 > s2; // cùng công thức giao nhau dùng ở BookingCapacityService
+                    if (!giaoNhau) return;
+                    this.applyCapacity(e);
+                });
         },
     };
 }

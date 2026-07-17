@@ -7,10 +7,12 @@ use App\Events\BookingCancelled;
 use App\Events\BookingCompleted;
 use App\Events\BookingCreated;
 use App\Events\BookingRejected;
+use App\Events\BookingRescheduled;
 use App\Events\BookingSlotUpdated;
 use App\Events\BookingWaitingChanged;
 use App\Models\DatLichTienIch;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -26,8 +28,9 @@ class BookingRealtimeService
     public function daTao(DatLichTienIch $datLich): void
     {
         $datLich->loadMissing(['tienIch', 'cuDan', 'canHo']);
-        DB::afterCommit(function () use ($datLich) {
-            broadcast(new BookingCreated($datLich));
+        [$actorLoai, $actorId] = $this->nguoiThucHien();
+        DB::afterCommit(function () use ($datLich, $actorLoai, $actorId) {
+            broadcast(new BookingCreated($datLich, $actorLoai, $actorId));
             Log::info('booking.created', ['id' => $datLich->id, 'ma_dat_lich' => $datLich->ma_dat_lich]);
         });
     }
@@ -35,8 +38,9 @@ class BookingRealtimeService
     public function daDuyet(DatLichTienIch $datLich): void
     {
         $datLich->loadMissing(['tienIch', 'cuDan', 'canHo']);
-        DB::afterCommit(function () use ($datLich) {
-            broadcast(new BookingApproved($datLich));
+        [$actorLoai, $actorId] = $this->nguoiThucHien();
+        DB::afterCommit(function () use ($datLich, $actorLoai, $actorId) {
+            broadcast(new BookingApproved($datLich, $actorLoai, $actorId));
             Log::info('booking.approved', ['id' => $datLich->id, 'ma_dat_lich' => $datLich->ma_dat_lich]);
         });
     }
@@ -44,8 +48,9 @@ class BookingRealtimeService
     public function daHuy(DatLichTienIch $datLich): void
     {
         $datLich->loadMissing(['tienIch', 'cuDan', 'canHo']);
-        DB::afterCommit(function () use ($datLich) {
-            broadcast(new BookingCancelled($datLich));
+        [$actorLoai, $actorId] = $this->nguoiThucHien();
+        DB::afterCommit(function () use ($datLich, $actorLoai, $actorId) {
+            broadcast(new BookingCancelled($datLich, $actorLoai, $actorId));
             Log::info('booking.cancelled', ['id' => $datLich->id, 'ma_dat_lich' => $datLich->ma_dat_lich]);
         });
     }
@@ -53,8 +58,9 @@ class BookingRealtimeService
     public function daTuChoi(DatLichTienIch $datLich): void
     {
         $datLich->loadMissing(['tienIch', 'cuDan', 'canHo']);
-        DB::afterCommit(function () use ($datLich) {
-            broadcast(new BookingRejected($datLich));
+        [$actorLoai, $actorId] = $this->nguoiThucHien();
+        DB::afterCommit(function () use ($datLich, $actorLoai, $actorId) {
+            broadcast(new BookingRejected($datLich, $actorLoai, $actorId));
             Log::info('booking.rejected', ['id' => $datLich->id, 'ma_dat_lich' => $datLich->ma_dat_lich]);
         });
     }
@@ -62,9 +68,26 @@ class BookingRealtimeService
     public function daHoanThanh(DatLichTienIch $datLich): void
     {
         $datLich->loadMissing(['tienIch', 'cuDan', 'canHo']);
-        DB::afterCommit(function () use ($datLich) {
-            broadcast(new BookingCompleted($datLich));
+        [$actorLoai, $actorId] = $this->nguoiThucHien();
+        DB::afterCommit(function () use ($datLich, $actorLoai, $actorId) {
+            broadcast(new BookingCompleted($datLich, $actorLoai, $actorId));
             Log::info('booking.completed', ['id' => $datLich->id, 'ma_dat_lich' => $datLich->ma_dat_lich]);
+        });
+    }
+
+    /**
+     * Giờ sử dụng của MỘT lượt đặt lịch đang Chờ duyệt vừa được sửa (chỉ khi
+     * thoi_gian_bat_dau/thoi_gian_ket_thuc thực sự đổi — xem
+     * BookingApprovalService::capNhatDatLich()) — dùng cho Toast Notification
+     * báo "bên còn lại" (Ban quản lý hoặc cư dân sở hữu) biết giờ đặt đã đổi.
+     */
+    public function daCapNhatThoiGian(DatLichTienIch $datLich): void
+    {
+        $datLich->loadMissing(['tienIch', 'cuDan', 'canHo']);
+        [$actorLoai, $actorId] = $this->nguoiThucHien();
+        DB::afterCommit(function () use ($datLich, $actorLoai, $actorId) {
+            broadcast(new BookingRescheduled($datLich, $actorLoai, $actorId));
+            Log::info('booking.rescheduled', ['id' => $datLich->id, 'ma_dat_lich' => $datLich->ma_dat_lich]);
         });
     }
 
@@ -105,5 +128,26 @@ class BookingRealtimeService
     public function logDeadlockRetry(string $thaoTac, int $lanThu): void
     {
         Log::warning('booking.deadlock-retry', ['thao_tac' => $thaoTac, 'lan_thu' => $lanThu]);
+    }
+
+    /**
+     * Xác định ai vừa gây ra thay đổi trạng thái NGAY tại thời điểm gọi (trước
+     * khi vào DB::afterCommit()) — dựa vào guard nào đang đăng nhập trong
+     * request hiện tại. Không có request nào đang đăng nhập (Scheduler/FIFO
+     * chạy từ Console, không gắn với người dùng) -> 'system'.
+     *
+     * @return array{0: string, 1: ?int} [actorLoai, actorId]
+     */
+    private function nguoiThucHien(): array
+    {
+        if (Auth::guard('nhanvien')->check()) {
+            return ['nhanvien', Auth::guard('nhanvien')->id()];
+        }
+
+        if (Auth::guard('cudan')->check()) {
+            return ['cudan', Auth::guard('cudan')->id()];
+        }
+
+        return ['system', null];
     }
 }

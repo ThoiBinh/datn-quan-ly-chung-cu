@@ -12,7 +12,9 @@ use App\Models\CuDan;
 use App\Models\DatLichTienIch;
 use App\Models\NhanVien;
 use App\Models\TienIch;
+use App\Services\BookingCapacityService;
 use App\Services\BookingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -241,6 +243,36 @@ class DatLichTienIchController extends Controller
     public function create()
     {
         return view('admin.dat-lich-tien-ich.create', $this->danhSachLua());
+    }
+
+    /**
+     * Sức chứa còn lại của tiện ích cho một khung giờ cụ thể — API đọc phục vụ
+     * Card sức chứa real-time trên form thêm đặt lịch (AJAX), không thay đổi dữ liệu.
+     * Cùng field name với BookingSlotUpdated::broadcastWith() để JS dùng chung
+     * một hàm chuẩn hoá cho cả kết quả AJAX lẫn broadcast Reverb.
+     */
+    public function sucChua(Request $request, TienIch $tienIch, BookingCapacityService $capacityService)
+    {
+        $data = $request->validate([
+            'thoi_gian_bat_dau'  => ['required', 'date'],
+            'thoi_gian_ket_thuc' => ['required', 'date', 'after:thoi_gian_bat_dau'],
+        ]);
+
+        $batDau  = Carbon::parse($data['thoi_gian_bat_dau']);
+        $ketThuc = Carbon::parse($data['thoi_gian_ket_thuc']);
+
+        $daDuyet = $capacityService->tongNguoiDaDuyetGiaoNhau($tienIch->id, $batDau, $ketThuc);
+        $sucChua = (int) ($tienIch->suc_chua ?? 0);
+
+        return response()->json([
+            'tien_ich'           => $tienIch->id,
+            'thoi_gian_bat_dau'  => $batDau->toIso8601String(),
+            'thoi_gian_ket_thuc' => $ketThuc->toIso8601String(),
+            'suc_chua'           => $sucChua,
+            'da_duyet'           => $daDuyet,
+            'con_lai'            => $sucChua ? max(0, $sucChua - $daDuyet) : null,
+            'day'                => $sucChua ? ($daDuyet >= $sucChua) : false,
+        ]);
     }
 
     public function store(StoreDatLichTienIchRequest $request)
