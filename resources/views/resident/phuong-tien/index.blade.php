@@ -9,7 +9,7 @@
     @endif
 
     <div class="flex justify-end">
-        <a href="{{ route('resident.phuong-tien.create') }}" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
+        <a href="{{ route('resident.yeu-cau.store') }}" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Đăng ký xe mới
         </a>
@@ -21,10 +21,11 @@
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Biển số</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Căn hộ</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Loại xe</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tên xe</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Ngày đăng ký</th>
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">TT</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Trạng Thái</th>
                         <th class="px-5 py-3"></th>
                     </tr>
                 </thead>
@@ -32,6 +33,12 @@
                     @forelse($phuongTien as $pt)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-4 font-semibold text-gray-800 font-mono">{{ $pt->bien_so }}</td>
+                        <td class="px-5 py-4 text-gray-600">
+                            {{ $pt->canHo?->so_can_ho ?? '—' }}
+                            @if($pt->canHo?->toaNha)
+                            <span class="text-xs text-gray-400">— {{ $pt->canHo->toaNha->ten_toa_nha }}</span>
+                            @endif
+                        </td>
                         <td class="px-5 py-4 text-gray-600">{{ $pt->loaiPhuongTien?->ten_loai_phuong_tien }}</td>
                         <td class="px-5 py-4 text-gray-600">{{ $pt->ten_phuong_tien ?? '-' }}</td>
                         <td class="px-5 py-4 text-xs text-gray-500">{{ $pt->ngay_dang_ky?->format('d/m/Y') }}</td>
@@ -50,7 +57,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="px-5 py-12 text-center text-gray-400">Chưa có phương tiện nào được đăng ký</td></tr>
+                    <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Chưa có phương tiện nào được đăng ký</td></tr>
                     @endforelse
                 </tbody>
             </table>

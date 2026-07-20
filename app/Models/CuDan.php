@@ -2,34 +2,67 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Storage;
 
 class CuDan extends Authenticatable
 {
+    use SoftDeletes;
+
     protected $table = 'cu_dan';
+
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
+    const DELETED_AT = 'deletedAt';
 
     protected $fillable = [
         'ho_ten_dem', 'ten', 'sdt', 'cccd', 'email',
+        // mat_khau: PBKDF2-SHA256, 100,000 iterations, 16-byte salt, 32-byte key via Hash::make().
+        // Format: PBKDF2$<iterations>$<base64_salt>$<base64_hash>
+        // Driver: App\Hashing\Pbkdf2Hasher (registered in config/hashing.php)
+        'mat_khau',
         'ngay_sinh', 'gioi_tinh', 'tinh', 'xa', 'dia_chi',
-        'mat_khau', 'tai_khoan_kich_hoat',
+        'trang_thai', 'nguoi_cap_nhat',
     ];
 
-    protected $hidden = ['mat_khau', 'remember_token'];
+    protected $hidden = ['mat_khau'];
 
-    public function getAuthPassword()
+    protected $rememberTokenName = null;
+
+    protected $casts = [
+        'ngay_sinh'  => 'date',
+        'gioi_tinh'  => 'integer',
+        'trang_thai' => 'integer',
+    ];
+
+    public function getAuthPassword(): string
     {
         return $this->mat_khau;
     }
 
-    // Họ tên đầy đủ
-    public function getHoTenAttribute(): string
-    {
-        return $this->ho_ten_dem . ' ' . $this->ten;
-    }
-
     public function isActive(): bool
     {
-        return $this->tai_khoan_kich_hoat == 1;
+        return $this->trang_thai == 1;
+    }
+
+    public function getHoTenAttribute(): string
+    {
+        return trim(($this->ho_ten_dem ?? '') . ' ' . ($this->ten ?? ''));
+    }
+
+    public function getNameAttribute(): string
+    {
+        return $this->ho_ten;
+    }
+
+    // Accessor để view dùng $model->created_at hoạt động với column createdAt
+    public function getCreatedAtAttribute(): ?Carbon
+    {
+        return isset($this->attributes['createdAt']) && $this->attributes['createdAt']
+            ? Carbon::parse($this->attributes['createdAt'])
+            : null;
     }
 
     public function cuDanCanHo()
@@ -42,13 +75,95 @@ class CuDan extends Authenticatable
         return $this->hasOne(CuDanCanHo::class, 'cu_dan')->where('trang_thai', 1);
     }
 
-    public function hopDong()
+    // Tất cả căn hộ mà cư dân có mặt trong cu_dan_can_ho (kể cả đã chuyển đi).
+    public function canHos()
     {
-        return $this->hasMany(HopDong::class, 'cu_dan');
+        return $this->belongsToMany(CanHo::class, 'cu_dan_can_ho', 'cu_dan', 'can_ho')
+            ->withPivot('vai_tro', 'trang_thai', 'ngay_chuyen_den', 'ngay_chuyen_di', 'nguoi_cap_nhat')
+            ->withTimestamps('createdAt', 'updatedAt');
+    }
+
+    /**
+     * Id của các căn hộ mà cư dân đang cư trú (trang_thai = 1 trên cu_dan_can_ho).
+     * Dùng chung cho mọi truy vấn hóa đơn/phương tiện/thanh toán của cư dân —
+     * một cư dân có thể đang thuộc nhiều căn hộ cùng lúc, không chỉ một.
+     */
+    public function canHoIdsHienTai()
+    {
+        return $this->canHos()->wherePivot('trang_thai', 1)->pluck('can_ho.id');
+    }
+
+    // Phương tiện của cư dân = phương tiện thuộc các căn hộ mà cư dân có mặt trong cu_dan_can_ho.
+    // Không có FK trực tiếp cu_dan -> phuong_tien nên phải qua bảng trung gian cu_dan_can_ho.
+    public function phuongTien()
+    {
+        return $this->hasManyThrough(
+            PhuongTien::class,
+            CuDanCanHo::class,
+            'cu_dan',   // FK trên cu_dan_can_ho trỏ về cu_dan.id
+            'can_ho',   // FK trên phuong_tien trỏ về can_ho.id
+            'id',       // local key trên cu_dan
+            'can_ho'    // cột trên cu_dan_can_ho khớp với phuong_tien.can_ho
+        )->distinct();
+    }
+
+    // Hóa đơn của cư dân = hóa đơn thuộc các căn hộ mà cư dân có mặt trong cu_dan_can_ho.
+    public function hoaDon()
+    {
+        return $this->hasManyThrough(
+            HoaDon::class,
+            CuDanCanHo::class,
+            'cu_dan',
+            'can_ho',
+            'id',
+            'can_ho'
+        )->distinct();
     }
 
     public function yeuCau()
     {
         return $this->hasMany(YeuCauCuDan::class, 'cu_dan');
+    }
+
+    public function thongBaoDaDoc()
+    {
+        return $this->hasMany(ThongBaoDaDoc::class, 'cu_dan_id');
+    }
+
+    public function lichSuThanhToan()
+    {
+        return $this->hasMany(LichSuThanhToan::class, 'nguoi_thanh_toan');
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        foreach (['jpg', 'jpeg', 'png', 'webp'] as $ext) {
+            if (Storage::disk('public')->exists("avatars/{$this->id}.{$ext}")) {
+                return Storage::disk('public')->url("avatars/{$this->id}.{$ext}");
+            }
+        }
+        return null;
+    }
+
+    public function getTrangThaiLabelAttribute(): array
+    {
+        return match((int) $this->trang_thai) {
+            1 => ['text' => 'Đang cư trú',  'class' => 'bg-emerald-100 text-emerald-700'],
+            2 => ['text' => 'Tạm vắng',      'class' => 'bg-amber-100 text-amber-700'],
+            3 => ['text' => 'Đã chuyển đi',  'class' => 'bg-gray-100 text-gray-600'],
+            default => ['text' => 'Không xác định', 'class' => 'bg-gray-100 text-gray-500'],
+        };
+    }
+
+    public function getGioiTinhLabelAttribute(): string
+    {
+        if ($this->gioi_tinh === null) {
+            return '—';
+        }
+        return match((int) $this->gioi_tinh) {
+            0 => 'Nữ',
+            1 => 'Nam',
+            default => '—',
+        };
     }
 }

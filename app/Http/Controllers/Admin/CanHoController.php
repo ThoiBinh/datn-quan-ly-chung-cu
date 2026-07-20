@@ -1,0 +1,213 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreCanHoRequest;
+use App\Http\Requests\Admin\UpdateCanHoRequest;
+use App\Models\CanHo;
+use App\Models\CuDanCanHo;
+use App\Models\HoaDon;
+use App\Models\LoaiCanHo;
+use App\Models\PhuongTien;
+use App\Models\ThuocTinh;
+use App\Models\ToaNha;
+use App\Models\TrangThaiCanHo;
+use App\Services\AuditLogService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class CanHoController extends Controller
+{
+    private const SORTABLE = ['so_can_ho', 'tang', 'gia', 'createdAt'];
+
+    public function index(Request $request)
+    {
+        $sort      = in_array($request->sort, self::SORTABLE) ? $request->sort : 'createdAt';
+        $direction = $request->direction === 'asc' ? 'asc' : 'desc';
+
+        $query = CanHo::with(['toaNha', 'loaiCanHo', 'trangThai', 'chuHo.cuDan', 'thuocTinh'])
+            ->withCount(['cuDanHienTai', 'phuongTien', 'hoaDon', 'canHoPhiDichVu']);
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('so_can_ho', 'like', "%{$s}%")
+                    ->orWhereHas('toaNha', fn ($qn) => $qn->where('ten_toa_nha', 'like', "%{$s}%"))
+                    ->orWhereHas('cuDanCanHo.cuDan', fn ($qc) => $qc->where('ho_ten_dem', 'like', "%{$s}%")
+                        ->orWhere('ten', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->filled('toa_nha')) {
+            $query->where('toa_nha', $request->toa_nha);
+        }
+        if ($request->filled('loai_can_ho')) {
+            $query->where('loai_can_ho', $request->loai_can_ho);
+        }
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $request->trang_thai);
+        }
+        if ($request->filled('tang')) {
+            $query->where('tang', (int) $request->tang);
+        }
+
+        $canHo       = $query->orderBy($sort, $direction)->paginate(15)->withQueryString();
+        $dsToaNha    = ToaNha::orderBy('ten_toa_nha')->get();
+        $dsLoaiCanHo = LoaiCanHo::orderBy('ten_loai_can_ho')->get();
+        $dsTrangThai = TrangThaiCanHo::orderBy('id')->get();
+
+        $stats = [
+            'tong'                 => CanHo::count(),
+            'tong_cu_dan'          => CuDanCanHo::where('trang_thai', 1)->count(),
+            'tong_phuong_tien'     => PhuongTien::count(),
+            'tong_dich_vu'         => DB::table('can_ho_phi_dich_vu')->count(),
+            'tong_hoa_don_chua_tt' => HoaDon::where('trang_thai', HoaDon::TRANG_THAI_CHUA_THANH_TOAN)->count(),
+        ];
+        $trangThaiStats = TrangThaiCanHo::withCount('canHo')->orderBy('id')->get();
+
+        return view('admin.can-ho.index', compact(
+            'canHo', 'dsToaNha', 'dsLoaiCanHo', 'dsTrangThai', 'sort', 'direction', 'stats', 'trangThaiStats'
+        ));
+    }
+
+    public function create()
+    {
+        $dsToaNha    = ToaNha::orderBy('ten_toa_nha')->get();
+        $dsLoaiCanHo = LoaiCanHo::orderBy('ten_loai_can_ho')->get();
+        $dsTrangThai = TrangThaiCanHo::orderBy('id')->get();
+        $dsThuocTinh = ThuocTinh::orderBy('ten_thuoc_tinh')->get();
+
+        return view('admin.can-ho.create', compact('dsToaNha', 'dsLoaiCanHo', 'dsTrangThai', 'dsThuocTinh'));
+    }
+
+    public function store(StoreCanHoRequest $request)
+    {
+        $validated = $request->validated();
+        $toaNha    = ToaNha::findOrFail($validated['toa_nha']);
+        $soCanHo   = CanHo::sinhSoCanHo($toaNha, $validated['tang'], $validated['so_phong']);
+
+        $canHo = DB::transaction(function () use ($request, $validated, $soCanHo) {
+            $canHo = CanHo::create([
+                'toa_nha'        => $validated['toa_nha'],
+                'so_can_ho'      => $soCanHo,
+                'tang'           => $validated['tang'],
+                'loai_can_ho'    => $validated['loai_can_ho'],
+                'trang_thai'     => $validated['trang_thai'],
+                'gia'            => $validated['gia'] ?? null,
+                'nguoi_cap_nhat' => auth('nhanvien')->id(),
+            ]);
+
+            $this->syncThuocTinh($canHo, $request->input('thuoc_tinh', []));
+
+            AuditLogService::log('INSERT', 'can_ho', $canHo->id, null, $canHo->toArray());
+
+            return $canHo;
+        });
+
+        return redirect()->route('admin.can-ho.index')
+            ->with('success', "Thêm căn hộ «{$canHo->so_can_ho}» thành công.");
+    }
+
+    public function show(CanHo $canHo)
+    {
+        $canHo->load([
+            'toaNha',
+            'loaiCanHo',
+            'trangThai',
+            'cuDanCanHo.cuDan',
+            'cuDanCanHo.vaiTro',
+            'phuongTien.loaiPhuongTien',
+            'canHoPhiDichVu.phiDichVu.loaiPhiDichVu',
+            'canHoPhiDichVu.phiDichVu.donViTinh',
+            'canHoPhiDichVu.phiDichVu.loaiTinhPhi',
+            'hoaDon.lichSuThanhToan.nguoiThanhToan',
+            'thuocTinh',
+        ]);
+
+        return view('admin.can-ho.show', compact('canHo'));
+    }
+
+    public function edit(CanHo $canHo)
+    {
+        $canHo->load('thuocTinh');
+        $dsToaNha         = ToaNha::orderBy('ten_toa_nha')->get();
+        $dsLoaiCanHo      = LoaiCanHo::orderBy('ten_loai_can_ho')->get();
+        $dsTrangThai      = TrangThaiCanHo::orderBy('id')->get();
+        $dsThuocTinh      = ThuocTinh::orderBy('ten_thuoc_tinh')->get();
+        $currentThuocTinh = $canHo->thuocTinh->keyBy('id');
+        $currentSoPhong   = (int) substr($canHo->so_can_ho, -3);
+
+        return view('admin.can-ho.edit', compact(
+            'canHo', 'dsToaNha', 'dsLoaiCanHo', 'dsTrangThai', 'dsThuocTinh', 'currentThuocTinh', 'currentSoPhong'
+        ));
+    }
+
+    public function update(UpdateCanHoRequest $request, CanHo $canHo)
+    {
+        $validated = $request->validated();
+        $toaNha    = ToaNha::findOrFail($validated['toa_nha']);
+        $soCanHo   = CanHo::sinhSoCanHo($toaNha, $validated['tang'], $validated['so_phong']);
+
+        DB::transaction(function () use ($request, $validated, $canHo, $soCanHo) {
+            $old = $canHo->toArray();
+
+            $canHo->update([
+                'toa_nha'        => $validated['toa_nha'],
+                'so_can_ho'      => $soCanHo,
+                'tang'           => $validated['tang'],
+                'loai_can_ho'    => $validated['loai_can_ho'],
+                'trang_thai'     => $validated['trang_thai'],
+                'gia'            => $validated['gia'] ?? null,
+                'nguoi_cap_nhat' => auth('nhanvien')->id(),
+            ]);
+
+            $this->syncThuocTinh($canHo, $request->input('thuoc_tinh', []));
+
+            AuditLogService::log('UPDATE', 'can_ho', $canHo->id, $old, $canHo->fresh()->toArray());
+        });
+
+        return redirect()->route('admin.can-ho.show', $canHo)
+            ->with('success', "Cập nhật căn hộ «{$canHo->so_can_ho}» thành công.");
+    }
+
+    public function destroy(CanHo $canHo)
+    {
+        if ($canHo->cuDanCanHo()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có lịch sử cư dân.');
+        }
+        if ($canHo->hoaDon()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có hóa đơn.');
+        }
+        if ($canHo->phuongTien()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có phương tiện đăng ký.');
+        }
+        if ($canHo->canHoPhiDichVu()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã đăng ký phí dịch vụ.');
+        }
+        if ($canHo->datLichTienIch()->exists()) {
+            return back()->with('error', 'Không thể xóa căn hộ đã có lịch sử đặt lịch tiện ích.');
+        }
+
+        $old = $canHo->toArray();
+
+        AuditLogService::log('DELETE', 'can_ho', $canHo->id, $old, null);
+        $canHo->delete();
+
+        return redirect()->route('admin.can-ho.index')
+            ->with('success', "Căn hộ «{$canHo->so_can_ho}» đã được xóa.");
+    }
+
+    private function syncThuocTinh(CanHo $canHo, array $rawInput): void
+    {
+        $pivotData = [];
+        foreach ($rawInput as $ttId => $ttData) {
+            if (!empty($ttData['active']) && isset($ttData['gia_tri']) && $ttData['gia_tri'] !== '') {
+                $pivotData[(int) $ttId] = [
+                    'gia_tri_thuoc_tinh' => $ttData['gia_tri'],
+                    'kieu_du_lieu'       => is_numeric($ttData['gia_tri']) ? 1 : 2,
+                ];
+            }
+        }
+        $canHo->thuocTinh()->sync($pivotData);
+    }
+}

@@ -1,7 +1,35 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
+@source '../../resources/**/*.blade.php';
+@source '../../resources/**/*.js';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source inline("bg-amber-500 hover:bg-amber-600 bg-amber-100 text-amber-500 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 bg-emerald-500 hover:bg-emerald-600 bg-emerald-50 bg-emerald-100 text-emerald-500 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 bg-red-500 hover:bg-red-600 bg-red-50 bg-red-100 text-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-white text-gray-900");
+
+/* Login page - force generate classes not picked up by file scanner */
+@source inline("opacity-[0.06] opacity-[0.035] dark:opacity-[0.08] blur-[110px] blur-[120px] blur-[100px] bg-blue-400/25 dark:bg-blue-500/20 bg-violet-400/20 dark:bg-violet-500/20 bg-cyan-400/20 dark:bg-cyan-400/10 bg-blue-500/10 dark:bg-blue-400/[0.08] bg-white/80 dark:bg-white/[0.06] bg-white/5 bg-white/10 bg-slate-100/80 bg-slate-900/5 border-slate-900/10 border-slate-900/[0.06] dark:border-white/10 from-blue-500/10 from-violet-500/10 shadow-blue-900/10 shadow-blue-900/20 shadow-indigo-950/50 bg-gradient-to-br bg-gradient-to-tr from-slate-100 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-indigo-950 dark:to-blue-950 from-blue-600 via-indigo-600 to-violet-600 lg:w-[42%] lg:w-[58%] w-[32rem] h-[32rem] w-[36rem] h-[36rem] w-[28rem] h-[28rem] w-[18px] h-[18px] max-w-[26rem] w-[calc(50%-4px)] rounded-[2rem] rounded-[1.75rem] -top-40 -left-32 -right-40 -top-10 -left-10 bottom-24 -rotate-6 rotate-12 top-1/3 left-1/4 text-[2.75rem] leading-[1.08] text-[1.0625rem] text-[0.9375rem] mix-blend-overlay backdrop-blur-xl focus:-translate-y-px dark:bg-red-500/10 dark:border-red-500/20 dark:bg-emerald-500/10 dark:border-emerald-500/20");
+
+/*
+ * Toast Notification — shadow nhiều lớp (chiều sâu kiểu macOS/iOS). Khai báo
+ * tường minh qua @utility thay vì shadow-[...] arbitrary value: khi 2 utility
+ * dạng bracket có dấu phẩy (shadow-[...] và transition-[...]) đứng liền nhau
+ * trong cùng 1 chuỗi class dài, Tailwind v4 chỉ nhận đúng utility đầu tiên —
+ * các biến thể hover:/dark:/dark:hover: phía sau bị bỏ sót khi quét mã nguồn.
+ * @utility tránh hẳn vấn đề này vì không cần Tailwind "dò" chuỗi ký tự nữa.
+ */
+@utility toast-shadow {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px -4px rgba(15, 23, 42, .10), 0 24px 48px -12px rgba(15, 23, 42, .18);
+}
+@utility toast-shadow-dark {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px -4px rgba(0, 0, 0, .5), 0 24px 48px -12px rgba(0, 0, 0, .6);
+}
+@utility toast-shadow-hover {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .08), 0 12px 28px -4px rgba(15, 23, 42, .14), 0 28px 56px -12px rgba(15, 23, 42, .22);
+}
+@utility toast-shadow-hover-dark {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 28px -4px rgba(0, 0, 0, .55), 0 28px 56px -12px rgba(0, 0, 0, .65);
+}
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -14,12 +42,29 @@
     --color-primary-900: #1e3a8a;
 }
 
-/* Sidebar scrollbar */
-.sidebar-scroll::-webkit-scrollbar { width: 4px; }
-.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+/* Alpine: hide until initialized */
+[x-cloak] { display: none !important; }
 
-/* Transitions */
-.sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200; }
-.sidebar-link:hover { @apply bg-white/10; }
-.sidebar-link.active { @apply bg-white/20 text-white; }
+/* Sidebar scrollbar - thin, slate, visible only on hover */
+.sidebar-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.sidebar-scroll:hover { scrollbar-color: rgba(148, 163, 184, 0.35) transparent; }
+.sidebar-scroll::-webkit-scrollbar { width: 5px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
+.sidebar-scroll:hover::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); }
+
+/* Sidebar menu links */
+.sidebar-link {
+    @apply relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-300 ease-in-out;
+}
+.sidebar-link:hover {
+    @apply translate-x-1 bg-slate-800/70 text-white shadow-lg;
+}
+.sidebar-link.active {
+    @apply bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-950/50;
+}
+
+/* Sidebar tooltip (shown when sidebar is collapsed) */
+.sidebar-tooltip {
+    @apply pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-300 group-hover:opacity-100;
+}

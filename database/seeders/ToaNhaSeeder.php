@@ -2,92 +2,85 @@
 
 namespace Database\Seeders;
 
-use App\Models\ToaNha;
-use App\Models\CanHo;
-use App\Models\PhiDichVu;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ToaNhaSeeder extends Seeder
 {
     public function run(): void
     {
-        if (ToaNha::exists()) {
-            return;
+        $data = [
+            [
+                'ten_toa_nha' => 'Tòa A',
+                'tien_to' => 'A',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 20,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa B',
+                'tien_to' => 'B',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 22,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa C',
+                'tien_to' => 'C',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 18,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa D',
+                'tien_to' => 'D',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh    ',
+                'so_tang' => 25,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa E',
+                'tien_to' => 'E',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 30,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa F',
+                'tien_to' => 'F',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 16,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa G',
+                'tien_to' => 'G',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 28,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa H',
+                'tien_to' => 'H',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 24,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa I',
+                'tien_to' => 'I',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 21,
+            ],
+            [
+                'ten_toa_nha' => 'Tòa J',
+                'tien_to' => 'J',
+                'dia_chi' => '123 Đường Nguyễn Văn Linh, Phường Tân Thuận, Thành phố Hồ Chí Minh',
+                'so_tang' => 26,
+            ],
+        ];
+
+        foreach ($data as $item) {
+            DB::table('toa_nha')->updateOrInsert(
+                ['tien_to' => $item['tien_to']],
+                array_merge($item, [
+                    'createdAt' => now(),
+                    'updatedAt' => now(),
+                    'deletedAt' => null,
+                ])
+            );
         }
-
-        $toaA = ToaNha::create([
-            'ten_toa_nha' => 'Tòa A',
-            'dia_chi' => '12 Nguyễn Văn Linh, Quận 7, TP.HCM',
-            'so_tang' => 20,
-        ]);
-
-        $toaB = ToaNha::create([
-            'ten_toa_nha' => 'Tòa B',
-            'dia_chi' => '12 Nguyễn Văn Linh, Quận 7, TP.HCM',
-            'so_tang' => 18,
-        ]);
-
-        $floor = 1;
-        foreach (['A', 'B', 'C', 'D'] as $unit) {
-            CanHo::create([
-                'toa_nha'   => $toaA->id,
-                'so_can_ho' => "A{$floor}0{$unit}",
-                'tang'      => $floor,
-                'loai_can_ho' => 3,
-                'dien_tich' => 75.5,
-                'trang_thai' => $unit === 'A' ? 2 : 1,
-            ]);
-        }
-
-        foreach (['A', 'B', 'C'] as $unit) {
-            CanHo::create([
-                'toa_nha'   => $toaB->id,
-                'so_can_ho' => "B{$floor}0{$unit}",
-                'tang'      => $floor,
-                'loai_can_ho' => 2,
-                'dien_tich' => 55.0,
-                'trang_thai' => 1,
-            ]);
-        }
-
-        PhiDichVu::create([
-            'ten_phi_dich_vu' => 'Phí quản lý',
-            'loai_phi_dich_vu' => 1,
-            'don_gia' => 15000,
-            'don_vi_tinh' => 2,
-            'loai_tinh_phi' => 3,
-        ]);
-
-        PhiDichVu::create([
-            'ten_phi_dich_vu' => 'Phí gửi xe máy',
-            'loai_phi_dich_vu' => 2,
-            'don_gia' => 150000,
-            'don_vi_tinh' => 3,
-            'loai_tinh_phi' => 1,
-        ]);
-
-        PhiDichVu::create([
-            'ten_phi_dich_vu' => 'Phí gửi ô tô',
-            'loai_phi_dich_vu' => 2,
-            'don_gia' => 1500000,
-            'don_vi_tinh' => 3,
-            'loai_tinh_phi' => 1,
-        ]);
-
-        PhiDichVu::create([
-            'ten_phi_dich_vu' => 'Tiền điện',
-            'loai_phi_dich_vu' => 3,
-            'don_gia' => 3500,
-            'don_vi_tinh' => 4,
-            'loai_tinh_phi' => 2,
-        ]);
-
-        PhiDichVu::create([
-            'ten_phi_dich_vu' => 'Tiền nước',
-            'loai_phi_dich_vu' => 4,
-            'don_gia' => 10000,
-            'don_vi_tinh' => 5,
-            'loai_tinh_phi' => 2,
-        ]);
     }
 }

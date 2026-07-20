@@ -3,128 +3,306 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\ChucVu;
+use App\Models\CuDan;
+use App\Models\NhanVien;
 use App\Services\AuditLogService;
+use App\Services\NhanVienTrangThaiService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
+    private function resolveUser(string $type, int $id): NhanVien|CuDan
+    {
+        if ($type === 'nhan-vien') {
+            $nv = NhanVien::with('chucVu')->findOrFail($id);
+            return NhanVienTrangThaiService::syncOne($nv);
+        }
+        return CuDan::findOrFail($id);
+    }
+
     public function index(Request $request)
     {
-        $query = User::query();
+        $search = $request->filled('search') ? trim($request->search) : null;
+        $type   = $request->filled('type')   ? $request->type   : null;
+        $status = $request->filled('status') ? $request->status : null;
 
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%')
-                  ->orWhere('phone', 'like', '%' . $request->search . '%');
+        $list = collect();
+
+        // --- NhanVien ---
+        if (!$type || $type === 'nhan_vien') {
+            NhanVienTrangThaiService::syncExpired();
+
+            $nvQuery = NhanVien::with('chucVu');
+
+            if ($search) {
+                $nvQuery->where(function ($q) use ($search) {
+                    $q->where('ho_ten', 'like', "%$search%")
+                      ->orWhere('email',  'like', "%$search%")
+                      ->orWhere('sdt',    'like', "%$search%")
+                      ->orWhere('cccd',   'like', "%$search%");
+                });
+            }
+
+            if ($status !== null) {
+                $nvQuery->where('trang_thai', $status === 'active' ? 1 : 0);
+            }
+
+            $nvQuery->get()->each(function ($nv) use (&$list) {
+                $list->push((object) [
+                    'url_type'   => 'nhan-vien',
+                    'src_type'   => 'nhan_vien',
+                    'id'         => $nv->id,
+                    'ho_ten'     => $nv->ho_ten,
+                    'email'      => $nv->email,
+                    'sdt'        => $nv->sdt,
+                    'cccd'       => $nv->cccd,
+                    'loai'       => 'Nhân viên',
+                    'trang_thai' => $nv->trang_thai,
+                    'created_at' => $nv->created_at,
+                    'is_self'    => $nv->id === auth('nhanvien')->id(),
+                ]);
             });
         }
 
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
+        // --- CuDan ---
+        if (!$type || $type === 'cu_dan') {
+            $cdQuery = CuDan::query();
+
+            if ($search) {
+                $cdQuery->where(function ($q) use ($search) {
+                    $q->where('ho_ten_dem', 'like', "%$search%")
+                      ->orWhere('ten',       'like', "%$search%")
+                      ->orWhere('email',     'like', "%$search%")
+                      ->orWhere('sdt',       'like', "%$search%")
+                      ->orWhere('cccd',      'like', "%$search%");
+                });
+            }
+
+            if ($status !== null) {
+                $cdQuery->where('trang_thai', $status === 'active' ? 1 : 0);
+            }
+
+            $cdQuery->get()->each(function ($cd) use (&$list) {
+                $list->push((object) [
+                    'url_type'   => 'cu-dan',
+                    'src_type'   => 'cu_dan',
+                    'id'         => $cd->id,
+                    'ho_ten'     => trim(($cd->ho_ten_dem ?? '') . ' ' . ($cd->ten ?? '')),
+                    'email'      => $cd->email,
+                    'sdt'        => $cd->sdt,
+                    'cccd'       => $cd->cccd,
+                    'loai'       => 'Cư dân',
+                    'trang_thai' => $cd->trang_thai,
+                    'created_at' => $cd->created_at,
+                    'is_self'    => false,
+                ]);
+            });
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        $sorted  = $list->sortByDesc('created_at')->values();
+        $perPage = 15;
+        $page    = $request->get('page', 1);
 
-        $users = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $users = new LengthAwarePaginator(
+            $sorted->slice(($page - 1) * $perPage, $perPage)->values(),
+            $sorted->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return view('admin.users.index', compact('users'));
     }
 
-    public function create()
+    // =========================================================
+    // CREATE / STORE
+    // =========================================================
+
+    public function create(Request $request)
     {
-        return view('admin.users.create');
+        $chucVu  = ChucVu::all();
+        $typeTab = $request->get('tab', 'nhan_vien');
+        return view('admin.users.create', compact('chucVu', 'typeTab'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'nullable|string|max:20',
-            'password' => 'required|min:8|confirmed',
-            'role'     => 'required|in:admin,manager,resident',
-            'status'   => 'required|in:active,inactive',
-        ], [
-            'name.required'     => 'Vui lòng nhập họ tên.',
-            'email.required'    => 'Vui lòng nhập email.',
-            'email.unique'      => 'Email đã tồn tại.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-            'password.min'      => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
-        ]);
-
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => $request->phone,
-            'password' => Hash::make($request->password),
-            'role'     => $request->role,
-            'status'   => $request->status,
-        ]);
-
-        AuditLogService::log('INSERT', 'users', $user->id, null, $user->toArray());
-
-        return redirect()->route('admin.users.index')->with('success', 'Tạo tài khoản thành công.');
+        if ($request->input('type') === 'cu_dan') {
+            return $this->storeCuDan($request);
+        }
+        return $this->storeNhanVien($request);
     }
 
-    public function edit(User $user)
+    private function storeNhanVien(StoreUserRequest $request)
     {
-        return view('admin.users.edit', compact('user'));
-    }
-
-    public function update(Request $request, User $user)
-    {
-        $request->validate([
-            'name'   => 'required|string|max:255',
-            'email'  => 'required|email|unique:users,email,' . $user->id,
-            'phone'  => 'nullable|string|max:20',
-            'role'   => 'required|in:admin,manager,resident',
-            'status' => 'required|in:active,inactive',
+        $nv = NhanVien::create([
+            'ho_ten'        => $request->ho_ten,
+            'chuc_vu'       => $request->chuc_vu,
+            'sdt'           => $request->sdt,
+            'email'         => $request->email,
+            'mat_khau'      => Hash::make($request->mat_khau),
+            'ma_nhan_vien'  => $request->ma_nhan_vien ?: 'NV-' . strtoupper(Str::uuid()),
+            'cccd'          => $request->cccd,
+            'ngay_sinh'     => $request->ngay_sinh     ?: null,
+            'ngay_vao_lam'  => $request->ngay_vao_lam  ?: null,
+            'ngay_nghi_lam' => $request->ngay_nghi_lam ?: null,
+            'ghi_chu'       => $request->ghi_chu,
+            'trang_thai'    => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
         ]);
 
-        $old = $user->toArray();
+        AuditLogService::log('INSERT', 'nhan_vien', $nv->id, null, $nv->toArray());
 
-        $data = $request->only('name', 'email', 'phone', 'role', 'status');
+        return redirect()->route('admin.users.index')->with('success', 'Thêm nhân viên thành công.');
+    }
 
-        if ($request->filled('password')) {
-            $request->validate(['password' => 'min:8|confirmed']);
-            $data['password'] = Hash::make($request->password);
+    private function storeCuDan(StoreUserRequest $request)
+    {
+        $cd = CuDan::create([
+            'ho_ten_dem' => $request->ho_ten_dem,
+            'ten'        => $request->ten,
+            'sdt'        => $request->sdt,
+            'cccd'       => $request->cccd,
+            'email'      => $request->email,
+            'mat_khau'   => Hash::make($request->mat_khau),
+            'ngay_sinh'  => $request->ngay_sinh  ?: null,
+            'gioi_tinh'  => $request->gioi_tinh !== '' ? $request->gioi_tinh : null,
+            'tinh'       => $request->tinh,
+            'xa'         => $request->xa,
+            'dia_chi'    => $request->dia_chi,
+            'trang_thai' => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
+        ]);
+
+        AuditLogService::log('INSERT', 'cu_dan', $cd->id, null, $cd->toArray());
+
+        return redirect()->route('admin.users.index')->with('success', 'Thêm cư dân thành công.');
+    }
+
+    // =========================================================
+    // SHOW
+    // =========================================================
+
+    public function show(string $type, int $id)
+    {
+        $user = $this->resolveUser($type, $id);
+        return view('admin.users.show', ['user' => $user, 'type' => $type]);
+    }
+
+    // =========================================================
+    // EDIT / UPDATE
+    // =========================================================
+
+    public function edit(string $type, int $id)
+    {
+        $user   = $this->resolveUser($type, $id);
+        $chucVu = ChucVu::all();
+        return view('admin.users.edit', ['user' => $user, 'type' => $type, 'chucVu' => $chucVu]);
+    }
+
+    public function update(UpdateUserRequest $request, string $type, int $id)
+    {
+        if ($type === 'nhan-vien') {
+            return $this->updateNhanVien($request, $id);
+        }
+        return $this->updateCuDan($request, $id);
+    }
+
+    private function updateNhanVien(UpdateUserRequest $request, int $id)
+    {
+        $user = NhanVien::findOrFail($id);
+
+        $old  = $user->toArray();
+        $data = [
+            'ho_ten'        => $request->ho_ten,
+            'chuc_vu'       => $request->chuc_vu,
+            'sdt'           => $request->sdt,
+            'email'         => $request->email,
+            'ma_nhan_vien'  => $request->ma_nhan_vien,
+            'cccd'          => $request->cccd,
+            'ngay_sinh'     => $request->ngay_sinh     ?: null,
+            'ngay_vao_lam'  => $request->ngay_vao_lam  ?: null,
+            'ngay_nghi_lam' => $request->ngay_nghi_lam ?: null,
+            'ghi_chu'       => $request->ghi_chu,
+            'trang_thai'    => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
+        ];
+
+        if ($request->filled('mat_khau')) {
+            $data['mat_khau'] = Hash::make($request->mat_khau);
         }
 
         $user->update($data);
+        AuditLogService::log('UPDATE', 'nhan_vien', $user->id, $old, $user->fresh()->toArray());
 
-        AuditLogService::log('UPDATE', 'users', $user->id, $old, $user->fresh()->toArray());
-
-        return redirect()->route('admin.users.index')->with('success', 'Cập nhật tài khoản thành công.');
+        return redirect()
+            ->route('admin.users.show', ['type' => 'nhan-vien', 'id' => $user->id])
+            ->with('success', 'Cập nhật nhân viên thành công.');
     }
 
-    public function destroy(User $user)
+    private function updateCuDan(UpdateUserRequest $request, int $id)
     {
-        if ($user->id === auth()->id()) {
-            return back()->with('error', 'Không thể xóa tài khoản của chính mình.');
+        $user = CuDan::findOrFail($id);
+
+        $old  = $user->toArray();
+        $data = [
+            'ho_ten_dem' => $request->ho_ten_dem,
+            'ten'        => $request->ten,
+            'sdt'        => $request->sdt,
+            'cccd'       => $request->cccd,
+            'email'      => $request->email,
+            'ngay_sinh'  => $request->ngay_sinh  ?: null,
+            'gioi_tinh'  => $request->gioi_tinh !== '' ? $request->gioi_tinh : null,
+            'tinh'       => $request->tinh,
+            'xa'         => $request->xa,
+            'dia_chi'    => $request->dia_chi,
+            'trang_thai' => (int) $request->trang_thai,
+            'nguoi_cap_nhat'     => auth('nhanvien')->id(),
+        ];
+
+        if ($request->filled('mat_khau')) {
+            $data['mat_khau'] = Hash::make($request->mat_khau);
         }
 
-        AuditLogService::log('DELETE', 'users', $user->id, $user->toArray(), null);
-        $user->delete();
+        $user->update($data);
+        AuditLogService::log('UPDATE', 'cu_dan', $user->id, $old, $user->fresh()->toArray());
 
-        return redirect()->route('admin.users.index')->with('success', 'Xóa tài khoản thành công.');
+        return redirect()
+            ->route('admin.users.show', ['type' => 'cu-dan', 'id' => $user->id])
+            ->with('success', 'Cập nhật cư dân thành công.');
     }
 
-    public function toggleStatus(User $user)
+    // =========================================================
+    // TOGGLE STATUS
+    // =========================================================
+
+    public function toggleStatus(string $type, int $id)
     {
-        if ($user->id === auth()->id()) {
-            return back()->with('error', 'Không thể thay đổi trạng thái tài khoản của chính mình.');
+        if ($type === 'nhan-vien') {
+            $user = NhanVien::findOrFail($id);
+            if ($user->id === auth('nhanvien')->id()) {
+                return back()->with('error', 'Không thể thay đổi trạng thái tài khoản của chính mình.');
+            }
+        } else {
+            $user = CuDan::findOrFail($id);
         }
 
-        $newStatus = $user->status === 'active' ? 'inactive' : 'active';
-        $user->update(['status' => $newStatus]);
+        $newStatus = $user->trang_thai == 1 ? 0 : 1;
+        $user->update(['trang_thai' => $newStatus]);
 
-        $msg = $newStatus === 'active' ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.';
+        $tableName = $type === 'nhan-vien' ? 'nhan_vien' : 'cu_dan';
+        AuditLogService::log('UPDATE', $tableName, $user->id,
+            ['trang_thai' => $user->trang_thai == 1 ? 0 : 1],
+            ['trang_thai' => $newStatus]
+        );
+
+        $msg = $newStatus === 1 ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.';
         return back()->with('success', $msg);
     }
 }

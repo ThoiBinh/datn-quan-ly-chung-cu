@@ -9,9 +9,39 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            LookupSeeder::class,
-            UserSeeder::class,
+            // Bảng phụ (không có foreign key)
+            ChucVuSeeder::class,
+            LoaiCanHoSeeder::class,
+            LoaiPhiDichVuSeeder::class,
+            DonViTinhPhiDichVuSeeder::class,
+            LoaiTinhPhiDichVuSeeder::class,
+            LoaiPhuongTienSeeder::class,
+            TrangThaiCanHoSeeder::class,
+            VaiTroSeeder::class,
+            NguonTaoSeeder::class,
+            ThuocTinhSeeder::class,
+            CauHinhWebsiteSeeder::class,
+            LoaiTienIchSeeder::class,
+
+            // Bảng chính (theo thứ tự phụ thuộc)
             ToaNhaSeeder::class,
+            NhanVienSeeder::class,
+            LoaiYeuCauSeeder::class,
+            CuDanSeeder::class,
+            CanHoSeeder::class,
+            CuDanCanHoSeeder::class,
+            PhiDichVuSeeder::class,
+            CanHoPhiDichVuSeeder::class,
+            CauHinhThanhToanSeeder::class,
+            HoaDonSeeder::class,
+            ChiTietHoaDonSeeder::class,
+            PhuongTienSeeder::class,
+            ThuocTinhCanHoSeeder::class,
+            YeuCauCuDanSeeder::class,
+            BangTinSeeder::class,
+            TienIchSeeder::class,
+            DatLichTienIchSeeder::class,
+            ThongBaoSeeder::class,
         ]);
     }
 }

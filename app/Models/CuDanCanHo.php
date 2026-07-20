@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class CuDanCanHo extends Model
 {
     protected $table = 'cu_dan_can_ho';
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
     protected $fillable = [
-        'cu_dan', 'can_ho', 'vai_tro', 'ngay_chuyen_den', 'ngay_chuyen_di', 'trang_thai',
+        'cu_dan', 'can_ho', 'vai_tro', 'ngay_chuyen_den', 'ngay_chuyen_di', 'trang_thai', 'nguoi_cap_nhat',
     ];
 
     protected $casts = [
@@ -23,11 +25,11 @@ class CuDanCanHo extends Model
 
     public function canHo()
     {
-        return $this->belongsTo(CanHo::class, 'can_ho');
+        return $this->belongsTo(CanHo::class, 'can_ho')->withTrashed();
     }
 
     public function vaiTro()
     {
-        return $this->belongsTo(VaiTro::class, 'vai_tro');
+        return $this->belongsTo(VaiTro::class, 'vai_tro')->withTrashed();
     }
 }

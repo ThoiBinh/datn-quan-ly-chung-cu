@@ -25,13 +25,17 @@ class PasswordController extends Controller
             'password.confirmed'        => 'Xác nhận mật khẩu không khớp.',
         ]);
 
-        $user = auth()->user();
+        $user = auth('nhanvien')->user() ?? auth('cudan')->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if (!Hash::check($request->current_password, $user->mat_khau)) {
             return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không đúng.']);
         }
 
-        $user->update(['password' => Hash::make($request->password)]);
+        $user->update(['mat_khau' => Hash::make($request->password)]);
 
         return back()->with('success', 'Đổi mật khẩu thành công.');
     }

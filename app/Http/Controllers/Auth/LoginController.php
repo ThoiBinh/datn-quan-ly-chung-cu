@@ -3,16 +3,50 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChucVu;
+use App\Services\SingleSessionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    public function __construct(private readonly SingleSessionService $singleSession) {}
+
+    /**
+     * Lấy ID chức vụ Admin
+     */
+    private function adminChucVuId(): ?int
+    {
+        return ChucVu::where('chuc_vu', 'Admin')->value('id');
+    }
+
+    /**
+     * Lấy ID chức vụ Quản lý
+     */
+    private function managerChucVuId(): ?int
+    {
+        return ChucVu::where('chuc_vu', 'Quản lý')->value('id');
+    }
+
     public function showLoginForm()
     {
-        if (Auth::check()) {
-            return $this->redirectByRole(Auth::user()->role);
+        if (Auth::guard('nhanvien')->check()) {
+
+            $user = Auth::guard('nhanvien')->user();
+
+            if ($user->chuc_vu == $this->adminChucVuId()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            if ($user->chuc_vu == $this->managerChucVuId()) {
+                return redirect()->route('manager.dashboard');
+            }
         }
+
+        if (Auth::guard('cudan')->check()) {
+            return redirect()->route('resident.dashboard');
+        }
+
         return view('auth.login');
     }
 
@@ -28,51 +62,114 @@ class LoginController extends Controller
             'password.min'      => 'Mật khẩu phải có ít nhất 6 ký tự.',
         ]);
 
-        $credentials = $request->only('email', 'password');
-        $remember    = $request->boolean('remember');
-        $loai        = $request->input('loai', 'nhanvien');
+        $credentials = [
+            'email'    => $request->email,
+            'password' => $request->password,
+        ];
 
-        if (Auth::attempt($credentials, $remember)) {
-            $user = Auth::user();
+        $remember = $request->boolean('remember');
+        $loai = $request->input('loai', 'nhanvien');
 
-            if (!$user->isActive()) {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.'])->withInput($request->only('email', 'loai'));
+        // =======================
+        // Đăng nhập nhân viên
+        // =======================
+        if ($loai === 'nhanvien') {
+
+            if (Auth::guard('nhanvien')->attempt($credentials, $remember)) {
+
+                $user = Auth::guard('nhanvien')->user();
+
+                // Kiểm tra trạng thái
+                if (!$user->isActive()) {
+
+                    Auth::guard('nhanvien')->logout();
+
+                    return back()
+                        ->withErrors([
+                            'email' => 'Tài khoản đã bị khóa.'
+                        ])
+                        ->withInput($request->only('email', 'loai'));
+                }
+
+                // Chỉ Admin và Quản lý được đăng nhập
+                $allowRoles = [
+                    $this->adminChucVuId(),
+                    $this->managerChucVuId(),
+                ];
+
+                if (!in_array($user->chuc_vu, $allowRoles)) {
+
+                    Auth::guard('nhanvien')->logout();
+
+                    return back()
+                        ->withErrors([
+                            'email' => 'Bạn không có quyền truy cập hệ thống.'
+                        ])
+                        ->withInput($request->only('email', 'loai'));
+                }
+
+                $request->session()->regenerate();
+                $this->singleSession->remember('nhanvien', $user->getAuthIdentifier(), $request->session()->getId());
+
+                if ($user->chuc_vu == $this->adminChucVuId()) {
+                    return redirect()->route('admin.dashboard');
+                }
+
+                if ($user->chuc_vu == $this->managerChucVuId()) {
+                    return redirect()->route('manager.dashboard');
+                }
             }
-
-            // Kiểm tra đúng loại tab đăng nhập
-            if ($loai === 'nhanvien' && $user->role === 'resident') {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Tài khoản này không phải nhân viên.'])->withInput($request->only('email', 'loai'));
-            }
-
-            if ($loai === 'cudan' && $user->role !== 'resident') {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Tài khoản này không phải cư dân.'])->withInput($request->only('email', 'loai'));
-            }
-
-            $request->session()->regenerate();
-            return $this->redirectByRole($user->role);
         }
 
-        return back()->withErrors(['email' => 'Email hoặc mật khẩu không đúng.'])->withInput($request->only('email', 'loai'));
+        // =======================
+        // Đăng nhập cư dân
+        // =======================
+        if ($loai === 'cudan') {
+
+            if (Auth::guard('cudan')->attempt($credentials, $remember)) {
+
+                $user = Auth::guard('cudan')->user();
+
+                if (!$user->isActive()) {
+
+                    Auth::guard('cudan')->logout();
+
+                    return back()
+                        ->withErrors([
+                            'email' => 'Tài khoản đã bị khóa.'
+                        ])
+                        ->withInput($request->only('email', 'loai'));
+                }
+
+                $request->session()->regenerate();
+                $this->singleSession->remember('cudan', $user->getAuthIdentifier(), $request->session()->getId());
+
+                return redirect()->route('resident.dashboard');
+            }
+        }
+
+        return back()
+            ->withErrors([
+                'email' => 'Email hoặc mật khẩu không đúng.'
+            ])
+            ->withInput($request->only('email', 'loai'));
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        foreach (['nhanvien', 'cudan'] as $guard) {
+            if (Auth::guard($guard)->check()) {
+                $this->singleSession->forget($guard, Auth::guard($guard)->id());
+            }
+
+            Auth::guard($guard)->logout();
+        }
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login')->with('success', 'Đã đăng xuất thành công.');
-    }
 
-    private function redirectByRole(string $role)
-    {
-        return match($role) {
-            'admin'    => redirect()->route('admin.dashboard'),
-            'manager'  => redirect()->route('manager.dashboard'),
-            'resident' => redirect()->route('resident.dashboard'),
-            default    => redirect()->route('home'),
-        };
+        return redirect()
+            ->route('login')
+            ->with('success', 'Đăng xuất thành công.');
     }
 }
