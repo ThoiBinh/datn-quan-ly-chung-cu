@@ -203,6 +203,11 @@
                 <span x-show="sidebarOpen" x-transition class="truncate">Nhật ký hệ thống</span>
                 <span x-show="!sidebarOpen" x-cloak class="sidebar-tooltip">Nhật ký hệ thống</span>
             </a>
+            <a href="{{ route('admin.import.index') }}" class="sidebar-link group {{ request()->routeIs('admin.import.*') ? 'active' : '' }}" :class="sidebarOpen ? '' : 'justify-center px-0'">
+                <svg class="h-5 w-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                <span x-show="sidebarOpen" x-transition class="truncate">Nhập dữ liệu</span>
+                <span x-show="!sidebarOpen" x-cloak class="sidebar-tooltip">Import dữ liệu</span>
+            </a>
         </nav>
 
         <script>

@@ -74,11 +74,15 @@ class NhanVienController extends Controller
 
     public function store(StoreNhanVienRequest $request)
     {
-        $nextId = (NhanVien::max('id') ?? 0) + 1;
+        $maxCode = NhanVien::selectRaw("
+    MAX(CAST(SUBSTRING(ma_nhan_vien, 3) AS UNSIGNED)) as max_code
+")->value('max_code');
+
+$nextNumber = ($maxCode ?? 0) + 1;
         $data   = $request->validated();
 
         $data['mat_khau']       = Hash::make($data['mat_khau']);
-        $data['ma_nhan_vien']   = $data['ma_nhan_vien'] ?: 'NV' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+        $data['ma_nhan_vien']   = $data['ma_nhan_vien'] ?: 'NV' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
         $data['nguoi_cap_nhat'] = auth('nhanvien')->id();
         $data['trang_thai']     = $this->resolveTrangThai($data);
 
