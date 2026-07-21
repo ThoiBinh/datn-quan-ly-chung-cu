@@ -37,6 +37,14 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::patch('users/{type}/{id}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status')->where('type', 'nhan-vien|cu-dan');
     Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('audit-logs/{nhatKy}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
+
+    // Import dữ liệu (Universal Excel Import)
+    Route::get('import', [\App\Http\Controllers\Admin\ImportController::class, 'index'])->name('import.index');
+    Route::get('import/template', [\App\Http\Controllers\Admin\ImportController::class, 'downloadTemplate'])->name('import.template');
+    Route::post('import/run', [\App\Http\Controllers\Admin\ImportController::class, 'run'])->name('import.run');
+    Route::get('import/status/{token}', [\App\Http\Controllers\Admin\ImportController::class, 'status'])->name('import.status');
+    Route::get('import/errors/{token}', [\App\Http\Controllers\Admin\ImportController::class, 'downloadErrors'])->name('import.errors');
+
     // Quản lý tòa nhà
     Route::resource('toa-nha', \App\Http\Controllers\Admin\ToaNhaController::class);
 
